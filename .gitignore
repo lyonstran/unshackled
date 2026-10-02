@@ -1,0 +1,26 @@
+# Unreal generated folders (each machine builds its own)
+Binaries/
+DerivedDataCache/
+Intermediate/
+Saved/
+Plugins/*/Binaries/
+Plugins/*/Intermediate/
+
+# IDE / generated project files
+.vs/
+.vscode/
+.idea/
+*.sln
+*.slnx
+*.code-workspace
+*.VC.db
+*.opensdf
+*.sdf
+*.suo
+compile_commands.json
+
+# OS / tool junk
+.DS_Store
+Thumbs.db
+*.rpp-bak
+*.reapeaks
