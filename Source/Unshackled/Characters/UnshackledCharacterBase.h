@@ -1,10 +1,10 @@
 ﻿#pragma once
 #include "CoreMinimal.h"
-#include "PaperCharacter.h"
+#include "PaperZDCharacter.h"
 #include "UnshackledCharacterBase.generated.h"
 
 UCLASS()
-class UNSHACKLED_API AUnshackledCharacterBase : public APaperCharacter
+class UNSHACKLED_API AUnshackledCharacterBase : public APaperZDCharacter
 {
 	GENERATED_BODY()
 	

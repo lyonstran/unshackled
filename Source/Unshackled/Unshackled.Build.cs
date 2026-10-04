@@ -11,7 +11,7 @@ public class Unshackled : ModuleRules
 		PublicDependencyModuleNames.AddRange(new string[]
 		{
 			"Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput",
-			"Paper2D", "GameplayTags", "AIModule", "NavigationSystem", "UMG"
+			"Paper2D", "GameplayTags", "AIModule", "NavigationSystem", "UMG", "PaperZD"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
