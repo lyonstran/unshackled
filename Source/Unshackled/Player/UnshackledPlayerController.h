@@ -15,9 +15,15 @@ public:
 	UInputMappingContext *MappingContext;
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction *MoveAction;
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction *AttackAction;
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction *DashAction;
 	
 protected:
 	virtual void BeginPlay() override;	
 	virtual void SetupInputComponent() override;
 	void Move(const FInputActionValue& Value);
+	void Attack();
+	void Dash();
 };
