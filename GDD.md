@@ -44,7 +44,7 @@ Taking place in a dungeon, the game aims to curate an experience that combines b
 The story follows Sirius. Plagued with amnesia, they can't figure out why they are locked in a dungeon, better yet, why they are in the depths of said dungeon housing the most dangerous of the dangerous, all while missing their left arm. In finding out the injustice that takes place in the dungeon, they set off to break out of the dungeon, rallying allies to join their party along the way. Can Sirius break out of the unforgiving hellscape that surrounds them and their allies, and can they remember why they are there in the first place? 
 
 ### 1.5 Unique Selling Points
-- Floors are real-time A-RPG fights against waves of enemies, and bosses are turn-based. How the player plays decides the Retribution bonuses and starting conditions for the boss fight.
+- Floors are real-time A-RPG fights against waves of enemies, and bosses are turn-based. The overworld Retribution sequence and the turn-based Retribution sequence are separate systems with different bonuses, and bonuses earned in the overworld do not carry into boss fights.
 - Grounding lets the player drop allies around the floor as semi-independent units that cast their own spells and interact with each other. This turns wave combat into positioning and area control and rewards player for strategizing instead of button-mashing.
 - The last fight is against Sirius, using every skill the player unlocked. Upgrading your character over the whole game is also building your final opponent, so the twist hits both in the story and in the gameplay.
 - Story pieces unlock floor by floor, so the player's progress in the escape is also their progress in finding out who Sirius is and why they were locked up at the bottom of the dungeon.
@@ -71,11 +71,15 @@ The story follows Sirius. Plagued with amnesia, they can't figure out why they a
 
 | Mechanic | Description | Purpose in Gameplay |
 |---|---|---|
-| Basic movement | Simple navigation around levels | Movement will be a core part of the overworld aspect of the game. Mobs of enemies will chase the player and party around the level in which the player's party needs to be able to manuever strategically around to defeat enemies efficiently |
-| Grounding allies | Deploy members of party around the level to automatically interact with enemies.  Party members will have unique interactions with enemies and allies when "grounded" (ex. casting specific spells or skills). | This serves as a way for the player to strategize throughout the level |
-| Retribution | Sequence of party member order will affect turn-based combat by giving player's party additional bonuses (damage boosts, additional shields/heals, enemy debuffs, etc) | To reward players for strategy and planning when fighting enemies |
-| Leader | Party members can switch a "leader" of party to start combat. This has unique effects and interactions with enemies and allies | This has unique effects and interactions with enemies and allies, both negative and positive |
-
+| Basic movement | Simple navigation around levels. Each character has their own base speed. | Movement is a core part of the overworld. Mobs chase the player and party, so the party must maneuver strategically to defeat enemies efficiently. |
+| Dash | Short burst of movement. The controlled character is immune to damage for about 1 second. Long cooldown (30 seocnds). | Lets the player escape a bad position or time a counter, at the cost of a long wait before the next dash. |
+| Grounding allies | Deploy a party member around the level. Grounded allies have their own health and mana, can be hit, and auto-recall at zero mana. Dead at zero health. Each ally has a 30-second cooldown after grounding or auto-recall. | Lets the player control area and strategize through the level. Party members have unique interactions when grounded (e.g. specific spells or skills). |
+| Recall | Instantly recall any grounded ally (F). Player chooses which ally to recall. Auto-recall starts the 30-second grounding cooldown. | Gives the player control over grounded allies and a way to bring them back to the fight. |
+| Health and mana | Each character has their own health and mana bars. Both regenerate passively and can be restored by items or skills. Dead allies stay dead until revived. | Keeps each character's state independent, which simplifies grounding and recall. |
+| Ultimate charge | Charges passively (small rate) and by dealing damage or healing. Taking damage and using items do not charge it. | Rewards active combat and healing. |
+| Retribution (overworld) | Each sequence is a randomized order of party members, one per party slot, starting with the controlled character. Following the order completes the sequence and grants a bonus, then re-rolls a new sequence. Breaking the order puts the sequence on a cooldown, then a new sequence is rolled. | Rewards planning which ally to switch to, balanced against switching to the ally the situation needs right now. |
+| Retribution (turn-based) | Same sequence rules as overworld, but with different bonuses (damage boosts, shields/heals, enemy debuffs). Re-rolls after each successful sequence. Failed sequences cool down until the boss's turn is over. Can happen every player turn, so bosses are designed to counter it. | Rewards planning in boss fights, and forces the player to weigh bonuses against the boss's telegraphed attacks. |
+| Leader | The party member who starts combat. Choosing a starter has unique effects and interactions with enemies and allies, both negative and positive. | Lets the player set up the start of each fight. |
 **Objectives:** 
 
 - Successfully escaping the dungeon.
@@ -100,18 +104,20 @@ The story follows Sirius. Plagued with amnesia, they can't figure out why they a
 | O-Look | Move mouse | Right Stick |
 | O-Jump | Space | Cross / A | 
 | Pause | Esc | Menu/Options |
-| O-Physical Skill | X | X / Square |
+| O-Basic Attack | X | X / Square |
 | O-Special Skill | C | Y / Triangle |
 | O-Ultimate Skill | V | RT / R2 |
 | Use item | Q | D-Pad up |
-| O-Tackle | Left shift | B / Circle |
+| O-Dash | Left shift | B / Circle |
 | O-Ground party member | G | LT / L2 |
+| O-Recall ally | F | R3 (press right stick) |
 | Interact | Left mouse click | LB / L1 |
 | Open inventory | R | View / Touchpad |
 | O-Switch leader | Tab + Scroll wheel (to cycle) | RB / R1  + D-pad (to select)|
 | T-Toggle skills | Arrow keys | D-pad |
 | T-Use skill | Space | Cross / A |
 | T-Hover party member/Hover enemy | WASD | Left Stick |
+| T-Block | Arrow keys / D-pad to select, Space / Cross to confirm | Same |
 
 ### 2.3 Player Progression
 
@@ -133,9 +139,22 @@ The story follows Sirius. Plagued with amnesia, they can't figure out why they a
 | Caster guards | levitation (slightly slower than player's party) | magic spells (can apply debbuffs) | Follows player party until they are in range, runs away if player party is too close, stops after death |
 | Caster wardens | levitation | very far ranged attacks (applies debuffs), can buff enemies | Casts spells towards player's party after spawning in, does not stop until defeated |
 | Hounds | Sprints (much faster than player's party) | small ranged, powerful melee attacks | slowly follows player party trail(s) until spotted in vision, where it then hunts player down until death |
-| Floor director (miniboss) | dependent on floor (each director is unique) | dependent on floor, miniboss will either be physical (short range melee), magic (long range spells), or both | dependent on miniboss, but they do not yield until defeated |
-| Floor boss (Goat, serpent, lion, dragon, Chimera) | no movement  | dependent on floor, each boss is unique | bosses will have turns equal to number of party members, and will choose most optimal moves given circumstances; stops once defeated |
-| S. Ravana + Chimera | no movement | Final boss is our main protagonist, Sirius; will have all skills player unlocked that can be used to attack player party | Given three turns (the total number of remaining party members) and will choose most optimal moves given circumstances; stops once defeated |
+| Floor director (miniboss) | Dependent on floor (each director is unique) | Dependent on floor. Miniboss is either physical (short-range melee), magic (long-range spells), or both | Overworld only. Does not yield until defeated. Not turn-based. |
+| Floor boss (Goat, Serpent, Lion, Dragon, Chimera) | No movement | Dependent on floor; each boss is unique. Sets up telegraphed attacks during its turn; they activate during a player turn (turn-based combat only). | Gets turns equal to the number of party members. After 50% HP, gets one additional turn. Chooses the most optimal move given circumstances. Stops once defeated. |
+| S. Ravana + Chimera | No movement | Final boss is the protagonist, Sirius. Has every skill the player unlocked. Uses telegraphed attacks like other bosses (turn-based combat only). | Gets turns equal to remaining party members. After 50% HP, gets one additional turn. Chooses the most optimal move given circumstances. Stops once defeated. |
+
+### 2.5 Boss Telegraphs
+
+- Telegraphs only occur in turn-based combat. They do not appear in the overworld.
+- A boss sets up a telegraphed attack during its turn. The attack activates during a player turn.
+- The HUD shows the telegraph (its name or icon and its timing). It does not show which party member counters it.
+- The player works out which party member, skill, or defensive action counters each telegraph. Learning these counters is part of the challenge.
+- Player responses:
+    - **Counter** with the right party member. Uses that turn and may break the Retribution sequence.
+    - **Tank** with Block.
+    - **Ignore** and keep the sequence. The telegraph lands.
+- Telegraphs are data-driven (Data Table), so each attack can be tuned without a recompile.
+
 
 ---
 
@@ -180,8 +199,8 @@ The story follows Sirius. Plagued with amnesia, they can't figure out why they a
 | `UBossDecisionComponent` | `UActorComponent` | Scores and picks the best boss move |
 | `AEnemyAIController` | `AAIController` | Behavior Trees and Perception |
 | `UBTTask_*` / `UBTService_*` | `UBTTaskNode` / `UBTService` | Custom AI actions (keep distance, track, buff) |
-| `UHealthComponent` | `UActorComponent` | HP, shields, damage, death |
-| `UStatsComponent` | `UActorComponent` | Level, EXP, stats |
+| `UHealthComponent` | `UActorComponent` | Per-character HP, shields, damage, death, revive |
+| `UStatsComponent` | `UActorComponent` | Level, EXP, stats, and per-character mana |
 | `USkillComponent` | `UActorComponent` | Skills and cooldowns in both combat modes |
 | `UStatusEffectComponent` | `UActorComponent` | Buffs and debuffs |
 | `UInventoryComponent` | `UActorComponent` | Items |
@@ -190,6 +209,8 @@ The story follows Sirius. Plagued with amnesia, they can't figure out why they a
 | `UDialogueWidget` | `UUserWidget` | Text reveal, portrait expressions, speaker highlight |
 | `UUnshackledSaveGame` | `USaveGame` | Save data |
 | `UUnshackledHUDWidget` / `UBattleWidget` | `UUserWidget` | HUD and battle UI data |
+| `URetributionComponent` | `UActorComponent` | Shared sequence logic for overworld and turn-based. Bonuses are set per mode. |
+| `UTelegraphComponent` | `UActorComponent` | Boss telegraphed attacks: setup, activation, counters |
 
 **Key Systems to Implement:**
 - [ ] 2D top-down character controller
@@ -261,15 +282,31 @@ The overall world/setting of the game will be a multi-floor dungeon. The dungeon
 | Cells | Cell to house prisoners | Can include loot, NPC interaction (where recruiting party members can take place, as well as basic dialogue with other NPCs) |
 | Safe spots | Small, guard-free rooms tucked into each floor (old storage rooms, collapsed cells) | Save points, healing, party management (upgrades, leader/order changes), and optional dialogue with allies |
 
-**Example Floor Layout:**
+### 4.2 Floor 1 Level Flow
 
-### 4.2 Environmental Features
+1. Player enters the start trigger volume, and wave 1 spawns.
+2. Short pause (2–3 seconds) after all enemies in a wave are defeated.
+3. Next wave spawns, and so on.
+4. Wave 3 includes the floor director (miniboss).
+5. After the last wave is cleared, interactables open.
+6. Player starts the boss fight when ready.
+
+| Wave | Enemies | Notes |
+|---|---|---|
+| 1 | 4 basic guards | Intro, slow pace |
+| 2 | 3 basic guards + 2 caster guards | First mix |
+| 3 | Floor director + 2 basic guards + 1 caster guard | Miniboss wave |
+| 4 | 4 basic guards + 3 caster guards | Clears the area for interactables |
+
+*Wave sizes are starting values, tuned during playtests.*
+
+### 4.3 Environmental Features
 - Terrain: Can be setup in a way to challenge player movement; there will also be pillars that can be broken in a way to have floors collapse 
 - Buildings / Structures: 
 - Interactive Elements: doors, switches for certain gates or doors, pickups like items or keys
 - Hazards: falling platforms (collapsed floors), enemy altered terrain 
 
-### 4.3 Flow and Pacing
+### 4.4 Flow and Pacing
 As the game progresses, the game will become harder in a roughly linear manner. Floors progressively challenge player mechanics and strategy with enemies growing in power, and skills. 
 
 Example Difficulty Curve:
@@ -374,17 +411,18 @@ Difficulty
 
 | HUD Element | Screen Position | Information Shown |
 |---|---|---|
-| O-Party Health Bar | Above player party (hovers above heads regardless of position) | current health / total combined health |
-| O-HUD bar | Bottom middle of screen | Character picture, skills & cooldowns, item equipped |
+| O-Character health and mana bars | Above each party member, regardless of position | Current health / max health, and current mana / max mana |
+| O-HUD bar | Bottom middle of screen | Controlled character portrait, basic attack / ability / ultimate with cooldowns, dash cooldown, item equipped |
 | O-Current character leading picture | Left side inside HUD bar | Picture of current leader of party |
+| O-Grounded allies list | Bottom left corner | Each grounded ally's health, mana, and grounding cooldown |
+| O-Retribution bar | Bottom right corner | Current sequence order and cooldown state (greyed out when on cooldown) |
 | O-Ability / Ability cooldowns | right side inside HUD bar | skills equiped and cooldowns if used (picture of skill will be greyed out with timer until back up) |
 | O-Half-circle mini-map | Top center of screen | portion of map party is in, mobs indicated by red marker |
 | O-Grounded allies list | bottom left corner | Current health and resource bar |
 | O-Retribution bar | Bottom right corner | Sequence order in character switches need to happen |
-| T-Character health bars | hover above character position on screen | Current health / Total health |
-| T-Character resource bars | hover above character position on screen, right below health bar | Current resource / Total resource |
-| T-Hud bar | bottom middle of screen | options to open skill menu, block, or open item menu |
-| T-retribution progress | bottom right of screen | Progression for retribution and next order sequence |
+| T-Character health and mana bars | Hover above character position | Current / total health, and current / total mana || T-Character resource bars | hover above character position on screen, right below health bar | Current resource / Total resource |
+| T-HUD bar | Bottom middle of screen | Skill menu, item menu, Block, and boss telegraph indicator |
+| T-Retribution progress | Bottom right of screen | Progress along the current sequence and the next member to switch to |
 
 ### 7.2 UX Design
 
@@ -406,6 +444,7 @@ For example red = damage, green = heals, blue = shields, purple/pink = debuffs.
 | Performance Testing | Unreal Insights, with max possible waves of enemies on screen | During every milestones |
 | Playtesting | friends play a build and fill out a short feedback form | Three rounds that being the prototype, alpha, and beta stages |
 | Balance Testing | Adjust stats and enemy waves in Data Tables based on the playtesting results | After each of the playtests |
+| Automated Tests | Unreal Automation Tests for C++ logic: damage math, status effects, Retribution sequence logic (re-roll on success, cooldown on failure), grounding cooldown, auto-recall at zero mana, and turn order | Every build |
 
 Bug Tracking: Cna use GitHub Issues, which is labeled by severity and platform the Windows / Linux
 
