@@ -166,3 +166,14 @@ void AUnshackledCharacterBase::ResetDash()
 {
       bCanDash = true;
 }
+
+void AUnshackledCharacterBase::ReviveCharacter()
+{
+	if (!Health->IsDead())
+	{
+		return;
+	}
+	Health->Revive();
+	SetActorEnableCollision(true);
+	GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+}

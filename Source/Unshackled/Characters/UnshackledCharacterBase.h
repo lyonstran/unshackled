@@ -15,6 +15,7 @@ public:
       void MoveCharacter(FVector2D Direction);
       void BasicAttack();
       void Dash();
+      void ReviveCharacter();
 
       //  called whenever something deals damage to this character.
       virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
