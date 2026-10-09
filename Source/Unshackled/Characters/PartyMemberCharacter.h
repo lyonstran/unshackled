@@ -17,4 +17,12 @@ public:
 	
 	UPROPERTY(VisibleAnywhere, Category = "Camera")
 	UCameraComponent* Camera;
+	UPROPERTY(EditAnywhere, Category = "Game Over")
+	float GameOverDelay = 2.0f;
+protected:
+	virtual void Die() override;
+
+	FTimerHandle GameOverTimer;
+	UFUNCTION()
+	void RestartLevelAfterDeath();
 };

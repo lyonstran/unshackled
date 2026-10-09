@@ -67,6 +67,16 @@ void AUnshackledCharacterBase::Die()
 
 void AUnshackledCharacterBase::BasicAttack()
 {
+	// Enemies and anything without mouse aim just attack the way they face.
+	AttackInDirection(FacingDirection);
+}
+
+void AUnshackledCharacterBase::AttackInDirection(FVector Direction)
+{
+      // Make the direction flat and exactly length 1, so AttackRange means the same thing every time.
+      Direction.Z = 0.0f;
+      Direction.Normalize();
+
       if (!bCanAttack)
       {
               return;
@@ -80,8 +90,8 @@ void AUnshackledCharacterBase::BasicAttack()
       bCanAttack = false;
       GetWorldTimerManager().SetTimer(AttackTimer, this, &AUnshackledCharacterBase::ResetAttack, AttackCooldown, false);
 
-      // Put an invisible sphere in front of the character.
-      FVector SphereCenter = GetActorLocation() + (FacingDirection * AttackRange);
+      // Put an invisible sphere in front of the character, toward the given direction.
+      FVector SphereCenter = GetActorLocation() + (Direction * AttackRange);
 
       TArray<FOverlapResult> OverlapResults;
       FCollisionQueryParams QueryParams;

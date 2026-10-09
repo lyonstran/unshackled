@@ -13,7 +13,8 @@ public:
       AUnshackledCharacterBase();
 
       void MoveCharacter(FVector2D Direction);
-      void BasicAttack();
+      void BasicAttack();                           // attacks the way we are facing (used by enemies)
+      void AttackInDirection(FVector Direction);
       void Dash();
       void ReviveCharacter();
 

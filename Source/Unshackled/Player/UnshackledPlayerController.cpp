@@ -6,6 +6,10 @@
 void AUnshackledPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
+
+	// The player aims with the mouse, so the cursor has to be visible.
+	bShowMouseCursor = true;
+
 	UEnhancedInputLocalPlayerSubsystem* InputSystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer());
 	if (InputSystem != nullptr && MappingContext != nullptr)
 	{
@@ -16,10 +20,35 @@ void AUnshackledPlayerController::BeginPlay()
 void AUnshackledPlayerController::Attack()
 {
 	AUnshackledCharacterBase* MyCharacter = Cast<AUnshackledCharacterBase>(GetPawn());
-	if (MyCharacter != nullptr)
+	if (MyCharacter == nullptr)
+	{
+		return;
+	}
+
+	FVector MouseWorldOrigin;
+	FVector MouseWorldDirection;
+	bool bGotMouse = DeprojectMousePositionToWorld(MouseWorldOrigin, MouseWorldDirection);
+	if (!bGotMouse)
 	{
 		MyCharacter->BasicAttack();
+		return;
 	}
+
+	FVector LineEnd = MouseWorldOrigin + (MouseWorldDirection * 100000.0f);
+	FVector PlanePoint = MyCharacter->GetActorLocation();
+	FVector PlaneNormal = FVector(0.0f, 0.0f, 1.0f);
+	FVector CursorPoint = FMath::LinePlaneIntersection(MouseWorldOrigin, LineEnd, PlanePoint, PlaneNormal);
+
+	FVector AttackDirection = CursorPoint - MyCharacter->GetActorLocation();
+	AttackDirection.Z = 0.0f;
+	if (AttackDirection.IsNearlyZero())
+	{
+		
+		MyCharacter->BasicAttack();
+		return;
+	}
+
+	MyCharacter->AttackInDirection(AttackDirection);
 }
 
 void AUnshackledPlayerController::Dash()
