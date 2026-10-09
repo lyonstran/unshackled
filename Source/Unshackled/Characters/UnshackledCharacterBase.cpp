@@ -151,10 +151,19 @@ void AUnshackledCharacterBase::Dash()
       // Shove the character in the direction they're facing.
       FVector DashVelocity = FacingDirection * DashSpeed;
       LaunchCharacter(DashVelocity, true, true);
-
+	  GetWorldTimerManager().SetTimer(DashDurationTimer, this, &AUnshackledCharacterBase::EndDash, DashDuration, false);
+		
       // One timer ends the immunity, a second one ends the cooldown.
-      GetWorldTimerManager().SetTimer(DashImmunityTimer, this, &AUnshackledCharacterBase::EndInvulnerability, DashImmunityTime, false);
-      GetWorldTimerManager().SetTimer(DashCooldownTimer, this, &AUnshackledCharacterBase::ResetDash, DashCooldown, false);
+      GetWorldTimerManager().SetTimer(DashImmunityTimer, this, 
+      	&AUnshackledCharacterBase::EndInvulnerability, DashImmunityTime, false);
+      GetWorldTimerManager().SetTimer(DashCooldownTimer, 
+      	this, &AUnshackledCharacterBase::ResetDash, DashCooldown, false);
+}
+
+void AUnshackledCharacterBase::EndDash()
+{
+	GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+	GetCharacterMovement()->Velocity = FVector::ZeroVector;
 }
 
 void AUnshackledCharacterBase::EndInvulnerability()

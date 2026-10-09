@@ -51,6 +51,9 @@ public:
 
       UPROPERTY(EditAnywhere, Category = "Dash")
       float DashCooldown = 5.0f;      // Use 5 while testing.
+      
+      UPROPERTY(EditAnywhere, Category = "Dash")
+      float DashDuration = 0.15f;
 
 protected:
       virtual void Die();
@@ -64,6 +67,7 @@ protected:
       FTimerHandle AttackTimer;
       FTimerHandle DashImmunityTimer;
       FTimerHandle DashCooldownTimer;
+      FTimerHandle DashDurationTimer;
 
       UFUNCTION()
       void ResetAttack();
@@ -73,4 +77,7 @@ protected:
 
       UFUNCTION()
       void ResetDash();
+      
+      UFUNCTION()
+      void EndDash();
 };
