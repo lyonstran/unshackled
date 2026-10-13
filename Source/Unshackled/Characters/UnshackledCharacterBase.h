@@ -16,24 +16,22 @@ public:
         virtual void Tick(float DeltaTime) override;
 
         void MoveCharacter(FVector2D Direction);
-        void BasicAttack();                           // attacks the way we are facing (used by enemies)
+        void BasicAttack();
         void AttackInDirection(FVector Direction);
         void Dash();
         void ReviveCharacter();
 
-        // Runs a hit through defense and the other stats. Returns the health actually lost.
-        // bTrueDamage skips defense (used for "% of health" damage).
-        float ApplyHit(float RawDamage, bool bTrueDamage, AUnshackledCharacterBase* Attacker);
+        void UseSpecial(FVector AimDirection);
+        void UseUltimate(FVector AimDirection);
 
-        // Builds the raw number from our Damage stat times the ability's scale, then hits the target.
+        FVector GetFacingDirection() const;
+
+        float ApplyHit(float RawDamage, bool bTrueDamage, AUnshackledCharacterBase* Attacker);
         void DealDamage(AUnshackledCharacterBase* Target, float AbilityScale, bool bTrueDamage);
 
-        // Hooks. Empty by default; characters override them for passives.
-        // Overrides must call Super:: first so lifesteal keeps working.
         virtual void OnDealtDamage(AUnshackledCharacterBase* Target, float DamageDealt);
         virtual void OnKilledTarget(AUnshackledCharacterBase* Target);
 
-        // Called whenever something deals damage to this character (old-style ApplyDamage ends up here).
         virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
                 class AController* EventInstigator, AActor* DamageCauser) override;
 
@@ -43,58 +41,92 @@ public:
         UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
         UStatsComponent* Stats;
 
-        // Combat settings (changeable in Blueprints)
         UPROPERTY(EditAnywhere, Category = "Combat")
         float AttackDamage = 20.0f;
 
-        // how far in front of me the hit sphere sits
         UPROPERTY(EditAnywhere, Category = "Combat")
         float AttackRange = 80.0f;
 
-        // size of the hit sphere
         UPROPERTY(EditAnywhere, Category = "Combat")
         float AttackRadius = 60.0f;
 
         UPROPERTY(EditAnywhere, Category = "Combat")
         float AttackCooldown = 0.5f;
 
-        // true on enemies so sides don't hurt themselves (does anyone like friendly fire hello?)
         UPROPERTY(EditAnywhere, Category = "Combat")
         bool bIsEnemy = false;
 
-        // Dash settings
         UPROPERTY(EditAnywhere, Category = "Dash")
         float DashSpeed = 1400.0f;
 
         UPROPERTY(EditAnywhere, Category = "Dash")
         float DashImmunityTime = 1.0f;
 
-        // Use 5 while testing.
         UPROPERTY(EditAnywhere, Category = "Dash")
         float DashCooldown = 5.0f;
 
         UPROPERTY(EditAnywhere, Category = "Dash")
         float DashDuration = 0.15f;
 
+        UPROPERTY(EditAnywhere, Category = "Special")
+        float SpecialManaCost = 20.0f;
+
+        UPROPERTY(EditAnywhere, Category = "Special")
+        float SpecialCooldown = 6.0f;
+
+        UPROPERTY(EditAnywhere, Category = "Special")
+        float SpecialWindup = 0.0f;
+
+        UPROPERTY(EditAnywhere, Category = "Ultimate")
+        float UltimateManaCost = 60.0f;
+
+        UPROPERTY(EditAnywhere, Category = "Ultimate")
+        float UltimateCooldown = 30.0f;
+
+        UPROPERTY(EditAnywhere, Category = "Ultimate")
+        float UltimateWindup = 0.0f;
+
+        UPROPERTY(EditAnywhere, Category = "Mana")
+        float ManaRegenPerSecond = 3.0f;
+
 protected:
         virtual void BeginPlay() override;
         virtual void Die();
-
-        // Return true to cancel a death (Mal'Kholm's passive). Called when health hits 0.
         virtual bool WouldDie();
-        // Copies stat results (speed, max health) onto the engine components.
+
+        virtual void PerformBasicAttack(FVector Direction);
+        virtual void PerformSpecial(FVector AimDirection);
+        virtual void PerformUltimate(FVector AimDirection);
+
         void ApplyStatEffects();
-        // Steps used by ApplyHit.
+        void RegenerateMana(float DeltaTime);
+
         float CalculateFinalDamage(float RawDamage, bool bTrueDamage);
         void CheckForDeath(AUnshackledCharacterBase* Attacker);
+
+        bool TryPayMana(float ManaCost);
+        FVector CleanAimDirection(FVector AimDirection);
+
         FVector FacingDirection = FVector(0.0f, 1.0f, 0.0f);
+
         bool bCanAttack = true;
         bool bCanDash = true;
         bool bInvulnerable = false;
+        bool bCanUseSpecial = true;
+        bool bCanUseUltimate = true;
+
+        FVector PendingSpecialAim = FVector(0.0f, 1.0f, 0.0f);
+        FVector PendingUltimateAim = FVector(0.0f, 1.0f, 0.0f);
+
         FTimerHandle AttackTimer;
         FTimerHandle DashImmunityTimer;
         FTimerHandle DashCooldownTimer;
         FTimerHandle DashDurationTimer;
+        FTimerHandle SpecialWindupTimer;
+        FTimerHandle SpecialCooldownTimer;
+        FTimerHandle UltimateWindupTimer;
+        FTimerHandle UltimateCooldownTimer;
+
         UFUNCTION()
         void ResetAttack();
 
@@ -106,4 +138,26 @@ protected:
 
         UFUNCTION()
         void EndDash();
+
+        UFUNCTION()
+        void FinishSpecialWindup();
+
+        UFUNCTION()
+        void ResetSpecial();
+
+        UFUNCTION()
+        void FinishUltimateWindup();
+
+        UFUNCTION()
+        void ResetUltimate();
 };
+
+// NOTES
+// AttackInDirection runs the checks and cooldown, then calls PerformBasicAttack. Characters override only that.
+// The default PerformBasicAttack is the melee sphere (used by enemies).
+// UseSpecial and UseUltimate are called by the controller with the aim direction.
+// PerformSpecial and PerformUltimate are overridden per character. They run after all checks pass.
+// OnDealtDamage, OnKilledTarget and WouldDie are passive hooks. Overrides call Super:: first.
+// Windup values are seconds between key press and the ability firing (0 means instant).
+// ManaRegenPerSecond only applies to characters with bHasMana.
+// bTrueDamage skips defense (use it for "% of health" damage).
