@@ -7,47 +7,37 @@
 #include "CollisionQueryParams.h"
 #include "DrawDebugHelpers.h"
 #include "TimerManager.h"
-
 AUnshackledCharacterBase::AUnshackledCharacterBase()
 {
         PrimaryActorTick.bCanEverTick = true;
-
         bUseControllerRotationYaw = false;
         GetCharacterMovement()->bOrientRotationToMovement = false;
         GetCharacterMovement()->BrakingDecelerationFlying = 1000.0f;
         GetCharacterMovement()->MaxAcceleration = 3500.0f;
         GetCharacterMovement()->BrakingDecelerationWalking = 3000.0f;
         GetSprite()->SetRelativeRotation(FRotator(0.0f, 90.0f, 90.0f));
-
         Health = CreateDefaultSubobject<UHealthComponent>(TEXT("Health"));
         Stats = CreateDefaultSubobject<UStatsComponent>(TEXT("Stats"));
 }
-
 void AUnshackledCharacterBase::BeginPlay()
 {
         Super::BeginPlay();
-
         Stats->BaseMaxHealth = Health->MaxHealth;
         Stats->BaseDamage = AttackDamage;
 }
-
 void AUnshackledCharacterBase::Tick(float DeltaTime)
 {
         Super::Tick(DeltaTime);
-
         ApplyStatEffects();
         RegenerateMana(DeltaTime);
 }
-
 void AUnshackledCharacterBase::ApplyStatEffects()
 {
         float FinalSpeed = Stats->GetFinal(ECharacterStat::Speed);
         GetCharacterMovement()->MaxFlySpeed = FinalSpeed;
-
         float FinalMaxHealth = Stats->GetFinal(ECharacterStat::MaxHealth);
         Health->SetMaxHealthFromStats(FinalMaxHealth);
 }
-
 void AUnshackledCharacterBase::RegenerateMana(float DeltaTime)
 {
         if (!Stats->bHasMana)
@@ -58,16 +48,13 @@ void AUnshackledCharacterBase::RegenerateMana(float DeltaTime)
         {
                 return;
         }
-
         float ManaGained = ManaRegenPerSecond * DeltaTime;
         Stats->RestoreMana(ManaGained);
 }
-
 FVector AUnshackledCharacterBase::GetFacingDirection() const
 {
         return FacingDirection;
 }
-
 void AUnshackledCharacterBase::MoveCharacter(FVector2D Direction)
 {
         if (!Direction.IsNearlyZero())
@@ -76,23 +63,19 @@ void AUnshackledCharacterBase::MoveCharacter(FVector2D Direction)
                 NewFacing.Normalize();
                 FacingDirection = NewFacing;
         }
-
         if (!Stats->CanMove())
         {
                 return;
         }
-
         AddMovementInput(FVector(1.0f, 0.0f, 0.0f), Direction.Y);
         AddMovementInput(FVector(0.0f, 1.0f, 0.0f), Direction.X);
 }
-
 float AUnshackledCharacterBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
         AController* EventInstigator, AActor* DamageCauser)
 {
         AUnshackledCharacterBase* Attacker = Cast<AUnshackledCharacterBase>(DamageCauser);
         return ApplyHit(DamageAmount, false, Attacker);
 }
-
 float AUnshackledCharacterBase::ApplyHit(float RawDamage, bool bTrueDamage, AUnshackledCharacterBase* Attacker)
 {
         if (Health->IsDead())
@@ -103,30 +86,22 @@ float AUnshackledCharacterBase::ApplyHit(float RawDamage, bool bTrueDamage, AUns
         {
                 return 0.0f;
         }
-
         float FinalDamage = CalculateFinalDamage(RawDamage, bTrueDamage);
-
         Stats->ConsumeHit();
-
         float HealthBefore = Health->CurrentHealth;
         Health->TakeHit(FinalDamage);
         float HealthAfter = Health->CurrentHealth;
         float DamageDealt = HealthBefore - HealthAfter;
-
         CheckForDeath(Attacker);
-
         if (Attacker != nullptr)
         {
                 Attacker->OnDealtDamage(this, DamageDealt);
         }
-
         return DamageDealt;
 }
-
 float AUnshackledCharacterBase::CalculateFinalDamage(float RawDamage, bool bTrueDamage)
 {
         float FinalDamage = RawDamage;
-
         if (!bTrueDamage)
         {
                 float DefenseValue = Stats->GetFinal(ECharacterStat::Defense);
@@ -134,83 +109,66 @@ float AUnshackledCharacterBase::CalculateFinalDamage(float RawDamage, bool bTrue
                 float Mitigation = DefenseScale / (DefenseScale + DefenseValue);
                 FinalDamage = FinalDamage * Mitigation;
         }
-
         float IncomingMultiplier = Stats->GetFinal(ECharacterStat::IncomingDamage);
         FinalDamage = FinalDamage * IncomingMultiplier;
-
         return FinalDamage;
 }
-
 void AUnshackledCharacterBase::CheckForDeath(AUnshackledCharacterBase* Attacker)
 {
         if (!Health->IsDead())
         {
                 return;
         }
-
         bool bDeathCancelled = WouldDie();
         if (bDeathCancelled)
         {
                 return;
         }
-
         Die();
-
         if (Attacker != nullptr)
         {
                 Attacker->OnKilledTarget(this);
         }
 }
-
 void AUnshackledCharacterBase::DealDamage(AUnshackledCharacterBase* Target, float AbilityScale, bool bTrueDamage)
 {
         if (Target == nullptr)
         {
                 return;
         }
-
         float DamageStat = Stats->GetFinal(ECharacterStat::Damage);
         float RawDamage = DamageStat * AbilityScale;
-
         Target->ApplyHit(RawDamage, bTrueDamage, this);
 }
-
 void AUnshackledCharacterBase::OnDealtDamage(AUnshackledCharacterBase* Target, float DamageDealt)
 {
         float LifestealFraction = Stats->GetFinal(ECharacterStat::Lifesteal);
-
         if (LifestealFraction > 0.0f)
         {
                 float HealthToGain = DamageDealt * LifestealFraction;
                 Health->Heal(HealthToGain);
         }
 }
-
 void AUnshackledCharacterBase::OnKilledTarget(AUnshackledCharacterBase* Target)
 {
 }
-
 bool AUnshackledCharacterBase::WouldDie()
 {
         return false;
 }
-
 void AUnshackledCharacterBase::Die()
 {
         GetCharacterMovement()->DisableMovement();
         SetActorEnableCollision(false);
 }
-
 void AUnshackledCharacterBase::BasicAttack()
 {
         AttackInDirection(FacingDirection);
 }
-
 void AUnshackledCharacterBase::AttackInDirection(FVector Direction)
 {
         Direction.Z = 0.0f;
         Direction.Normalize();
-
         if (!bCanAttack)
         {
                 return;
@@ -223,28 +181,20 @@ void AUnshackledCharacterBase::AttackInDirection(FVector Direction)
         {
                 return;
         }
-
         bCanAttack = false;
         GetWorldTimerManager().SetTimer(AttackTimer, this, &AUnshackledCharacterBase::ResetAttack, AttackCooldown, false);
-
         PerformBasicAttack(Direction);
 }
-
 void AUnshackledCharacterBase::PerformBasicAttack(FVector Direction)
 {
         FVector SphereCenter = GetActorLocation() + (Direction * AttackRange);
-
         TArray<FOverlapResult> OverlapResults;
         FCollisionQueryParams QueryParams;
         QueryParams.AddIgnoredActor(this);
-
         FCollisionObjectQueryParams ObjectParams;
         ObjectParams.AddObjectTypesToQuery(ECC_Pawn);
-
         FCollisionShape Sphere = FCollisionShape::MakeSphere(AttackRadius);
-
         GetWorld()->OverlapMultiByObjectType(OverlapResults, SphereCenter, FQuat::Identity, ObjectParams, Sphere, QueryParams);
-
         TArray<AActor*> ActorsAlreadyHit;
         for (int32 i = 0; i < OverlapResults.Num(); i++)
         {
@@ -253,13 +203,11 @@ void AUnshackledCharacterBase::PerformBasicAttack(FVector Direction)
                 {
                         continue;
                 }
-
                 if (ActorsAlreadyHit.Contains(HitActor))
                 {
                         continue;
                 }
                 ActorsAlreadyHit.Add(HitActor);
-
                 AUnshackledCharacterBase* OtherCharacter = Cast<AUnshackledCharacterBase>(HitActor);
                 if (OtherCharacter == nullptr)
                 {
@@ -269,18 +217,14 @@ void AUnshackledCharacterBase::PerformBasicAttack(FVector Direction)
                 {
                         continue;
                 }
-
                 DealDamage(OtherCharacter, 1.0f, false);
         }
-
         DrawDebugSphere(GetWorld(), SphereCenter, AttackRadius, 12, FColor::Red, false, 0.2f);
 }
-
 void AUnshackledCharacterBase::ResetAttack()
 {
         bCanAttack = true;
 }
-
 void AUnshackledCharacterBase::Dash()
 {
         if (!bCanDash)
@@ -295,77 +239,62 @@ void AUnshackledCharacterBase::Dash()
         {
                 return;
         }
-
         bCanDash = false;
         bInvulnerable = true;
-
         FVector DashVelocity = FacingDirection * DashSpeed;
         LaunchCharacter(DashVelocity, true, true);
         GetWorldTimerManager().SetTimer(DashDurationTimer, this, &AUnshackledCharacterBase::EndDash, DashDuration, false);
-
         GetWorldTimerManager().SetTimer(DashImmunityTimer, this,
                 &AUnshackledCharacterBase::EndInvulnerability, DashImmunityTime, false);
         GetWorldTimerManager().SetTimer(DashCooldownTimer,
                 this, &AUnshackledCharacterBase::ResetDash, DashCooldown, false);
 }
-
 void AUnshackledCharacterBase::EndDash()
 {
         GetCharacterMovement()->SetMovementMode(MOVE_Flying);
         GetCharacterMovement()->Velocity = FVector::ZeroVector;
 }
-
 void AUnshackledCharacterBase::EndInvulnerability()
 {
         bInvulnerable = false;
 }
-
 void AUnshackledCharacterBase::ResetDash()
 {
         bCanDash = true;
 }
-
 void AUnshackledCharacterBase::ReviveCharacter()
 {
         if (!Health->IsDead())
         {
                 return;
         }
-
         Health->Revive();
         SetActorEnableCollision(true);
         GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 }
-
 bool AUnshackledCharacterBase::TryPayMana(float ManaCost)
 {
         if (ManaCost <= 0.0f)
         {
                 return true;
         }
-
         bool bPaid = Stats->SpendMana(ManaCost);
         if (!bPaid)
         {
                 GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Orange, TEXT("Not enough mana"));
         }
-
         return bPaid;
 }
-
 FVector AUnshackledCharacterBase::CleanAimDirection(FVector AimDirection)
 {
         AimDirection.Z = 0.0f;
-
         if (AimDirection.IsNearlyZero())
         {
                 return FacingDirection;
         }
-
         AimDirection.Normalize();
         return AimDirection;
 }
-
 void AUnshackledCharacterBase::UseSpecial(FVector AimDirection)
 {
         if (!bCanUseSpecial)
@@ -380,22 +309,18 @@ void AUnshackledCharacterBase::UseSpecial(FVector AimDirection)
         {
                 return;
         }
-
         bool bPaid = TryPayMana(SpecialManaCost);
         if (!bPaid)
         {
                 return;
         }
-
         if (SpecialCooldown > 0.0f)
         {
                 bCanUseSpecial = false;
                 GetWorldTimerManager().SetTimer(SpecialCooldownTimer, this,
                         &AUnshackledCharacterBase::ResetSpecial, SpecialCooldown, false);
         }
-
         PendingSpecialAim = CleanAimDirection(AimDirection);
-
         if (SpecialWindup > 0.0f)
         {
                 GetWorldTimerManager().SetTimer(SpecialWindupTimer, this,
@@ -406,7 +331,6 @@ void AUnshackledCharacterBase::UseSpecial(FVector AimDirection)
                 FinishSpecialWindup();
         }
 }
-
 void AUnshackledCharacterBase::FinishSpecialWindup()
 {
         if (Health->IsDead())
@@ -417,15 +341,12 @@ void AUnshackledCharacterBase::FinishSpecialWindup()
         {
                 return;
         }
-
         PerformSpecial(PendingSpecialAim);
 }
-
 void AUnshackledCharacterBase::ResetSpecial()
 {
         bCanUseSpecial = true;
 }
-
 void AUnshackledCharacterBase::UseUltimate(FVector AimDirection)
 {
         if (!bCanUseUltimate)
@@ -440,22 +361,18 @@ void AUnshackledCharacterBase::UseUltimate(FVector AimDirection)
         {
                 return;
         }
-
         bool bPaid = TryPayMana(UltimateManaCost);
         if (!bPaid)
         {
                 return;
         }
-
         if (UltimateCooldown > 0.0f)
         {
                 bCanUseUltimate = false;
                 GetWorldTimerManager().SetTimer(UltimateCooldownTimer, this,
                         &AUnshackledCharacterBase::ResetUltimate, UltimateCooldown, false);
         }
-
         PendingUltimateAim = CleanAimDirection(AimDirection);
-
         if (UltimateWindup > 0.0f)
         {
                 GetWorldTimerManager().SetTimer(UltimateWindupTimer, this,
@@ -466,7 +383,6 @@ void AUnshackledCharacterBase::UseUltimate(FVector AimDirection)
                 FinishUltimateWindup();
         }
 }
-
 void AUnshackledCharacterBase::FinishUltimateWindup()
 {
         if (Health->IsDead())
@@ -477,26 +393,17 @@ void AUnshackledCharacterBase::FinishUltimateWindup()
         {
                 return;
         }
-
         PerformUltimate(PendingUltimateAim);
 }
-
 void AUnshackledCharacterBase::ResetUltimate()
 {
         bCanUseUltimate = true;
 }
-
 void AUnshackledCharacterBase::PerformSpecial(FVector AimDirection)
 {
         GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Cyan, TEXT("Special used (placeholder)"));
 }
-
 void AUnshackledCharacterBase::PerformUltimate(FVector AimDirection)
 {
         GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Magenta, TEXT("Ultimate used (placeholder)"));
 }
-
-// ApplyHit order: dead and invulnerable check, defense math, ConsumeHit, subtract HP, death check, attacker hook.
-// DealDamage: raw = Damage stat * AbilityScale. bTrueDamage skips defense.
-// AttackInDirection: checks, cooldown, then PerformBasicAttack. The base version is the enemy melee sphere.
-// Use functions: checks, pay mana, start cooldown, then windup. Stun or death during windup cancels (mana is lost).

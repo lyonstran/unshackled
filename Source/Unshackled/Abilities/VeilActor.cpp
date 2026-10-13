@@ -5,7 +5,6 @@
 #include "DrawDebugHelpers.h"
 #include "Components/StatsComponent.h"
 #include "Stats/StatTypes.h"
-
 AVeilActor::AVeilActor()
 {
         PrimaryActorTick.bCanEverTick = true;
@@ -16,57 +15,46 @@ AVeilActor::AVeilActor()
         Visual->SetRelativeRotation(FRotator(0.0f, 90.0f, 90.0f));
         Visual->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
-
 void AVeilActor::Setup(AUnshackledCharacterBase* InOwner)
 {
         OwnerCharacter = InOwner;
         FollowOwner();
 }
-
 void AVeilActor::Tick(float DeltaTime) {
         Super::Tick(DeltaTime);
-
         if (OwnerCharacter == nullptr)
         {
                 Destroy();
                 return;
         }
-
         AgeSeconds = AgeSeconds + DeltaTime;
         if (AgeSeconds >= Lifetime)
         {
                 Destroy();
                 return;
         }
-
         FollowOwner();
-
         TimeSinceAura = TimeSinceAura + DeltaTime;
         if (TimeSinceAura >= AuraInterval)
         {
                 TimeSinceAura = 0.0f;
                 ApplyDebuffsToEnemies();
         }
-
         TimeSinceDamage = TimeSinceDamage + DeltaTime;
         if (TimeSinceDamage >= DamageInterval)
         {
                 TimeSinceDamage = 0.0f;
                 DamageEnemies();
         }
-
         DrawDebugShapeIfNoSprite();
 }
-
 void AVeilActor::FollowOwner()
 {
         SetActorLocation(OwnerCharacter->GetActorLocation());
 }
-
 TArray<AUnshackledCharacterBase*> AVeilActor::FindEnemiesInside()
 {
         TArray<AUnshackledCharacterBase*> EnemiesInside;
-
         TArray<FOverlapResult> OverlapResults;
         FCollisionQueryParams QueryParams;
         QueryParams.AddIgnoredActor(this);
@@ -89,10 +77,8 @@ TArray<AUnshackledCharacterBase*> AVeilActor::FindEnemiesInside()
                         }
                 }
         }
-
         return EnemiesInside;
 }
-
 void AVeilActor::ApplyDebuffsToEnemies()
 {
         TArray<AUnshackledCharacterBase*> EnemiesInside = FindEnemiesInside();
@@ -101,7 +87,6 @@ void AVeilActor::ApplyDebuffsToEnemies()
                 ApplyDebuffsToTarget(EnemiesInside[i]);
         }
 }
-
 void AVeilActor::ApplyDebuffsToTarget(AUnshackledCharacterBase* Target)
 {
         FStatModifier SlowModifier;
@@ -112,7 +97,6 @@ void AVeilActor::ApplyDebuffsToTarget(AUnshackledCharacterBase* Target)
         SlowModifier.Duration = AuraDuration;
         SlowModifier.Rule = EStackRule::RefreshSameSource;
         Target->Stats->AddModifier(SlowModifier);
-
         FStatModifier DefenseModifier;
         DefenseModifier.SourceId = FName("SiriusVeil");
         DefenseModifier.Stat = ECharacterStat::Defense;
@@ -122,7 +106,6 @@ void AVeilActor::ApplyDebuffsToTarget(AUnshackledCharacterBase* Target)
         DefenseModifier.Rule = EStackRule::RefreshSameSource;
         Target->Stats->AddModifier(DefenseModifier);
 }
-
 void AVeilActor::DamageEnemies()
 {
         TArray<AUnshackledCharacterBase*> EnemiesInside = FindEnemiesInside();
@@ -131,7 +114,6 @@ void AVeilActor::DamageEnemies()
                 OwnerCharacter->DealDamage(EnemiesInside[i], DamageScale, false);
         }
 }
-
 void AVeilActor::DrawDebugShapeIfNoSprite()
 {
         if (!bDrawDebugShape)

@@ -1,16 +1,12 @@
 ﻿#include "EnemyCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/CharacterMovementComponent.h"
-
 AEnemyCharacter::AEnemyCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
 	bIsEnemy = true;
-
-	// REQUIRED: enemies need a controller or the movement component never runs.
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 }
-
 void AEnemyCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -47,7 +43,6 @@ void AEnemyCharacter::Tick(float DeltaTime)
 		BasicAttack();
 	}
 }
-
 void AEnemyCharacter::Die()
 {
 	Super::Die();

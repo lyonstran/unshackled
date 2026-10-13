@@ -2,7 +2,6 @@
 #include "CoreMinimal.h"
 #include "UnshackledCharacterBase.h"
 #include "EnemyCharacter.generated.h"
-
 UCLASS()
 class UNSHACKLED_API AEnemyCharacter: public AUnshackledCharacterBase
 {

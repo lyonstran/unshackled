@@ -6,7 +6,6 @@ UCLASS()
 class UNSHACKLED_API AUnshackledGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
-
 public:
 	AUnshackledGameMode();
 };
