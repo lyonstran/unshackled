@@ -45,8 +45,7 @@ protected:
         FVector LastStickAimDirection = FVector(0.0f, 1.0f, 0.0f);
 };
 
-// NOTES
 //GetAimDirection: stick if it was used last, otherwise the mouse point on the ground plane, otherwise facing.
-// - Aim stores the stick direction and keeps it after release, so a button press still aims the last way pointed.
+// - Aim stores e stick direction and keeps it after release, so a button press still aims the last way pointed.
 // PlayerTick switches back to mouse aim as soon as the mouse moves.
-//Each Action slot must be set in BP_PlayerController and mapped in IMC_Overworld, or it fails silently.
+//Each  slot must be set in BP_PlayerController and mapped in IMC_Overworld, or it fails silently.

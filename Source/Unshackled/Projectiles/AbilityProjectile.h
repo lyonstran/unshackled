@@ -51,9 +51,7 @@ protected:
         TArray<AActor*> ActorsAlreadyHit;
 };
 
-// NOTES
-// Make a Blueprint child (BP_CrescentProjectile) and set the flipbook on its Visual component. That is all the art needs.
-// With no flipbook assigned, a debug sphere is drawn. Assigning one hides it automatically.
+
 // Launch sets the owner (for damage and which side to hurt), direction, damage scale, and size scale.
 // Radius and MaxRange are tuning numbers. The projectile hits characters whose bIsEnemy differs from the owner's.
 // SizeScale is for empowered versions (Sirius's C). It scales the hit radius and the sprite.

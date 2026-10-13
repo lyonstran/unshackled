@@ -130,8 +130,6 @@ void AAbilityProjectile::DrawDebugShapeIfNoSprite()
         DrawDebugSphere(GetWorld(), GetActorLocation(), CurrentRadius, 16, FColor::Cyan, false, 0.0f);
 }
 
-// NOTES
-// Tick order: move, check overlaps, draw debug shape, destroy when MaxRange is reached.
+
 // Hit checks poll an overlap sphere each frame (no overlap delegates). Each actor is hit once per projectile.
 // If the owner is gone (destroyed), the projectile destroys itself.
-// Debug shapes only show in the editor and development builds. They never show in packaged shipping builds.

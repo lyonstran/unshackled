@@ -152,8 +152,6 @@ protected:
         void ResetUltimate();
 };
 
-// NOTES
-// AttackInDirection runs the checks and cooldown, then calls PerformBasicAttack. Characters override only that.
 // The default PerformBasicAttack is the melee sphere (used by enemies).
 // UseSpecial and UseUltimate are called by the controller with the aim direction.
 // PerformSpecial and PerformUltimate are overridden per character. They run after all checks pass.

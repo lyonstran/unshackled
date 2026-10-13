@@ -32,5 +32,4 @@ protected:
 	void DrawManaBar(class AUnshackledCharacterBase* Character);
 };
 
-// NOTES
 // - Sizes are screen pixels. ManaBarGap is the empty space between the health and mana bars.

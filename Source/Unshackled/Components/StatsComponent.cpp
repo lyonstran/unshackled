@@ -2,15 +2,12 @@
 
 UStatsComponent::UStatsComponent()
 {
-        // We tick so timed modifiers can count down and expire.
         PrimaryComponentTick.bCanEverTick = true;
 }
 
 void UStatsComponent::BeginPlay()
 {
         Super::BeginPlay();
-
-        // Party members start with full mana.
         if (bHasMana)
         {
                 CurrentMana = GetFinal(ECharacterStat::MaxMana);
@@ -28,13 +25,10 @@ void UStatsComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 // Lowers every timed modifier's time left, and drops the ones that ran out.
 void UStatsComponent::CountDownModifiers(float DeltaTime)
 {
-        // We build a new list of the modifiers that are still active, then swap it in.
         TArray<FStatModifier> StillActive;
-
         for (int32 i = 0; i < Modifiers.Num(); i++)
         {
                 FStatModifier Current = Modifiers[i];
-
                 // Duration 0 means permanent, so it is always kept.
                 if (Current.Duration <= 0.0f)
                 {
@@ -43,15 +37,12 @@ void UStatsComponent::CountDownModifiers(float DeltaTime)
                 else
                 {
                         Current.TimeLeft = Current.TimeLeft - DeltaTime;
-
-                        // Keep it only if it still has time left.
                         if (Current.TimeLeft > 0.0f)
                         {
                                 StillActive.Add(Current);
                         }
                 }
         }
-
         Modifiers = StillActive;
 }
 
@@ -172,8 +163,6 @@ float UStatsComponent::GetFinal(ECharacterStat Stat) const
 
         return ApplyFloors(Stat, Result);
 }
-
-// The starting number for each stat, before any modifiers.
 float UStatsComponent::GetBaseValue(ECharacterStat Stat) const
 {
         if (Stat == ECharacterStat::MaxHealth)
@@ -200,8 +189,6 @@ float UStatsComponent::GetBaseValue(ECharacterStat Stat) const
         {
                 return 1.0f;
         }
-
-        // Lifesteal starts at zero.
         return 0.0f;
 }
 
@@ -225,7 +212,6 @@ float UStatsComponent::GetFlatTotal(ECharacterStat Stat) const
         return FlatTotal;
 }
 
-// Adds up every Percent modifier for this stat. Speed slows are skipped here (see GetStrongestSlow).
 float UStatsComponent::GetPercentTotal(ECharacterStat Stat) const
 {
         float PercentTotal = 0.0f;
@@ -237,8 +223,6 @@ float UStatsComponent::GetPercentTotal(ECharacterStat Stat) const
                         if (Modifiers[i].Kind == EModifierKind::Percent)
                         {
                                 float AmountWithStacks = Modifiers[i].Amount * Modifiers[i].Stacks;
-
-                                // A negative percent on Speed is a slow, which is counted somewhere else.
                                 bool bIsSlow = false;
                                 if (Stat == ECharacterStat::Speed)
                                 {
@@ -297,14 +281,10 @@ float UStatsComponent::GetStrongestSlow() const
 float UStatsComponent::ApplyFloors(ECharacterStat Stat, float Value) const
 {
         float Result = Value;
-
-        // Nothing goes below zero.
         if (Result < 0.0f)
         {
                 Result = 0.0f;
         }
-
-        // Max health never goes below 1, or a character could be dead from a debuff.
         if (Stat == ECharacterStat::MaxHealth)
         {
                 if (Result < 1.0f)
@@ -387,8 +367,6 @@ void UStatsComponent::RestoreMana(float Amount)
         }
 
         CurrentMana = CurrentMana + Amount;
-
-        // Mana cannot go above the maximum.
         float MaxMana = GetFinal(ECharacterStat::MaxMana);
         if (CurrentMana > MaxMana)
         {

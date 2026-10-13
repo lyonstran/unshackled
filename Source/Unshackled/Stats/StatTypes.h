@@ -11,15 +11,13 @@ enum class ECharacterStat : uint8
 	Defense,
 	Speed,
 	IncomingDamage,   // multiplier on damage taken, 1.0 = normal
-	Lifesteal         // fraction of damage dealt that comes back as health
+	Lifesteal         
 };
 enum class EModifierKind : uint8
 {
 	Flat,
 	Percent
 };
-
-// What happens when the same effect is applied again.
 enum class EStackRule : uint8
 {
 	RefreshSameSource,   // replaces the old one and restart its timer
@@ -27,7 +25,6 @@ enum class EStackRule : uint8
 	ConsumeOnHit         // like Refresh, but also removed after HitsRemaining hits
 };
 
-// Status effects that ride along on a modifier.
 enum class EStatusFlag : uint8
 {
 	None,
@@ -36,17 +33,12 @@ enum class EStatusFlag : uint8
 	Freeze   // cannot move or attack (Kalia's time stop)
 };
 
-// One temporary or permanent change to one stat.
 struct FStatModifier
 {
 	FName SourceId = NAME_None;
 	ECharacterStat Stat = ECharacterStat::Damage;
 	EModifierKind Kind = EModifierKind::Percent;
-
-	// Amount PER STACK.
 	float Amount = 0.0f;
-
-	// Seconds the modifier lasts. 0 means permanent until removed.
 	float Duration = 0.0f;
 	float TimeLeft = 0.0f;
 

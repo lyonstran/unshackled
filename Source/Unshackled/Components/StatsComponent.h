@@ -15,13 +15,10 @@ public:
         // Base values (before any modifiers). Editable per Blueprint.
         UPROPERTY(EditAnywhere, Category = "Stats")
         float BaseDamage = 25.0f;
-
         UPROPERTY(EditAnywhere, Category = "Stats")
         float BaseDefense = 20.0f;
-
         UPROPERTY(EditAnywhere, Category = "Stats")
         float BaseSpeed = 600.0f;
-
         UPROPERTY(EditAnywhere, Category = "Stats")
         float BaseMaxMana = 100.0f;
 
@@ -36,13 +33,8 @@ public:
         // The strongest a slow can be (0.8 = at most 80% slower).
         UPROPERTY(EditAnywhere, Category = "Stats")
         float MaxSlowFraction = 0.8f;
-
-        // Set by the character at BeginPlay from the HealthComponent's MaxHealth,
-        // so the number typed in the Blueprint is kept.
         float BaseMaxHealth = 100.0f;
-
         float CurrentMana = 0.0f;
-
         // Adding and removing modifiers.
         void AddModifier(FStatModifier NewModifier);
         void RemoveModifiersFromSource(FName SourceId);
@@ -66,7 +58,7 @@ protected:
         virtual void BeginPlay() override;
 
 private:
-        // Helpers that GetFinal uses, one job each.
+        // Helpers that GetFinal uses,
         float GetBaseValue(ECharacterStat Stat) const;
         float GetFlatTotal(ECharacterStat Stat) const;
         float GetPercentTotal(ECharacterStat Stat) const;

@@ -496,11 +496,7 @@ void AUnshackledCharacterBase::PerformUltimate(FVector AimDirection)
         GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Magenta, TEXT("Ultimate used (placeholder)"));
 }
 
-// NOTES
-// Tick: ApplyStatEffects writes MaxFlySpeed (flying ignores MaxWalkSpeed) and pushes max health.
 // ApplyHit order: dead and invulnerable check, defense math, ConsumeHit, subtract HP, death check, attacker hook.
 // DealDamage: raw = Damage stat * AbilityScale. bTrueDamage skips defense.
 // AttackInDirection: checks, cooldown, then PerformBasicAttack. The base version is the enemy melee sphere.
 // Use functions: checks, pay mana, start cooldown, then windup. Stun or death during windup cancels (mana is lost).
-// PerformSpecial and PerformUltimate above are placeholders. Characters override them.
-// DrawDebugSphere in PerformBasicAttack is a gray-box aid. Remove before playtesters.
