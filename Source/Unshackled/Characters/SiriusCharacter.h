@@ -11,6 +11,7 @@ class UNSHACKLED_API ASiriusCharacter : public APartyMemberCharacter
 	GENERATED_BODY()
 public:
 	ASiriusCharacter();
+	virtual void OnDealtDamage(AUnshackledCharacterBase* Target, float DamageDealt) override;
 	UPROPERTY(EditAnywhere, Category = "Sirius")
 	TSubclassOf<AAbilityProjectile> CrescentClass;
 	UPROPERTY(EditAnywhere, Category = "Sirius")
@@ -27,6 +28,10 @@ public:
 	float TornadoSpawnOffset = 150.0f;
 	UPROPERTY(EditAnywhere, Category = "Sirius")
 	TSubclassOf<AVeilActor> VeilClass;
+	UPROPERTY(EditAnywhere, Category = "Sirius")
+	float ExecuteThreshold = 0.05f;
+	UPROPERTY(EditAnywhere, Category = "Sirius")
+	float ExecuteDamage = 100000.0f;
 protected:
 	virtual void PerformBasicAttack(FVector Direction) override;
 	virtual void PerformSpecial(FVector AimDirection) override;
@@ -34,6 +39,7 @@ protected:
 	void FireCrescent(FVector Direction, float DamageScale, float SizeScale);
 	void SpawnTornado(FVector Direction);
 	void SpawnVeil();
+	void TryExecute(AUnshackledCharacterBase* Target);
 	int32 EmpoweredAttacksLeft = 0;
 	UPROPERTY()
 	AVeilActor* ActiveVeil;

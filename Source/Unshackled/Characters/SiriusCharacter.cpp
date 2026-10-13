@@ -4,6 +4,36 @@
 ASiriusCharacter::ASiriusCharacter()
 {
 }
+void ASiriusCharacter::OnDealtDamage(AUnshackledCharacterBase* Target, float DamageDealt)
+{
+        Super::OnDealtDamage(Target, DamageDealt);
+        TryExecute(Target);
+}
+void ASiriusCharacter::TryExecute(AUnshackledCharacterBase* Target)
+{
+        if (Target == nullptr)
+        {
+                return;
+        }
+        if (Target->bIsEnemy == bIsEnemy)
+        {
+                return;
+        }
+        if (Target->Health->IsDead())
+        {
+                return;
+        }
+        float MaxHealthValue = Target->Health->MaxHealth;
+        if (MaxHealthValue > 0.0f)
+        {
+                float HealthFraction = Target->Health->CurrentHealth / MaxHealthValue;
+                if (HealthFraction < ExecuteThreshold)
+                {
+                        GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, TEXT("Executed!"));
+                        Target->ApplyHit(ExecuteDamage, true, this);
+                }
+        }
+}
 void ASiriusCharacter::PerformBasicAttack(FVector Direction)
 {
         if (EmpoweredAttacksLeft > 0)
