@@ -6,8 +6,8 @@ AEnemyCharacter::AEnemyCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
 	bIsEnemy = true;
-	GetCharacterMovement()->MaxWalkSpeed = 320.0f;
-	AutoPossessAI = EAutoPossessAI::Disabled;
+
+	// REQUIRED: enemies need a controller or the movement component never runs.
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 }
 
@@ -19,7 +19,7 @@ void AEnemyCharacter::Tick(float DeltaTime)
 		return;
 	}
 	APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(this, 0);
-	if (PlayerPawn==nullptr)
+	if (PlayerPawn == nullptr)
 	{
 		return;
 	}
@@ -40,7 +40,7 @@ void AEnemyCharacter::Tick(float DeltaTime)
 	{
 		FVector2D MoveInput = FVector2D(DirectionToPlayer.Y, DirectionToPlayer.X);
 		MoveCharacter(MoveInput);
-	} 
+	}
 	else
 	{
 		FacingDirection = DirectionToPlayer;

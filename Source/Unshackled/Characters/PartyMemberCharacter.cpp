@@ -10,12 +10,15 @@ APartyMemberCharacter::APartyMemberCharacter()
 	CameraArm->SetUsingAbsoluteRotation(true);
 	CameraArm->SetRelativeRotation(FRotator(-90.0f, 0.0f, 0.0f));
 	CameraArm->TargetArmLength = 1000.0f;
-	CameraArm->bDoCollisionTest = false; 
-	
+	CameraArm->bDoCollisionTest = false;
+
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(CameraArm);
 	Camera->SetProjectionMode(ECameraProjectionMode::Orthographic);
 	Camera->SetOrthoWidth(1300.0f);
+
+	// Only the player party has mana.
+	Stats->bHasMana = true;
 }
 
 

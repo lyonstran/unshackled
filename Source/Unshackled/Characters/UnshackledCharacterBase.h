@@ -2,83 +2,108 @@
 #include "CoreMinimal.h"
 #include "PaperZDCharacter.h"
 #include "Components/HealthComponent.h"
+#include "Components/StatsComponent.h"
 #include "UnshackledCharacterBase.generated.h"
 
 UCLASS()
 class UNSHACKLED_API AUnshackledCharacterBase : public APaperZDCharacter
 {
-      GENERATED_BODY()
+        GENERATED_BODY()
 
 public:
-      AUnshackledCharacterBase();
+        AUnshackledCharacterBase();
 
-      void MoveCharacter(FVector2D Direction);
-      void BasicAttack();                           // attacks the way we are facing (used by enemies)
-      void AttackInDirection(FVector Direction);
-      void Dash();
-      void ReviveCharacter();
+        virtual void Tick(float DeltaTime) override;
 
-      //  called whenever something deals damage to this character.
-      virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
-              class AController* EventInstigator, AActor* DamageCauser) override;
+        void MoveCharacter(FVector2D Direction);
+        void BasicAttack();                           // attacks the way we are facing (used by enemies)
+        void AttackInDirection(FVector Direction);
+        void Dash();
+        void ReviveCharacter();
 
-      UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-      UHealthComponent* Health;
+        // Runs a hit through defense and the other stats. Returns the health actually lost.
+        // bTrueDamage skips defense (used for "% of health" damage).
+        float ApplyHit(float RawDamage, bool bTrueDamage, AUnshackledCharacterBase* Attacker);
 
-      // Combat settings (changeable in Blueprints)
-      UPROPERTY(EditAnywhere, Category = "Combat")
-      float AttackDamage = 20.0f;
+        // Builds the raw number from our Damage stat times the ability's scale, then hits the target.
+        void DealDamage(AUnshackledCharacterBase* Target, float AbilityScale, bool bTrueDamage);
 
-      UPROPERTY(EditAnywhere, Category = "Combat")
-      float AttackRange = 80.0f;      
-      // how far in front of me the hit sphere sits
+        // Hooks. Empty by default; characters override them for passives.
+        // Overrides must call Super:: first so lifesteal keeps working.
+        virtual void OnDealtDamage(AUnshackledCharacterBase* Target, float DamageDealt);
+        virtual void OnKilledTarget(AUnshackledCharacterBase* Target);
 
-      UPROPERTY(EditAnywhere, Category = "Combat")
-      float AttackRadius = 60.0f;     
-      // size of the hit sphere
+        // Called whenever something deals damage to this character (old-style ApplyDamage ends up here).
+        virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
+                class AController* EventInstigator, AActor* DamageCauser) override;
 
-      UPROPERTY(EditAnywhere, Category = "Combat")
-      float AttackCooldown = 0.5f;
+        UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+        UHealthComponent* Health;
 
-      UPROPERTY(EditAnywhere, Category = "Combat")
-      bool bIsEnemy = false;          // true on enemies so sides don't hurt themselves (does anyone like friendly fire hello?)
+        UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+        UStatsComponent* Stats;
 
-      // Dash settings
-      UPROPERTY(EditAnywhere, Category = "Dash")
-      float DashSpeed = 1400.0f;
+        // Combat settings (changeable in Blueprints)
+        UPROPERTY(EditAnywhere, Category = "Combat")
+        float AttackDamage = 20.0f;
 
-      UPROPERTY(EditAnywhere, Category = "Dash")
-      float DashImmunityTime = 1.0f;
+        // how far in front of me the hit sphere sits
+        UPROPERTY(EditAnywhere, Category = "Combat")
+        float AttackRange = 80.0f;
 
-      UPROPERTY(EditAnywhere, Category = "Dash")
-      float DashCooldown = 5.0f;      // Use 5 while testing.
-      
-      UPROPERTY(EditAnywhere, Category = "Dash")
-      float DashDuration = 0.15f;
+        // size of the hit sphere
+        UPROPERTY(EditAnywhere, Category = "Combat")
+        float AttackRadius = 60.0f;
+
+        UPROPERTY(EditAnywhere, Category = "Combat")
+        float AttackCooldown = 0.5f;
+
+        // true on enemies so sides don't hurt themselves (does anyone like friendly fire hello?)
+        UPROPERTY(EditAnywhere, Category = "Combat")
+        bool bIsEnemy = false;
+
+        // Dash settings
+        UPROPERTY(EditAnywhere, Category = "Dash")
+        float DashSpeed = 1400.0f;
+
+        UPROPERTY(EditAnywhere, Category = "Dash")
+        float DashImmunityTime = 1.0f;
+
+        // Use 5 while testing.
+        UPROPERTY(EditAnywhere, Category = "Dash")
+        float DashCooldown = 5.0f;
+
+        UPROPERTY(EditAnywhere, Category = "Dash")
+        float DashDuration = 0.15f;
 
 protected:
-      virtual void Die();
+        virtual void BeginPlay() override;
+        virtual void Die();
 
-      FVector FacingDirection = FVector(0.0f, 1.0f, 0.0f);
+        // Return true to cancel a death (Mal'Kholm's passive). Called when health hits 0.
+        virtual bool WouldDie();
+        // Copies stat results (speed, max health) onto the engine components.
+        void ApplyStatEffects();
+        // Steps used by ApplyHit.
+        float CalculateFinalDamage(float RawDamage, bool bTrueDamage);
+        void CheckForDeath(AUnshackledCharacterBase* Attacker);
+        FVector FacingDirection = FVector(0.0f, 1.0f, 0.0f);
+        bool bCanAttack = true;
+        bool bCanDash = true;
+        bool bInvulnerable = false;
+        FTimerHandle AttackTimer;
+        FTimerHandle DashImmunityTimer;
+        FTimerHandle DashCooldownTimer;
+        FTimerHandle DashDurationTimer;
+        UFUNCTION()
+        void ResetAttack();
 
-      bool bCanAttack = true;
-      bool bCanDash = true;
-      bool bInvulnerable = false;
+        UFUNCTION()
+        void EndInvulnerability();
 
-      FTimerHandle AttackTimer;
-      FTimerHandle DashImmunityTimer;
-      FTimerHandle DashCooldownTimer;
-      FTimerHandle DashDurationTimer;
+        UFUNCTION()
+        void ResetDash();
 
-      UFUNCTION()
-      void ResetAttack();
-
-      UFUNCTION()
-      void EndInvulnerability();
-
-      UFUNCTION()
-      void ResetDash();
-      
-      UFUNCTION()
-      void EndDash();
+        UFUNCTION()
+        void EndDash();
 };
