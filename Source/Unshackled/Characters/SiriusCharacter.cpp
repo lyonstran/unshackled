@@ -1,6 +1,9 @@
 ﻿#include "SiriusCharacter.h"
 #include "Engine/World.h"
 #include "Engine/Engine.h"
+#include "Components/HealthComponent.h"
+#include "Components/StatsComponent.h"
+#include "Stats/StatTypes.h"
 ASiriusCharacter::ASiriusCharacter()
 {
 }
@@ -8,6 +11,33 @@ void ASiriusCharacter::OnDealtDamage(AUnshackledCharacterBase* Target, float Dam
 {
         Super::OnDealtDamage(Target, DamageDealt);
         TryExecute(Target);
+}
+void ASiriusCharacter::OnSwappedOut(APartyMemberCharacter* NewLeader)
+{
+        Super::OnSwappedOut(NewLeader);
+        if (NewLeader == nullptr)
+        {
+                return;
+        }
+        if (Health->IsDead())
+        {
+                return;
+        }
+        GiveSwapVeil(NewLeader);
+}
+void ASiriusCharacter::GiveSwapVeil(APartyMemberCharacter* Ally)
+{
+        FStatModifier SwapVeil;
+        SwapVeil.SourceId = FName("SiriusSwapVeil");
+        SwapVeil.Stat = ECharacterStat::IncomingDamage;
+        SwapVeil.Kind = EModifierKind::Percent;
+        SwapVeil.Amount = 0.0f - SwapVeilReduction;
+        SwapVeil.Duration = SwapVeilDuration;
+        SwapVeil.Rule = EStackRule::ConsumeOnHit;
+        SwapVeil.HitsRemaining = SwapVeilHits;
+        Ally->Stats->AddModifier(SwapVeil);
+        FString Message = FString::Printf(TEXT("Swap veil on %s"), *Ally->DisplayName);
+        GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Cyan, Message);
 }
 void ASiriusCharacter::TryExecute(AUnshackledCharacterBase* Target)
 {
