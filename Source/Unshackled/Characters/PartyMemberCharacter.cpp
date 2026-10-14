@@ -2,35 +2,96 @@
 #include "Engine/Engine.h"
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
+#include "Components/CapsuleComponent.h"
 APartyMemberCharacter::APartyMemberCharacter()
 {
-	CameraArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraArm"));
-	CameraArm->SetupAttachment(RootComponent);
-	CameraArm->SetUsingAbsoluteRotation(true);
-	CameraArm->SetRelativeRotation(FRotator(-90.0f, 0.0f, 0.0f));
-	CameraArm->TargetArmLength = 1000.0f;
-	CameraArm->bDoCollisionTest = false;
-	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
-	Camera->SetupAttachment(CameraArm);
-	Camera->SetProjectionMode(ECameraProjectionMode::Orthographic);
-	Camera->SetOrthoWidth(1300.0f);
-	Stats->bHasMana = true;
+        CameraArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraArm"));
+        CameraArm->SetupAttachment(RootComponent);
+        CameraArm->SetUsingAbsoluteRotation(true);
+        CameraArm->SetRelativeRotation(FRotator(-90.0f, 0.0f, 0.0f));
+        CameraArm->TargetArmLength = 1000.0f;
+        CameraArm->bDoCollisionTest = false;
+        Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
+        Camera->SetupAttachment(CameraArm);
+        Camera->SetProjectionMode(ECameraProjectionMode::Orthographic);
+        Camera->SetOrthoWidth(1300.0f);
+        Stats->bHasMana = true;
+        AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
+}
+void APartyMemberCharacter::BeginPlay()
+{
+        Super::BeginPlay();
+        if (!IsPlayerControlled())
+        {
+                SetFollowing(true);
+        }
+}
+void APartyMemberCharacter::Tick(float DeltaTime)
+{
+        Super::Tick(DeltaTime);
+        if (!bIsFollowing)
+        {
+                return;
+        }
+        if (Health->IsDead())
+        {
+                return;
+        }
+        FollowLeader();
+}
+void APartyMemberCharacter::SetFollowing(bool bShouldFollow)
+{
+        bIsFollowing = bShouldFollow;
+        if (bShouldFollow)
+        {
+                GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+        }
+        else
+        {
+                GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+        }
+}
+bool APartyMemberCharacter::IsFollowing() const
+{
+        return bIsFollowing;
+}
+void APartyMemberCharacter::FollowLeader()
+{
+        APawn* LeaderPawn = UGameplayStatics::GetPlayerPawn(this, 0);
+        if (LeaderPawn == nullptr)
+        {
+                return;
+        }
+        if (LeaderPawn == this)
+        {
+                return;
+        }
+        FVector VectorToLeader = LeaderPawn->GetActorLocation() - GetActorLocation();
+        VectorToLeader.Z = 0.0f;
+        float DistanceToLeader = VectorToLeader.Size();
+        if (DistanceToLeader > FollowDistance)
+        {
+                FVector DirectionToLeader = VectorToLeader;
+                DirectionToLeader.Normalize();
+                FVector2D MoveInput = FVector2D(DirectionToLeader.Y, DirectionToLeader.X);
+                MoveCharacter(MoveInput);
+        }
 }
 void APartyMemberCharacter::Die()
 {
-	Super::Die();
-	if (!IsPlayerControlled())
-	{
-		return;
-	}
-	if (GEngine != nullptr)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, GameOverDelay, FColor::Red, TEXT("Game Over"));
-	}
-	GetWorldTimerManager().SetTimer(GameOverTimer, this, &APartyMemberCharacter::RestartLevelAfterDeath, GameOverDelay, false);
+        Super::Die();
+        if (!IsPlayerControlled())
+        {
+                return;
+        }
+        if (GEngine != nullptr)
+        {
+                GEngine->AddOnScreenDebugMessage(-1, GameOverDelay, FColor::Red, TEXT("Game Over"));
+        }
+        GetWorldTimerManager().SetTimer(GameOverTimer, this, &APartyMemberCharacter::RestartLevelAfterDeath, GameOverDelay, false);
 }
 void APartyMemberCharacter::RestartLevelAfterDeath()
 {
-	FString CurrentLevelName = UGameplayStatics::GetCurrentLevelName(this, true);
-	UGameplayStatics::OpenLevel(this, FName(*CurrentLevelName));
+        FString CurrentLevelName = UGameplayStatics::GetCurrentLevelName(this, true);
+        UGameplayStatics::OpenLevel(this, FName(*CurrentLevelName));
 }
