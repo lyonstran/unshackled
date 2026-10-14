@@ -13,4 +13,5 @@ public:
 	float AttackTriggerDistance = 90.0f;
 protected:
 	virtual void Die() override;
+	AUnshackledCharacterBase* FindClosestTarget();
 };

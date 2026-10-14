@@ -17,6 +17,11 @@ void AUnshackledHUD::DrawHUD()
                 {
                         DrawHealthBar(Character);
                         DrawManaBar(Character);
+                        APartyMemberCharacter* PartyMember = Cast<APartyMemberCharacter>(Character);
+                        if (PartyMember != nullptr)
+                        {
+                                DrawGroundedTag(PartyMember);
+                        }
                 }
         }
         DrawSwitchMenu();
@@ -71,6 +76,21 @@ void AUnshackledHUD::DrawManaBar(AUnshackledCharacterBase* Character)
         FLinearColor FrontColor = FLinearColor(0.2f, 0.5f, 1.0f, 1.0f);
         DrawRect(FrontColor, BarLeft, BarTop, BarWidth * ManaFraction, ManaBarHeight);
 }
+void AUnshackledHUD::DrawGroundedTag(APartyMemberCharacter* Member)
+{
+        if (!Member->IsGrounded())
+        {
+                return;
+        }
+        if (Member->Health->IsDead())
+        {
+                return;
+        }
+        FVector WorldPosition = Member->GetActorLocation() + FVector(BarWorldOffset, 0.0f, 0.0f);
+        FVector ScreenPosition = Project(WorldPosition);
+        FLinearColor GroundedColor = FLinearColor(0.4f, 1.0f, 0.5f, 1.0f);
+        DrawText(TEXT("Grounded"), GroundedColor, ScreenPosition.X - 28.0f, ScreenPosition.Y - 18.0f);
+}
 void AUnshackledHUD::DrawSwitchMenu()
 {
         AUnshackledPlayerController* MyController = Cast<AUnshackledPlayerController>(GetOwningPlayerController());
@@ -90,16 +110,20 @@ void AUnshackledHUD::DrawSwitchMenu()
         float TotalWidth = (PartyCount * CardWidth) + ((PartyCount - 1) * CardGap);
         float StartLeft = (Canvas->SizeX - TotalWidth) / 2.0f;
         float CardTop = Canvas->SizeY - CardHeight - MenuBottomMargin;
+        FLinearColor TitleColor = FLinearColor(1.0f, 1.0f, 1.0f, 1.0f);
+        FString MenuTitle = MyController->GetMenuTitle();
+        DrawText(MenuTitle, TitleColor, StartLeft, CardTop - 32.0f, nullptr, 1.4f);
         int32 SelectedIndex = MyController->GetSwitchMenuIndex();
         for (int32 i = 0; i < PartyCount; i++)
         {
                 APartyMemberCharacter* Member = MyController->GetPartyMember(i);
                 float CardLeft = StartLeft + (i * (CardWidth + CardGap));
                 bool bSelected = (i == SelectedIndex);
-                DrawSwitchCard(Member, CardLeft, CardTop, bSelected);
+                bool bChoosable = MyController->CanChooseMember(Member);
+                DrawSwitchCard(Member, CardLeft, CardTop, bSelected, bChoosable);
         }
 }
-void AUnshackledHUD::DrawSwitchCard(APartyMemberCharacter* Member, float Left, float Top, bool bSelected)
+void AUnshackledHUD::DrawSwitchCard(APartyMemberCharacter* Member, float Left, float Top, bool bSelected, bool bChoosable)
 {
         if (Member == nullptr)
         {
@@ -127,22 +151,7 @@ void AUnshackledHUD::DrawSwitchCard(APartyMemberCharacter* Member, float Left, f
         }
         FLinearColor TextColor = FLinearColor(1.0f, 1.0f, 1.0f, 1.0f);
         DrawText(Member->DisplayName, TextColor, Left + 8.0f, Top + PortraitSize + 12.0f);
-        bool bDead = Member->Health->IsDead();
-        if (bDead)
-        {
-                FLinearColor DimColor = FLinearColor(0.0f, 0.0f, 0.0f, 0.65f);
-                DrawRect(DimColor, PortraitLeft, PortraitTop, PortraitSize, PortraitSize);
-                FLinearColor DownColor = FLinearColor(0.9f, 0.1f, 0.1f, 1.0f);
-                DrawText(TEXT("Down"), DownColor, Left + 8.0f, Top + PortraitSize + 30.0f);
-        }
-        else
-        {
-                if (!Member->IsFollowing())
-                {
-                        FLinearColor LeaderColor = FLinearColor(1.0f, 0.85f, 0.2f, 1.0f);
-                        DrawText(TEXT("Leading"), LeaderColor, Left + 8.0f, Top + PortraitSize + 30.0f);
-                }
-        }
+        DrawCardStatusText(Member, Left, Top + PortraitSize + 30.0f);
         float MaxHealth = Member->Health->MaxHealth;
         float HealthFraction = 0.0f;
         if (MaxHealth > 0.0f)
@@ -150,10 +159,55 @@ void AUnshackledHUD::DrawSwitchCard(APartyMemberCharacter* Member, float Left, f
                 HealthFraction = Member->Health->CurrentHealth / MaxHealth;
         }
         float BarLeft = Left + 8.0f;
-        float BarTop = Top + CardHeight - 16.0f;
         float BarWidthInCard = CardWidth - 16.0f;
+        float ManaBarTop = Top + CardHeight - 28.0f;
+        float HealthBarTop = Top + CardHeight - 16.0f;
+        float MaxMana = Member->Stats->GetFinal(ECharacterStat::MaxMana);
+        float ManaFraction = 0.0f;
+        if (MaxMana > 0.0f)
+        {
+                ManaFraction = Member->Stats->CurrentMana / MaxMana;
+        }
         FLinearColor BarBack = FLinearColor(0.05f, 0.05f, 0.05f, 0.9f);
-        DrawRect(BarBack, BarLeft, BarTop, BarWidthInCard, 8.0f);
-        FLinearColor BarFront = FLinearColor(0.1f, 0.9f, 0.2f, 1.0f);
-        DrawRect(BarFront, BarLeft, BarTop, BarWidthInCard * HealthFraction, 8.0f);
+        FLinearColor ManaFront = FLinearColor(0.2f, 0.5f, 1.0f, 1.0f);
+        DrawRect(BarBack, BarLeft, ManaBarTop, BarWidthInCard, 8.0f);
+        DrawRect(ManaFront, BarLeft, ManaBarTop, BarWidthInCard * ManaFraction, 8.0f);
+        FLinearColor HealthFront = FLinearColor(0.1f, 0.9f, 0.2f, 1.0f);
+        DrawRect(BarBack, BarLeft, HealthBarTop, BarWidthInCard, 8.0f);
+        DrawRect(HealthFront, BarLeft, HealthBarTop, BarWidthInCard * HealthFraction, 8.0f);
+        if (Member->Health->IsDead() || !bChoosable)
+        {
+                FLinearColor DimColor = FLinearColor(0.0f, 0.0f, 0.0f, 0.6f);
+                DrawRect(DimColor, Left, Top, CardWidth, CardHeight);
+        }
+}
+void AUnshackledHUD::DrawCardStatusText(APartyMemberCharacter* Member, float Left, float TextTop)
+{
+        float TextLeft = Left + 8.0f;
+        if (Member->Health->IsDead())
+        {
+                FLinearColor DownColor = FLinearColor(0.9f, 0.1f, 0.1f, 1.0f);
+                DrawText(TEXT("Down"), DownColor, TextLeft, TextTop);
+                return;
+        }
+        if (Member->IsPlayerControlled())
+        {
+                FLinearColor LeaderColor = FLinearColor(1.0f, 0.85f, 0.2f, 1.0f);
+                DrawText(TEXT("Leading"), LeaderColor, TextLeft, TextTop);
+                return;
+        }
+        if (Member->IsGrounded())
+        {
+                FLinearColor GroundedColor = FLinearColor(0.4f, 1.0f, 0.5f, 1.0f);
+                DrawText(TEXT("Grounded"), GroundedColor, TextLeft, TextTop);
+                return;
+        }
+        float CooldownLeft = Member->GetGroundCooldownRemaining();
+        if (CooldownLeft > 0.0f)
+        {
+                int32 SecondsLeft = FMath::CeilToInt(CooldownLeft);
+                FString CooldownText = FString::Printf(TEXT("Cooldown %d"), SecondsLeft);
+                FLinearColor CooldownColor = FLinearColor(1.0f, 0.6f, 0.2f, 1.0f);
+                DrawText(CooldownText, CooldownColor, TextLeft, TextTop);
+        }
 }

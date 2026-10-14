@@ -129,6 +129,39 @@ APartyMemberCharacter* AUnshackledPlayerController::GetPartyMember(int32 Index) 
         }
         return PartyMembers[Index];
 }
+FString AUnshackledPlayerController::GetMenuTitle() const
+{
+        if (SwitchMenuMode == EPartyMenuMode::Ground)
+        {
+                return TEXT("Ground an ally");
+        }
+        if (SwitchMenuMode == EPartyMenuMode::Recall)
+        {
+                return TEXT("Recall an ally");
+        }
+        return TEXT("Switch leader");
+}
+bool AUnshackledPlayerController::CanChooseMember(APartyMemberCharacter* Member) const
+{
+        if (Member == nullptr)
+        {
+                return false;
+        }
+        APartyMemberCharacter* CurrentLeader = Cast<APartyMemberCharacter>(GetPawn());
+        if (Member == CurrentLeader)
+        {
+                return true;
+        }
+        if (SwitchMenuMode == EPartyMenuMode::Ground)
+        {
+                return Member->CanBeGrounded();
+        }
+        if (SwitchMenuMode == EPartyMenuMode::Recall)
+        {
+                return Member->IsGrounded();
+        }
+        return !Member->Health->IsDead();
+}
 void AUnshackledPlayerController::BuildPartyList()
 {
         if (PartyMembers.Num() > 0)
@@ -146,6 +179,30 @@ void AUnshackledPlayerController::BuildPartyList()
 }
 void AUnshackledPlayerController::OpenSwitchMenu()
 {
+        OpenMenu(EPartyMenuMode::Switch);
+}
+void AUnshackledPlayerController::CloseSwitchMenu()
+{
+        CloseMenu(EPartyMenuMode::Switch);
+}
+void AUnshackledPlayerController::OpenGroundMenu()
+{
+        OpenMenu(EPartyMenuMode::Ground);
+}
+void AUnshackledPlayerController::CloseGroundMenu()
+{
+        CloseMenu(EPartyMenuMode::Ground);
+}
+void AUnshackledPlayerController::OpenRecallMenu()
+{
+        OpenMenu(EPartyMenuMode::Recall);
+}
+void AUnshackledPlayerController::CloseRecallMenu()
+{
+        CloseMenu(EPartyMenuMode::Recall);
+}
+void AUnshackledPlayerController::OpenMenu(EPartyMenuMode Mode)
+{
         if (bSwitchMenuOpen)
         {
                 return;
@@ -161,12 +218,17 @@ void AUnshackledPlayerController::OpenSwitchMenu()
         {
                 return;
         }
+        SwitchMenuMode = Mode;
         SwitchMenuIndex = LeaderIndex;
         bSwitchMenuOpen = true;
 }
-void AUnshackledPlayerController::CloseSwitchMenu()
+void AUnshackledPlayerController::CloseMenu(EPartyMenuMode Mode)
 {
         if (!bSwitchMenuOpen)
+        {
+                return;
+        }
+        if (SwitchMenuMode != Mode)
         {
                 return;
         }
@@ -181,11 +243,22 @@ void AUnshackledPlayerController::CloseSwitchMenu()
         {
                 return;
         }
-        if (Selected->Health->IsDead())
+        if (!CanChooseMember(Selected))
         {
                 return;
         }
-        SwitchTo(Selected);
+        if (Mode == EPartyMenuMode::Switch)
+        {
+                SwitchTo(Selected);
+        }
+        if (Mode == EPartyMenuMode::Ground)
+        {
+                Selected->GroundAlly();
+        }
+        if (Mode == EPartyMenuMode::Recall)
+        {
+                Selected->RecallAlly();
+        }
 }
 void AUnshackledPlayerController::SwitchNext()
 {
@@ -219,13 +292,10 @@ void AUnshackledPlayerController::MoveSwitchSelection(int32 Step)
                         CandidateIndex = PartySize - 1;
                 }
                 APartyMemberCharacter* Candidate = PartyMembers[CandidateIndex];
-                if (Candidate != nullptr)
+                if (CanChooseMember(Candidate))
                 {
-                        if (!Candidate->Health->IsDead())
-                        {
-                                SwitchMenuIndex = CandidateIndex;
-                                return;
-                        }
+                        SwitchMenuIndex = CandidateIndex;
+                        return;
                 }
         }
 }
@@ -255,6 +325,10 @@ void AUnshackledPlayerController::SwitchTo(APartyMemberCharacter* NewLeader)
 {
         APartyMemberCharacter* OldLeader = Cast<APartyMemberCharacter>(GetPawn());
         AController* FollowerController = NewLeader->GetController();
+        if (NewLeader->IsGrounded())
+        {
+                NewLeader->RecallAlly();
+        }
         NewLeader->SetFollowing(false);
         Possess(NewLeader);
         if (FollowerController != nullptr)
@@ -300,6 +374,16 @@ void AUnshackledPlayerController::SetupInputComponent()
                 {
                         Input->BindAction(SwitchMenuAction, ETriggerEvent::Started, this, &AUnshackledPlayerController::OpenSwitchMenu);
                         Input->BindAction(SwitchMenuAction, ETriggerEvent::Completed, this, &AUnshackledPlayerController::CloseSwitchMenu);
+                }
+                if (GroundMenuAction != nullptr)
+                {
+                        Input->BindAction(GroundMenuAction, ETriggerEvent::Started, this, &AUnshackledPlayerController::OpenGroundMenu);
+                        Input->BindAction(GroundMenuAction, ETriggerEvent::Completed, this, &AUnshackledPlayerController::CloseGroundMenu);
+                }
+                if (RecallMenuAction != nullptr)
+                {
+                        Input->BindAction(RecallMenuAction, ETriggerEvent::Started, this, &AUnshackledPlayerController::OpenRecallMenu);
+                        Input->BindAction(RecallMenuAction, ETriggerEvent::Completed, this, &AUnshackledPlayerController::CloseRecallMenu);
                 }
                 if (SwitchNextAction != nullptr)
                 {

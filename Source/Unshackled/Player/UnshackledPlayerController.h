@@ -6,6 +6,12 @@
 #include "InputActionValue.h"
 #include "Characters/PartyMemberCharacter.h"
 #include "UnshackledPlayerController.generated.h"
+enum class EPartyMenuMode : uint8
+{
+        Switch,
+        Ground,
+        Recall
+};
 UCLASS()
 class UNSHACKLED_API AUnshackledPlayerController : public APlayerController
 {
@@ -28,6 +34,10 @@ public:
         UPROPERTY(EditAnywhere, Category = "Input")
         UInputAction *SwitchMenuAction;
         UPROPERTY(EditAnywhere, Category = "Input")
+        UInputAction *GroundMenuAction;
+        UPROPERTY(EditAnywhere, Category = "Input")
+        UInputAction *RecallMenuAction;
+        UPROPERTY(EditAnywhere, Category = "Input")
         UInputAction *SwitchNextAction;
         UPROPERTY(EditAnywhere, Category = "Input")
         UInputAction *SwitchPreviousAction;
@@ -37,6 +47,8 @@ public:
         int32 GetPartyCount() const;
         int32 GetSwitchMenuIndex() const;
         APartyMemberCharacter* GetPartyMember(int32 Index) const;
+        FString GetMenuTitle() const;
+        bool CanChooseMember(APartyMemberCharacter* Member) const;
         bool SwitchToFirstLivingAlly();
 protected:
         virtual void BeginPlay() override;
@@ -50,6 +62,12 @@ protected:
         void Ultimate();
         void OpenSwitchMenu();
         void CloseSwitchMenu();
+        void OpenGroundMenu();
+        void CloseGroundMenu();
+        void OpenRecallMenu();
+        void CloseRecallMenu();
+        void OpenMenu(EPartyMenuMode Mode);
+        void CloseMenu(EPartyMenuMode Mode);
         void SwitchNext();
         void SwitchPrevious();
         void MoveSwitchSelection(int32 Step);
@@ -59,6 +77,7 @@ protected:
         bool bAimWithStick = false;
         FVector LastStickAimDirection = FVector(0.0f, 1.0f, 0.0f);
         bool bSwitchMenuOpen = false;
+        EPartyMenuMode SwitchMenuMode = EPartyMenuMode::Switch;
         int32 SwitchMenuIndex = 0;
         UPROPERTY()
         TArray<APartyMemberCharacter*> PartyMembers;

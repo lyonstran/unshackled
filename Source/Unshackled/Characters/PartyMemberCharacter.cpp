@@ -30,6 +30,11 @@ void APartyMemberCharacter::BeginPlay()
 void APartyMemberCharacter::Tick(float DeltaTime)
 {
         Super::Tick(DeltaTime);
+        UpdateGroundCooldown(DeltaTime);
+        if (bIsGrounded)
+        {
+                DrainGroundedMana(DeltaTime);
+        }
         if (!bIsFollowing)
         {
                 return;
@@ -39,6 +44,27 @@ void APartyMemberCharacter::Tick(float DeltaTime)
                 return;
         }
         FollowLeader();
+}
+void APartyMemberCharacter::UpdateGroundCooldown(float DeltaTime)
+{
+        if (GroundCooldownRemaining > 0.0f)
+        {
+                GroundCooldownRemaining = GroundCooldownRemaining - DeltaTime;
+                if (GroundCooldownRemaining < 0.0f)
+                {
+                        GroundCooldownRemaining = 0.0f;
+                }
+        }
+}
+void APartyMemberCharacter::DrainGroundedMana(float DeltaTime)
+{
+        float ManaToDrain = GroundManaDrainPerSecond * DeltaTime;
+        bool bPaid = Stats->SpendMana(ManaToDrain);
+        if (!bPaid)
+        {
+                Stats->CurrentMana = 0.0f;
+                RecallAlly();
+        }
 }
 void APartyMemberCharacter::SetFollowing(bool bShouldFollow)
 {
@@ -55,6 +81,60 @@ void APartyMemberCharacter::SetFollowing(bool bShouldFollow)
 bool APartyMemberCharacter::IsFollowing() const
 {
         return bIsFollowing;
+}
+bool APartyMemberCharacter::IsGrounded() const
+{
+        return bIsGrounded;
+}
+float APartyMemberCharacter::GetGroundCooldownRemaining() const
+{
+        return GroundCooldownRemaining;
+}
+bool APartyMemberCharacter::CanBeGrounded() const
+{
+        if (Health->IsDead())
+        {
+                return false;
+        }
+        if (IsPlayerControlled())
+        {
+                return false;
+        }
+        if (bIsGrounded)
+        {
+                return false;
+        }
+        if (GroundCooldownRemaining > 0.0f)
+        {
+                return false;
+        }
+        if (Stats->CurrentMana <= 0.0f)
+        {
+                return false;
+        }
+        return true;
+}
+void APartyMemberCharacter::GroundAlly()
+{
+        if (!CanBeGrounded())
+        {
+                return;
+        }
+        bIsGrounded = true;
+        SetFollowing(false);
+}
+void APartyMemberCharacter::RecallAlly()
+{
+        if (!bIsGrounded)
+        {
+                return;
+        }
+        bIsGrounded = false;
+        GroundCooldownRemaining = GroundCooldown;
+        if (!IsPlayerControlled())
+        {
+                SetFollowing(true);
+        }
 }
 void APartyMemberCharacter::OnSwappedIn(APartyMemberCharacter* PreviousLeader)
 {
@@ -87,6 +167,11 @@ void APartyMemberCharacter::FollowLeader()
 void APartyMemberCharacter::Die()
 {
         Super::Die();
+        if (bIsGrounded)
+        {
+                bIsGrounded = false;
+                SetFollowing(true);
+        }
         if (!IsPlayerControlled())
         {
                 return;

@@ -1,50 +1,86 @@
 ﻿#include "EnemyCharacter.h"
-#include "Kismet/GameplayStatics.h"
+#include "Characters/PartyMemberCharacter.h"
+#include "EngineUtils.h"
 #include "GameFramework/CharacterMovementComponent.h"
 AEnemyCharacter::AEnemyCharacter()
 {
-	PrimaryActorTick.bCanEverTick = true;
-	bIsEnemy = true;
-	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
+        PrimaryActorTick.bCanEverTick = true;
+        bIsEnemy = true;
+        AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
+}
+AUnshackledCharacterBase* AEnemyCharacter::FindClosestTarget()
+{
+        AUnshackledCharacterBase* ClosestTarget = nullptr;
+        float ClosestDistance = 0.0f;
+        for (TActorIterator<APartyMemberCharacter> It(GetWorld()); It; ++It)
+        {
+                APartyMemberCharacter* Member = *It;
+                if (Member != nullptr)
+                {
+                        bool bCanBeTargeted = Member->IsPlayerControlled();
+                        if (Member->IsGrounded())
+                        {
+                                bCanBeTargeted = true;
+                        }
+                        if (Member->Health->IsDead())
+                        {
+                                bCanBeTargeted = false;
+                        }
+                        if (bCanBeTargeted)
+                        {
+                                float Distance = FVector::Dist2D(Member->GetActorLocation(), GetActorLocation());
+                                bool bIsCloser = false;
+                                if (ClosestTarget == nullptr)
+                                {
+                                        bIsCloser = true;
+                                }
+                                else
+                                {
+                                        if (Distance < ClosestDistance)
+                                        {
+                                                bIsCloser = true;
+                                        }
+                                }
+                                if (bIsCloser)
+                                {
+                                        ClosestTarget = Member;
+                                        ClosestDistance = Distance;
+                                }
+                        }
+                }
+        }
+        return ClosestTarget;
 }
 void AEnemyCharacter::Tick(float DeltaTime)
 {
-	Super::Tick(DeltaTime);
-	if (Health->IsDead())
-	{
-		return;
-	}
-	APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(this, 0);
-	if (PlayerPawn == nullptr)
-	{
-		return;
-	}
-	AUnshackledCharacterBase* PlayerCharacter = Cast<AUnshackledCharacterBase>(PlayerPawn);
-	if (PlayerCharacter != nullptr)
-	{
-		if (PlayerCharacter->Health->IsDead())
-		{
-			return;
-		}
-	}
-	FVector VectorToPlayer = PlayerPawn->GetActorLocation() - GetActorLocation();
-	VectorToPlayer.Z = 0.0f;
-	float DistanceToPlayer = VectorToPlayer.Size();
-	FVector DirectionToPlayer = VectorToPlayer;
-	DirectionToPlayer.Normalize();
-	if (DistanceToPlayer > AttackTriggerDistance)
-	{
-		FVector2D MoveInput = FVector2D(DirectionToPlayer.Y, DirectionToPlayer.X);
-		MoveCharacter(MoveInput);
-	}
-	else
-	{
-		FacingDirection = DirectionToPlayer;
-		BasicAttack();
-	}
+        Super::Tick(DeltaTime);
+        if (Health->IsDead())
+        {
+                return;
+        }
+        AUnshackledCharacterBase* Target = FindClosestTarget();
+        if (Target == nullptr)
+        {
+                return;
+        }
+        FVector VectorToTarget = Target->GetActorLocation() - GetActorLocation();
+        VectorToTarget.Z = 0.0f;
+        float DistanceToTarget = VectorToTarget.Size();
+        FVector DirectionToTarget = VectorToTarget;
+        DirectionToTarget.Normalize();
+        if (DistanceToTarget > AttackTriggerDistance)
+        {
+                FVector2D MoveInput = FVector2D(DirectionToTarget.Y, DirectionToTarget.X);
+                MoveCharacter(MoveInput);
+        }
+        else
+        {
+                FacingDirection = DirectionToTarget;
+                BasicAttack();
+        }
 }
 void AEnemyCharacter::Die()
 {
-	Super::Die();
-	SetLifeSpan(1.0f);
+        Super::Die();
+        SetLifeSpan(1.0f);
 }
