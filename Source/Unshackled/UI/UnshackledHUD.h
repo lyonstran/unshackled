@@ -18,7 +18,19 @@ public:
 	float ManaBarHeight = 5.0f;
 	UPROPERTY(EditAnywhere, Category = "Health Bars")
 	float ManaBarGap = 2.0f;
+	UPROPERTY(EditAnywhere, Category = "Switch Menu")
+	float CardWidth = 110.0f;
+	UPROPERTY(EditAnywhere, Category = "Switch Menu")
+	float CardHeight = 160.0f;
+	UPROPERTY(EditAnywhere, Category = "Switch Menu")
+	float CardGap = 14.0f;
+	UPROPERTY(EditAnywhere, Category = "Switch Menu")
+	float MenuBottomMargin = 40.0f;
+	UPROPERTY(EditAnywhere, Category = "Switch Menu")
+	float CardBorder = 4.0f;
 protected:
 	void DrawHealthBar(class AUnshackledCharacterBase* Character);
 	void DrawManaBar(class AUnshackledCharacterBase* Character);
+	void DrawSwitchMenu();
+	void DrawSwitchCard(class APartyMemberCharacter* Member, float Left, float Top, bool bSelected);
 };

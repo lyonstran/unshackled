@@ -4,6 +4,7 @@
 #include "InputMappingContext.h"
 #include "InputAction.h"
 #include "InputActionValue.h"
+#include "Characters/PartyMemberCharacter.h"
 #include "UnshackledPlayerController.generated.h"
 UCLASS()
 class UNSHACKLED_API AUnshackledPlayerController : public APlayerController
@@ -25,7 +26,18 @@ public:
         UPROPERTY(EditAnywhere, Category = "Input")
         UInputAction *AimAction;
         UPROPERTY(EditAnywhere, Category = "Input")
+        UInputAction *SwitchMenuAction;
+        UPROPERTY(EditAnywhere, Category = "Input")
+        UInputAction *SwitchNextAction;
+        UPROPERTY(EditAnywhere, Category = "Input")
+        UInputAction *SwitchPreviousAction;
+        UPROPERTY(EditAnywhere, Category = "Input")
         float StickAimThreshold = 0.25f;
+        bool IsSwitchMenuOpen() const;
+        int32 GetPartyCount() const;
+        int32 GetSwitchMenuIndex() const;
+        APartyMemberCharacter* GetPartyMember(int32 Index) const;
+        bool SwitchToFirstLivingAlly();
 protected:
         virtual void BeginPlay() override;
         virtual void SetupInputComponent() override;
@@ -36,7 +48,18 @@ protected:
         void Dash();
         void Special();
         void Ultimate();
+        void OpenSwitchMenu();
+        void CloseSwitchMenu();
+        void SwitchNext();
+        void SwitchPrevious();
+        void MoveSwitchSelection(int32 Step);
+        void SwitchTo(APartyMemberCharacter* NewLeader);
+        void BuildPartyList();
         FVector GetAimDirection(class AUnshackledCharacterBase* MyCharacter);
         bool bAimWithStick = false;
         FVector LastStickAimDirection = FVector(0.0f, 1.0f, 0.0f);
+        bool bSwitchMenuOpen = false;
+        int32 SwitchMenuIndex = 0;
+        UPROPERTY()
+        TArray<APartyMemberCharacter*> PartyMembers;
 };

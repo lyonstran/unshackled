@@ -4,6 +4,7 @@
 #include "CollisionQueryParams.h"
 #include "DrawDebugHelpers.h"
 #include "Components/StatsComponent.h"
+#include "Components/HealthComponent.h"
 #include "Stats/StatTypes.h"
 AVeilActor::AVeilActor()
 {
@@ -20,9 +21,15 @@ void AVeilActor::Setup(AUnshackledCharacterBase* InOwner)
         OwnerCharacter = InOwner;
         FollowOwner();
 }
-void AVeilActor::Tick(float DeltaTime) {
+void AVeilActor::Tick(float DeltaTime)
+{
         Super::Tick(DeltaTime);
         if (OwnerCharacter == nullptr)
+        {
+                Destroy();
+                return;
+        }
+        if (OwnerCharacter->Health->IsDead())
         {
                 Destroy();
                 return;

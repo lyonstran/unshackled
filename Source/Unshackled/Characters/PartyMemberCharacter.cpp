@@ -1,4 +1,5 @@
 ﻿#include "PartyMemberCharacter.h"
+#include "Player/UnshackledPlayerController.h"
 #include "Engine/Engine.h"
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
@@ -55,6 +56,12 @@ bool APartyMemberCharacter::IsFollowing() const
 {
         return bIsFollowing;
 }
+void APartyMemberCharacter::OnSwappedIn(APartyMemberCharacter* PreviousLeader)
+{
+}
+void APartyMemberCharacter::OnSwappedOut(APartyMemberCharacter* NewLeader)
+{
+}
 void APartyMemberCharacter::FollowLeader()
 {
         APawn* LeaderPawn = UGameplayStatics::GetPlayerPawn(this, 0);
@@ -83,6 +90,15 @@ void APartyMemberCharacter::Die()
         if (!IsPlayerControlled())
         {
                 return;
+        }
+        AUnshackledPlayerController* MyController = Cast<AUnshackledPlayerController>(GetController());
+        if (MyController != nullptr)
+        {
+                bool bSwitchedToAlly = MyController->SwitchToFirstLivingAlly();
+                if (bSwitchedToAlly)
+                {
+                        return;
+                }
         }
         if (GEngine != nullptr)
         {
