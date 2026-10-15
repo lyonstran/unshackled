@@ -2,13 +2,14 @@
 
 **Lyons Tran, GSD390, Oct 14, 2026**
 
+## at a glance...
 My final project, *Unshackled*, currently is now functional as a gray box test level. A party of three fights four waves of enemies in real time, and the enemy count grows with the floor number and party size. Stats, abilities, party switching and grounding all run in C++.
 
 The art right now is absent, and is using a placeholder (Elliott Smith's *Either/Or*, IFYKYK). Every visual is a debug shape that hides itself once a sprite is added, so I can add art later without changing any code.
 
-If you've played *League of Legends*, I took a lot of inspiration from the depth of a some abilities, with the hope that this game makes player think a little bit more about their actions instead of button mashing, an aspect that really draws me to turn-based style games .
+If you've played *League of Legends* (got re-addicted to the game this summer break, so it's pretty fresh on my mind), I took a lot of inspiration from the depth of a some abilities, with the hope that this game makes player think a little bit more about their actions instead of button mashing, an aspect that really draws me to turn-based style games .
 
-## at a glance...
+Something else I want to also keep in mind is how much time I'm putting into this project. I think for the last two weeks or so, I've pretty much thought about and worked on this game for a majority of my day, which although is really fun and making me quesiton if I want to explore more opportunities in game dev, it's been affecting my physical health a bit. I **will** make more of an effort to go outside and touch grass haha.
 
  The turn based half has not been started. All work thus far has been on the overworld aspect of the game.
 
