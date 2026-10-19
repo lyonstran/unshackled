@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "CoreMinimal.h"
 #include "UnshackledCharacterBase.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -33,6 +33,8 @@ public:
         FString DisplayName = TEXT("Ally");
         UPROPERTY(EditAnywhere, Category = "Party")
         UTexture2D* Portrait = nullptr;
+        UPROPERTY(EditAnywhere, Category = "Party")
+        FLinearColor AuraColor = FLinearColor(0.0f, 0.8f, 0.8f, 1.0f);
         UPROPERTY(EditAnywhere, Category = "Grounding")
         float GroundCooldown = 30.0f;
         UPROPERTY(EditAnywhere, Category = "Grounding")
