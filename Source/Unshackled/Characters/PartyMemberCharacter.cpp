@@ -1,4 +1,4 @@
-﻿#include "PartyMemberCharacter.h"
+#include "PartyMemberCharacter.h"
 #include "Player/UnshackledPlayerController.h"
 #include "Engine/Engine.h"
 #include "Kismet/GameplayStatics.h"
@@ -35,6 +35,13 @@ void APartyMemberCharacter::Tick(float DeltaTime)
         {
                 DrainGroundedMana(DeltaTime);
         }
+        if (bIsGrounded)
+        {
+                if (!Health->IsDead())
+                {
+                        GroundedTick(DeltaTime);
+                }
+        }
         if (!bIsFollowing)
         {
                 return;
@@ -44,6 +51,9 @@ void APartyMemberCharacter::Tick(float DeltaTime)
                 return;
         }
         FollowLeader();
+}
+void APartyMemberCharacter::GroundedTick(float DeltaTime)
+{
 }
 void APartyMemberCharacter::UpdateGroundCooldown(float DeltaTime)
 {

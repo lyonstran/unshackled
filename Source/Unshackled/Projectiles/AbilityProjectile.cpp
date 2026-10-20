@@ -1,8 +1,10 @@
-﻿#include "AbilityProjectile.h"
+#include "AbilityProjectile.h"
 #include "Engine/World.h"
 #include "Engine/OverlapResult.h"
 #include "CollisionQueryParams.h"
 #include "DrawDebugHelpers.h"
+#include "Components/StatsComponent.h"
+#include "Stats/StatTypes.h"
 AAbilityProjectile::AAbilityProjectile()
 {
         PrimaryActorTick.bCanEverTick = true;
@@ -83,12 +85,28 @@ bool AAbilityProjectile::HitOverlappingCharacters()
                 }
                 if (Target->bIsEnemy == OwnerCharacter->bIsEnemy)
                 {
+                        SlowAlly(Target);
                         continue;
                 }
                 OwnerCharacter->DealDamage(Target, DamageScale, false);
                 bHitSomething = true;
         }
         return bHitSomething;
+}
+void AAbilityProjectile::SlowAlly(AUnshackledCharacterBase* Ally)
+{
+        if (AllySlowFraction <= 0.0f)
+        {
+                return;
+        }
+        FStatModifier Slow;
+        Slow.SourceId = FName("AirBladeSlow");
+        Slow.Stat = ECharacterStat::Speed;
+        Slow.Kind = EModifierKind::Percent;
+        Slow.Amount = 0.0f - AllySlowFraction;
+        Slow.Duration = AllySlowDuration;
+        Slow.Rule = EStackRule::RefreshSameSource;
+        Ally->Stats->AddModifier(Slow);
 }
 void AAbilityProjectile::DrawDebugShapeIfNoSprite()
 {

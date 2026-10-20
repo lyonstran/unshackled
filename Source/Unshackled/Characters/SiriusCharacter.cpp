@@ -1,6 +1,7 @@
-﻿#include "SiriusCharacter.h"
+#include "SiriusCharacter.h"
 #include "Engine/World.h"
 #include "Engine/Engine.h"
+#include "EngineUtils.h"
 #include "Components/HealthComponent.h"
 #include "Components/StatsComponent.h"
 #include "Stats/StatTypes.h"
@@ -62,6 +63,74 @@ void ASiriusCharacter::TryExecute(AUnshackledCharacterBase* Target)
                         GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, TEXT("Executed!"));
                         Target->ApplyHit(ExecuteDamage, true, this);
                 }
+        }
+}
+void ASiriusCharacter::GroundedTick(float DeltaTime)
+{
+        Super::GroundedTick(DeltaTime);
+        if (!Stats->CanAct())
+        {
+                return;
+        }
+        AirBladeTimeLeft = AirBladeTimeLeft - DeltaTime;
+        if (AirBladeTimeLeft > 0.0f)
+        {
+                return;
+        }
+        AirBladeTimeLeft = 0.0f;
+        AUnshackledCharacterBase* Target = FindNearestEnemy();
+        if (Target == nullptr)
+        {
+                return;
+        }
+        FireAirBlade(Target);
+        AirBladeTimeLeft = AirBladeInterval;
+}
+AUnshackledCharacterBase* ASiriusCharacter::FindNearestEnemy()
+{
+        AUnshackledCharacterBase* NearestEnemy = nullptr;
+        float NearestDistance = AirBladeSearchRange;
+        for (TActorIterator<AUnshackledCharacterBase> It(GetWorld()); It; ++It)
+        {
+                AUnshackledCharacterBase* Candidate = *It;
+                if (Candidate->bIsEnemy != bIsEnemy)
+                {
+                        if (!Candidate->Health->IsDead())
+                        {
+                                float Distance = FVector::Dist2D(GetActorLocation(), Candidate->GetActorLocation());
+                                if (Distance <= NearestDistance)
+                                {
+                                        NearestDistance = Distance;
+                                        NearestEnemy = Candidate;
+                                }
+                        }
+                }
+        }
+        return NearestEnemy;
+}
+void ASiriusCharacter::FireAirBlade(AUnshackledCharacterBase* Target)
+{
+        FVector Direction = Target->GetActorLocation() - GetActorLocation();
+        Direction.Z = 0.0f;
+        Direction.Normalize();
+        TSubclassOf<AAbilityProjectile> ClassToSpawn = AirBladeClass;
+        if (ClassToSpawn == nullptr)
+        {
+                ClassToSpawn = AAbilityProjectile::StaticClass();
+        }
+        FVector SpawnLocation = GetActorLocation() + (Direction * AirBladeSpawnOffset);
+        FRotator SpawnRotation = Direction.Rotation();
+        FActorSpawnParameters SpawnParameters;
+        SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+        AAbilityProjectile* Blade = GetWorld()->SpawnActor<AAbilityProjectile>(ClassToSpawn, SpawnLocation, SpawnRotation, SpawnParameters);
+        if (Blade != nullptr)
+        {
+                Blade->Speed = AirBladeSpeed;
+                Blade->MaxRange = AirBladeRange;
+                Blade->Radius = AirBladeRadius;
+                Blade->AllySlowFraction = AirBladeAllySlow;
+                Blade->AllySlowDuration = AirBladeAllySlowDuration;
+                Blade->Launch(this, Direction, AirBladeDamageScale, 1.0f);
         }
 }
 void ASiriusCharacter::PerformBasicAttack(FVector Direction)

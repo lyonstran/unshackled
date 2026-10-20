@@ -42,6 +42,7 @@ public:
 protected:
         virtual void BeginPlay() override;
         virtual void Die() override;
+        virtual void GroundedTick(float DeltaTime);
         void FollowLeader();
         void UpdateGroundCooldown(float DeltaTime);
         void DrainGroundedMana(float DeltaTime);

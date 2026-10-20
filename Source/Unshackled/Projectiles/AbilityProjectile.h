@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "PaperFlipbookComponent.h"
@@ -24,9 +24,14 @@ public:
         bool bPierces = true;
         UPROPERTY(EditAnywhere, Category = "Projectile")
         bool bDrawDebugShape = true;
+        UPROPERTY(EditAnywhere, Category = "Projectile")
+        float AllySlowFraction = 0.0f;
+        UPROPERTY(EditAnywhere, Category = "Projectile")
+        float AllySlowDuration = 2.0f;
 protected:
         void MoveForward(float DeltaTime);
         bool HitOverlappingCharacters();
+        void SlowAlly(AUnshackledCharacterBase* Ally);
         void DrawDebugShapeIfNoSprite();
         UPROPERTY()
         AUnshackledCharacterBase* OwnerCharacter;

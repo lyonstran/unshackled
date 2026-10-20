@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "CoreMinimal.h"
 #include "PartyMemberCharacter.h"
 #include "Projectiles/AbilityProjectile.h"
@@ -39,16 +39,40 @@ public:
         float SwapVeilDuration = 3.0f;
         UPROPERTY(EditAnywhere, Category = "Sirius")
         int32 SwapVeilHits = 1;
+        UPROPERTY(EditAnywhere, Category = "Sirius Grounded")
+        TSubclassOf<AAbilityProjectile> AirBladeClass;
+        UPROPERTY(EditAnywhere, Category = "Sirius Grounded")
+        float AirBladeInterval = 2.0f;
+        UPROPERTY(EditAnywhere, Category = "Sirius Grounded")
+        float AirBladeSearchRange = 700.0f;
+        UPROPERTY(EditAnywhere, Category = "Sirius Grounded")
+        float AirBladeDamageScale = 0.6f;
+        UPROPERTY(EditAnywhere, Category = "Sirius Grounded")
+        float AirBladeSpeed = 900.0f;
+        UPROPERTY(EditAnywhere, Category = "Sirius Grounded")
+        float AirBladeRange = 800.0f;
+        UPROPERTY(EditAnywhere, Category = "Sirius Grounded")
+        float AirBladeRadius = 50.0f;
+        UPROPERTY(EditAnywhere, Category = "Sirius Grounded")
+        float AirBladeSpawnOffset = 60.0f;
+        UPROPERTY(EditAnywhere, Category = "Sirius Grounded")
+        float AirBladeAllySlow = 0.1f;
+        UPROPERTY(EditAnywhere, Category = "Sirius Grounded")
+        float AirBladeAllySlowDuration = 2.0f;
 protected:
         virtual void PerformBasicAttack(FVector Direction) override;
         virtual void PerformSpecial(FVector AimDirection) override;
         virtual void PerformUltimate(FVector AimDirection) override;
+        virtual void GroundedTick(float DeltaTime) override;
         void FireCrescent(FVector Direction, float DamageScale, float SizeScale);
         void SpawnTornado(FVector Direction);
         void SpawnVeil();
         void TryExecute(AUnshackledCharacterBase* Target);
         void GiveSwapVeil(APartyMemberCharacter* Ally);
+        AUnshackledCharacterBase* FindNearestEnemy();
+        void FireAirBlade(AUnshackledCharacterBase* Target);
         int32 EmpoweredAttacksLeft = 0;
+        float AirBladeTimeLeft = 0.0f;
         UPROPERTY()
         AVeilActor* ActiveVeil;
 };
