@@ -197,22 +197,61 @@ void ASiriusCharacter::SpawnTornado(FVector Direction)
 }
 void ASiriusCharacter::SpawnVeil()
 {
+        DestroyOldVeils();
+        ActiveVeil = SpawnVeilOn(this);
+        SpawnVeilsOnGroundedAllies();
+}
+void ASiriusCharacter::DestroyOldVeils()
+{
         if (IsValid(ActiveVeil))
         {
                 ActiveVeil->Destroy();
         }
+        for (int32 i = 0; i < AllyVeils.Num(); i++)
+        {
+                if (IsValid(AllyVeils[i]))
+                {
+                        AllyVeils[i]->Destroy();
+                }
+        }
+        AllyVeils.Empty();
+}
+AVeilActor* ASiriusCharacter::SpawnVeilOn(AUnshackledCharacterBase* VeilOwner)
+{
         TSubclassOf<AVeilActor> ClassToSpawn = VeilClass;
         if (ClassToSpawn == nullptr)
         {
                 ClassToSpawn = AVeilActor::StaticClass();
         }
-        FVector SpawnLocation = GetActorLocation();
+        FVector SpawnLocation = VeilOwner->GetActorLocation();
         FRotator SpawnRotation = FRotator::ZeroRotator;
         FActorSpawnParameters SpawnParameters;
         SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-        ActiveVeil = GetWorld()->SpawnActor<AVeilActor>(ClassToSpawn, SpawnLocation, SpawnRotation, SpawnParameters);
-        if (ActiveVeil != nullptr)
+        AVeilActor* NewVeil = GetWorld()->SpawnActor<AVeilActor>(ClassToSpawn, SpawnLocation, SpawnRotation, SpawnParameters);
+        if (NewVeil != nullptr)
         {
-                ActiveVeil->Setup(this);
+                NewVeil->Setup(VeilOwner);
+        }
+        return NewVeil;
+}
+void ASiriusCharacter::SpawnVeilsOnGroundedAllies()
+{
+        for (TActorIterator<APartyMemberCharacter> It(GetWorld()); It; ++It)
+        {
+                APartyMemberCharacter* Ally = *It;
+                if (Ally != this)
+                {
+                        if (Ally->IsGrounded())
+                        {
+                                if (!Ally->Health->IsDead())
+                                {
+                                        AVeilActor* AllyVeil = SpawnVeilOn(Ally);
+                                        if (AllyVeil != nullptr)
+                                        {
+                                                AllyVeils.Add(AllyVeil);
+                                        }
+                                }
+                        }
+                }
         }
 }

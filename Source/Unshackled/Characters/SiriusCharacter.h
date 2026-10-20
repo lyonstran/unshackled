@@ -67,6 +67,9 @@ protected:
         void FireCrescent(FVector Direction, float DamageScale, float SizeScale);
         void SpawnTornado(FVector Direction);
         void SpawnVeil();
+        void DestroyOldVeils();
+        AVeilActor* SpawnVeilOn(AUnshackledCharacterBase* VeilOwner);
+        void SpawnVeilsOnGroundedAllies();
         void TryExecute(AUnshackledCharacterBase* Target);
         void GiveSwapVeil(APartyMemberCharacter* Ally);
         AUnshackledCharacterBase* FindNearestEnemy();
@@ -75,4 +78,6 @@ protected:
         float AirBladeTimeLeft = 0.0f;
         UPROPERTY()
         AVeilActor* ActiveVeil;
+        UPROPERTY()
+        TArray<AVeilActor*> AllyVeils;
 };
