@@ -9,6 +9,7 @@
 #include "Stats/StatTypes.h"
 #include "Kismet/GameplayStatics.h"
 #include "Player/UnshackledPlayerController.h"
+#include "EngineUtils.h"
 AMalkholmCharacter::AMalkholmCharacter()
 {
         DisplayName = TEXT("Mal'Kholm");
@@ -24,6 +25,8 @@ void AMalkholmCharacter::Tick(float DeltaTime)
         Super::Tick(DeltaTime);
         TickRetribution(DeltaTime);
         TickPassiveCooldown(DeltaTime);
+        TickUltimateDash(DeltaTime);
+        TickUltimateBuff(DeltaTime);
 }
 float AMalkholmCharacter::GetRangeMultiplier() const
 {
@@ -426,4 +429,138 @@ void AMalkholmCharacter::KnockBack(AUnshackledCharacterBase* Target)
         Direction.Normalize();
         FVector NewLocation = Target->GetActorLocation() + (Direction * WhipKnockbackDistance);
         Target->SetActorLocation(NewLocation);
+}
+void AMalkholmCharacter::PerformUltimate(FVector AimDirection)
+{
+        AUnshackledCharacterBase* Target = FindUltimateTarget();
+        if (Target == nullptr)
+        {
+                RefundUltimate();
+                GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Silver, TEXT("No target for the chain yank"));
+                return;
+        }
+        UltimateTarget = Target;
+        UltimateTargetLocation = Target->GetActorLocation();
+        UltimateGainHealth = Target->Health->MaxHealth * UltimateHealthGainFraction;
+        UltimateGainDefense = Target->Stats->GetFinal(ECharacterStat::Defense) * UltimateDefenseGainFraction;
+        UltimateDashTimeLeft = UltimateDashMaxTime;
+        bUltimateDashing = true;
+}
+AUnshackledCharacterBase* AMalkholmCharacter::FindUltimateTarget()
+{
+        AUnshackledCharacterBase* BestTarget = nullptr;
+        float BestHealth = 0.0f;
+        float SearchRange = UltimateRange * GetRangeMultiplier();
+        for (TActorIterator<AUnshackledCharacterBase> It(GetWorld()); It; ++It)
+        {
+                AUnshackledCharacterBase* Candidate = *It;
+                if (Candidate->bIsEnemy != bIsEnemy)
+                {
+                        if (!Candidate->Health->IsDead())
+                        {
+                                float Distance = FVector::Dist2D(GetActorLocation(), Candidate->GetActorLocation());
+                                if (Distance <= SearchRange)
+                                {
+                                        if (Candidate->Health->CurrentHealth > BestHealth)
+                                        {
+                                                BestHealth = Candidate->Health->CurrentHealth;
+                                                BestTarget = Candidate;
+                                        }
+                                }
+                        }
+                }
+        }
+        return BestTarget;
+}
+void AMalkholmCharacter::RefundUltimate()
+{
+        Stats->RestoreMana(UltimateManaCost);
+        GetWorldTimerManager().ClearTimer(UltimateCooldownTimer);
+        bCanUseUltimate = true;
+}
+void AMalkholmCharacter::TickUltimateDash(float DeltaTime)
+{
+        if (!bUltimateDashing)
+        {
+                return;
+        }
+        if (Health->IsDead())
+        {
+                bUltimateDashing = false;
+                return;
+        }
+        if (UltimateTarget != nullptr)
+        {
+                if (!UltimateTarget->Health->IsDead())
+                {
+                        UltimateTargetLocation = UltimateTarget->GetActorLocation();
+                }
+        }
+        UltimateDashTimeLeft = UltimateDashTimeLeft - DeltaTime;
+        FVector ToTarget = UltimateTargetLocation - GetActorLocation();
+        ToTarget.Z = 0.0f;
+        float Distance = ToTarget.Size();
+        if (Distance <= UltimateStopDistance)
+        {
+                FinishUltimateDash();
+                return;
+        }
+        if (UltimateDashTimeLeft <= 0.0f)
+        {
+                FinishUltimateDash();
+                return;
+        }
+        float StepLength = UltimateDashSpeed * DeltaTime;
+        if (StepLength > Distance)
+        {
+                StepLength = Distance;
+        }
+        FVector StepDirection = ToTarget / Distance;
+        SetActorLocation(GetActorLocation() + (StepDirection * StepLength));
+}
+void AMalkholmCharacter::FinishUltimateDash()
+{
+        bUltimateDashing = false;
+        UltimateTarget = nullptr;
+        UltimateBuffTimeLeft = UltimateBuffDuration;
+        FStatModifier HealthGain;
+        HealthGain.SourceId = FName("MalkholmUltimate");
+        HealthGain.Stat = ECharacterStat::MaxHealth;
+        HealthGain.Kind = EModifierKind::Flat;
+        HealthGain.Amount = UltimateGainHealth;
+        HealthGain.Duration = UltimateBuffDuration;
+        HealthGain.Rule = EStackRule::RefreshSameSource;
+        Stats->AddModifier(HealthGain);
+        FStatModifier DefenseGain;
+        DefenseGain.SourceId = FName("MalkholmUltimate");
+        DefenseGain.Stat = ECharacterStat::Defense;
+        DefenseGain.Kind = EModifierKind::Flat;
+        DefenseGain.Amount = UltimateGainDefense;
+        DefenseGain.Duration = UltimateBuffDuration;
+        DefenseGain.Rule = EStackRule::RefreshSameSource;
+        Stats->AddModifier(DefenseGain);
+        GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Magenta, TEXT("Mal'Kholm absorbed his target!"));
+}
+void AMalkholmCharacter::TickUltimateBuff(float DeltaTime)
+{
+        if (UltimateBuffTimeLeft <= 0.0f)
+        {
+                return;
+        }
+        if (Health->IsDead())
+        {
+                UltimateBuffTimeLeft = 0.0f;
+                return;
+        }
+        UltimateBuffTimeLeft = UltimateBuffTimeLeft - DeltaTime;
+        if (UltimateBuffTimeLeft < 0.0f)
+        {
+                UltimateBuffTimeLeft = 0.0f;
+        }
+        bool bWindingUp = GetWorldTimerManager().IsTimerActive(SpecialWindupTimer);
+        if (!bWindingUp)
+        {
+                GetWorldTimerManager().ClearTimer(SpecialCooldownTimer);
+                bCanUseSpecial = true;
+        }
 }

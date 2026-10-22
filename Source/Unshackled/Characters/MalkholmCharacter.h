@@ -78,9 +78,24 @@ public:
         float YankHealthFraction = 0.1f;
         UPROPERTY(EditAnywhere, Category = "Malkholm Grounded")
         float YankOffset = 100.0f;
+        UPROPERTY(EditAnywhere, Category = "Malkholm Ultimate")
+        float UltimateRange = 600.0f;
+        UPROPERTY(EditAnywhere, Category = "Malkholm Ultimate")
+        float UltimateDashSpeed = 2500.0f;
+        UPROPERTY(EditAnywhere, Category = "Malkholm Ultimate")
+        float UltimateDashMaxTime = 1.0f;
+        UPROPERTY(EditAnywhere, Category = "Malkholm Ultimate")
+        float UltimateStopDistance = 90.0f;
+        UPROPERTY(EditAnywhere, Category = "Malkholm Ultimate")
+        float UltimateHealthGainFraction = 1.0f;
+        UPROPERTY(EditAnywhere, Category = "Malkholm Ultimate")
+        float UltimateDefenseGainFraction = 0.5f;
+        UPROPERTY(EditAnywhere, Category = "Malkholm Ultimate")
+        float UltimateBuffDuration = 10.0f;
 protected:
         virtual void PerformBasicAttack(FVector Direction) override;
         virtual void PerformSpecial(FVector AimDirection) override;
+        virtual void PerformUltimate(FVector AimDirection) override;
         virtual bool WouldDie() override;
         virtual void GroundedTick(float DeltaTime) override;
         bool IsBonusSwing() const;
@@ -98,9 +113,22 @@ protected:
         bool TryYankLeader();
         int32 WhipEnemiesInRange();
         void KnockBack(AUnshackledCharacterBase* Target);
+        AUnshackledCharacterBase* FindUltimateTarget();
+        void RefundUltimate();
+        void TickUltimateDash(float DeltaTime);
+        void FinishUltimateDash();
+        void TickUltimateBuff(float DeltaTime);
         int32 SwingCount = 0;
         bool bSwingClockwise = true;
         float RetributionTimeLeft = 0.0f;
         float PassiveCooldownLeft = 0.0f;
         float WhipTimeLeft = 0.0f;
+        bool bUltimateDashing = false;
+        float UltimateDashTimeLeft = 0.0f;
+        float UltimateBuffTimeLeft = 0.0f;
+        float UltimateGainHealth = 0.0f;
+        float UltimateGainDefense = 0.0f;
+        FVector UltimateTargetLocation = FVector::ZeroVector;
+        UPROPERTY()
+        AUnshackledCharacterBase* UltimateTarget;
 };
