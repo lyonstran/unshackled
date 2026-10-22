@@ -8,6 +8,8 @@ class UNSHACKLED_API AMalkholmCharacter : public APartyMemberCharacter
         GENERATED_BODY()
 public:
         AMalkholmCharacter();
+        virtual void Tick(float DeltaTime) override;
+        virtual void PerformRetribution() override;
         UPROPERTY(EditAnywhere, Category = "Malkholm")
         float ChainRadius = 160.0f;
         UPROPERTY(EditAnywhere, Category = "Malkholm")
@@ -44,6 +46,18 @@ public:
         float SlamSlowDuration = 1.5f;
         UPROPERTY(EditAnywhere, Category = "Malkholm Slam")
         float SlamRootDuration = 2.0f;
+        UPROPERTY(EditAnywhere, Category = "Malkholm Retribution")
+        float RetributionDuration = 10.0f;
+        UPROPERTY(EditAnywhere, Category = "Malkholm Retribution")
+        float RetributionHealthCost = 0.35f;
+        UPROPERTY(EditAnywhere, Category = "Malkholm Retribution")
+        float RetributionDamageBonus = 0.25f;
+        UPROPERTY(EditAnywhere, Category = "Malkholm Retribution")
+        float RetributionRangeMultiplier = 2.0f;
+        UPROPERTY(EditAnywhere, Category = "Malkholm Retribution")
+        float RetributionMissingHealHeal = 0.25f;
+        UPROPERTY(EditAnywhere, Category = "Malkholm Retribution")
+        float RetributionMaxHealHeal = 0.2f;
 protected:
         virtual void PerformBasicAttack(FVector Direction) override;
         virtual void PerformSpecial(FVector AimDirection) override;
@@ -54,6 +68,10 @@ protected:
         void ApplySlamEffects(AUnshackledCharacterBase* Target);
         void GainDefenseStack();
         void ShowSwingText();
+        float GetRangeMultiplier() const;
+        void TickRetribution(float DeltaTime);
+        void EndRetribution();
         int32 SwingCount = 0;
         bool bSwingClockwise = true;
+        float RetributionTimeLeft = 0.0f;
 };

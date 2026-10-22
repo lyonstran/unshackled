@@ -17,16 +17,30 @@ AMalkholmCharacter::AMalkholmCharacter()
         Health->MaxHealth = 160.0f;
         Stats->BaseDefense = 40.0f;
 }
+void AMalkholmCharacter::Tick(float DeltaTime)
+{
+        Super::Tick(DeltaTime);
+        TickRetribution(DeltaTime);
+}
+float AMalkholmCharacter::GetRangeMultiplier() const
+{
+        if (RetributionTimeLeft > 0.0f)
+        {
+                return RetributionRangeMultiplier;
+        }
+        return 1.0f;
+}
 void AMalkholmCharacter::PerformBasicAttack(FVector Direction)
 {
         SwingCount = SwingCount + 1;
         FVector SwingCenter = GetActorLocation();
+        float EffectiveRadius = ChainRadius * GetRangeMultiplier();
         TArray<FOverlapResult> OverlapResults;
         FCollisionQueryParams QueryParams;
         QueryParams.AddIgnoredActor(this);
         FCollisionObjectQueryParams ObjectParams;
         ObjectParams.AddObjectTypesToQuery(ECC_Pawn);
-        FCollisionShape Circle = FCollisionShape::MakeSphere(ChainRadius);
+        FCollisionShape Circle = FCollisionShape::MakeSphere(EffectiveRadius);
         GetWorld()->OverlapMultiByObjectType(OverlapResults, SwingCenter, FQuat::Identity, ObjectParams, Circle, QueryParams);
         TArray<AActor*> ActorsAlreadyHit;
         for (int32 i = 0; i < OverlapResults.Num(); i++)
@@ -53,7 +67,7 @@ void AMalkholmCharacter::PerformBasicAttack(FVector Direction)
         {
                 GainDefenseStack();
         }
-        DrawDebugSphere(GetWorld(), SwingCenter, ChainRadius, 16, FColor::Orange, false, 0.2f);
+        DrawDebugSphere(GetWorld(), SwingCenter, EffectiveRadius, 16, FColor::Orange, false, 0.2f);
         ShowSwingText();
         bSwingClockwise = !bSwingClockwise;
 }
@@ -69,7 +83,7 @@ bool AMalkholmCharacter::IsBonusSwing() const
 bool AMalkholmCharacter::IsOnEdge(AUnshackledCharacterBase* Target) const
 {
         float DistanceToTarget = FVector::Dist2D(GetActorLocation(), Target->GetActorLocation());
-        float EdgeDistance = ChainRadius * EdgeStartFraction;
+        float EdgeDistance = ChainRadius * GetRangeMultiplier() * EdgeStartFraction;
         if (DistanceToTarget >= EdgeDistance)
         {
                 return true;
@@ -132,13 +146,16 @@ void AMalkholmCharacter::ShowSwingText()
 }
 void AMalkholmCharacter::PerformSpecial(FVector AimDirection)
 {
-        FVector SlamCenter = GetActorLocation() + (AimDirection * SlamRange);
+        float RangeMultiplier = GetRangeMultiplier();
+        float EffectiveRange = SlamRange * RangeMultiplier;
+        float EffectiveRadius = SlamRadius * RangeMultiplier;
+        FVector SlamCenter = GetActorLocation() + (AimDirection * EffectiveRange);
         TArray<FOverlapResult> OverlapResults;
         FCollisionQueryParams QueryParams;
         QueryParams.AddIgnoredActor(this);
         FCollisionObjectQueryParams ObjectParams;
         ObjectParams.AddObjectTypesToQuery(ECC_Pawn);
-        FCollisionShape SlamShape = FCollisionShape::MakeSphere(SlamRadius);
+        FCollisionShape SlamShape = FCollisionShape::MakeSphere(EffectiveRadius);
         GetWorld()->OverlapMultiByObjectType(OverlapResults, SlamCenter, FQuat::Identity, ObjectParams, SlamShape, QueryParams);
         TArray<AActor*> ActorsAlreadyHit;
         for (int32 i = 0; i < OverlapResults.Num(); i++)
@@ -161,13 +178,14 @@ void AMalkholmCharacter::PerformSpecial(FVector AimDirection)
                         }
                 }
         }
-        DrawDebugSphere(GetWorld(), SlamCenter, SlamRadius, 16, FColor::Red, false, 0.5f);
+        DrawDebugSphere(GetWorld(), SlamCenter, EffectiveRadius, 16, FColor::Red, false, 0.5f);
         GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, TEXT("Chain slam!"));
 }
 bool AMalkholmCharacter::IsAtSlamTip(AUnshackledCharacterBase* Target) const
 {
         float DistanceToTarget = FVector::Dist2D(GetActorLocation(), Target->GetActorLocation());
-        if (DistanceToTarget >= SlamTipDistance)
+        float TipDistance = SlamTipDistance * GetRangeMultiplier();
+        if (DistanceToTarget >= TipDistance)
         {
                 return true;
         }
@@ -200,4 +218,50 @@ void AMalkholmCharacter::ApplySlamEffects(AUnshackledCharacterBase* Target)
         SlamRoot.Rule = EStackRule::RefreshSameSource;
         SlamRoot.Flag = EStatusFlag::Root;
         Target->Stats->AddModifier(SlamRoot);
+}
+void AMalkholmCharacter::PerformRetribution()
+{
+        Super::PerformRetribution();
+        if (Health->IsDead())
+        {
+                return;
+        }
+        float HealthCost = Health->CurrentHealth * RetributionHealthCost;
+        Health->TakeHit(HealthCost);
+        RetributionTimeLeft = RetributionDuration;
+        FStatModifier DamageBonus;
+        DamageBonus.SourceId = FName("MalkholmRetribution");
+        DamageBonus.Stat = ECharacterStat::Damage;
+        DamageBonus.Kind = EModifierKind::Percent;
+        DamageBonus.Amount = RetributionDamageBonus;
+        DamageBonus.Duration = RetributionDuration;
+        DamageBonus.Rule = EStackRule::RefreshSameSource;
+        Stats->AddModifier(DamageBonus);
+        GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Orange, TEXT("Mal'Kholm Retribution"));
+}
+void AMalkholmCharacter::TickRetribution(float DeltaTime)
+{
+        if (RetributionTimeLeft <= 0.0f)
+        {
+                return;
+        }
+        if (Health->IsDead())
+        {
+                RetributionTimeLeft = 0.0f;
+                return;
+        }
+        RetributionTimeLeft = RetributionTimeLeft - DeltaTime;
+        if (RetributionTimeLeft <= 0.0f)
+        {
+                RetributionTimeLeft = 0.0f;
+                EndRetribution();
+        }
+}
+void AMalkholmCharacter::EndRetribution()
+{
+        float MissingHealth = Health->MaxHealth - Health->CurrentHealth;
+        float MissingHeal = MissingHealth * RetributionMissingHealHeal;
+        float MaxHeal = Health->MaxHealth * RetributionMaxHealHeal;
+        Health->Heal(MissingHeal + MaxHeal);
+        GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, TEXT("Mal'Kholm Retribution ended"));
 }
