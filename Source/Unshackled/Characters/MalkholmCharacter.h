@@ -58,9 +58,18 @@ public:
         float RetributionMissingHealHeal = 0.25f;
         UPROPERTY(EditAnywhere, Category = "Malkholm Retribution")
         float RetributionMaxHealHeal = 0.2f;
+        UPROPERTY(EditAnywhere, Category = "Malkholm Passive")
+        float PassiveCooldown = 180.0f;
+        UPROPERTY(EditAnywhere, Category = "Malkholm Passive")
+        float PassiveBuffDuration = 15.0f;
+        UPROPERTY(EditAnywhere, Category = "Malkholm Passive")
+        float PassiveLifesteal = 0.1f;
+        UPROPERTY(EditAnywhere, Category = "Malkholm Passive")
+        float PassiveDefenseLoss = 1000.0f;
 protected:
         virtual void PerformBasicAttack(FVector Direction) override;
         virtual void PerformSpecial(FVector AimDirection) override;
+        virtual bool WouldDie() override;
         bool IsBonusSwing() const;
         bool IsOnEdge(AUnshackledCharacterBase* Target) const;
         bool IsAtSlamTip(AUnshackledCharacterBase* Target) const;
@@ -71,7 +80,10 @@ protected:
         float GetRangeMultiplier() const;
         void TickRetribution(float DeltaTime);
         void EndRetribution();
+        void TickPassiveCooldown(float DeltaTime);
+        void GiveCheatDeathBuffs();
         int32 SwingCount = 0;
         bool bSwingClockwise = true;
         float RetributionTimeLeft = 0.0f;
+        float PassiveCooldownLeft = 0.0f;
 };

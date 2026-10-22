@@ -21,6 +21,7 @@ void AMalkholmCharacter::Tick(float DeltaTime)
 {
         Super::Tick(DeltaTime);
         TickRetribution(DeltaTime);
+        TickPassiveCooldown(DeltaTime);
 }
 float AMalkholmCharacter::GetRangeMultiplier() const
 {
@@ -264,4 +265,52 @@ void AMalkholmCharacter::EndRetribution()
         float MaxHeal = Health->MaxHealth * RetributionMaxHealHeal;
         Health->Heal(MissingHeal + MaxHeal);
         GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, TEXT("Mal'Kholm Retribution ended"));
+}
+bool AMalkholmCharacter::WouldDie()
+{
+        bool bBaseCancelled = Super::WouldDie();
+        if (bBaseCancelled)
+        {
+                return true;
+        }
+        if (PassiveCooldownLeft > 0.0f)
+        {
+                return false;
+        }
+        Health->CurrentHealth = Health->MaxHealth;
+        PassiveCooldownLeft = PassiveCooldown;
+        GiveCheatDeathBuffs();
+        GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("Mal'Kholm cheated death!"));
+        return true;
+}
+void AMalkholmCharacter::GiveCheatDeathBuffs()
+{
+        FStatModifier DefenseLoss;
+        DefenseLoss.SourceId = FName("MalkholmCheatDeath");
+        DefenseLoss.Stat = ECharacterStat::Defense;
+        DefenseLoss.Kind = EModifierKind::Flat;
+        DefenseLoss.Amount = 0.0f - PassiveDefenseLoss;
+        DefenseLoss.Duration = PassiveBuffDuration;
+        DefenseLoss.Rule = EStackRule::RefreshSameSource;
+        Stats->AddModifier(DefenseLoss);
+        FStatModifier LifestealGain;
+        LifestealGain.SourceId = FName("MalkholmCheatDeath");
+        LifestealGain.Stat = ECharacterStat::Lifesteal;
+        LifestealGain.Kind = EModifierKind::Flat;
+        LifestealGain.Amount = PassiveLifesteal;
+        LifestealGain.Duration = PassiveBuffDuration;
+        LifestealGain.Rule = EStackRule::RefreshSameSource;
+        Stats->AddModifier(LifestealGain);
+}
+void AMalkholmCharacter::TickPassiveCooldown(float DeltaTime)
+{
+        if (PassiveCooldownLeft <= 0.0f)
+        {
+                return;
+        }
+        PassiveCooldownLeft = PassiveCooldownLeft - DeltaTime;
+        if (PassiveCooldownLeft < 0.0f)
+        {
+                PassiveCooldownLeft = 0.0f;
+        }
 }
