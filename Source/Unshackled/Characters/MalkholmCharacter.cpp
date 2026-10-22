@@ -13,6 +13,7 @@ AMalkholmCharacter::AMalkholmCharacter()
         AuraColor = FLinearColor(1.0f, 0.9f, 0.0f);
         AttackDamage = 22.0f;
         AttackCooldown = 0.7f;
+        SpecialWindup = 1.5f;
         Health->MaxHealth = 160.0f;
         Stats->BaseDefense = 40.0f;
 }
@@ -128,4 +129,75 @@ void AMalkholmCharacter::ShowSwingText()
         }
         FString Message = FString::Printf(TEXT("Chain swing %d: %s"), SwingCount, *DirectionName);
         GEngine->AddOnScreenDebugMessage(-1, 0.6f, FColor::Orange, Message);
+}
+void AMalkholmCharacter::PerformSpecial(FVector AimDirection)
+{
+        FVector SlamCenter = GetActorLocation() + (AimDirection * SlamRange);
+        TArray<FOverlapResult> OverlapResults;
+        FCollisionQueryParams QueryParams;
+        QueryParams.AddIgnoredActor(this);
+        FCollisionObjectQueryParams ObjectParams;
+        ObjectParams.AddObjectTypesToQuery(ECC_Pawn);
+        FCollisionShape SlamShape = FCollisionShape::MakeSphere(SlamRadius);
+        GetWorld()->OverlapMultiByObjectType(OverlapResults, SlamCenter, FQuat::Identity, ObjectParams, SlamShape, QueryParams);
+        TArray<AActor*> ActorsAlreadyHit;
+        for (int32 i = 0; i < OverlapResults.Num(); i++)
+        {
+                AActor* HitActor = OverlapResults[i].GetActor();
+                if (HitActor != nullptr)
+                {
+                        if (!ActorsAlreadyHit.Contains(HitActor))
+                        {
+                                ActorsAlreadyHit.Add(HitActor);
+                                AUnshackledCharacterBase* OtherCharacter = Cast<AUnshackledCharacterBase>(HitActor);
+                                if (OtherCharacter != nullptr)
+                                {
+                                        if (OtherCharacter->bIsEnemy != bIsEnemy)
+                                        {
+                                                DealDamage(OtherCharacter, SlamDamageScale, false);
+                                                ApplySlamEffects(OtherCharacter);
+                                        }
+                                }
+                        }
+                }
+        }
+        DrawDebugSphere(GetWorld(), SlamCenter, SlamRadius, 16, FColor::Red, false, 0.5f);
+        GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, TEXT("Chain slam!"));
+}
+bool AMalkholmCharacter::IsAtSlamTip(AUnshackledCharacterBase* Target) const
+{
+        float DistanceToTarget = FVector::Dist2D(GetActorLocation(), Target->GetActorLocation());
+        if (DistanceToTarget >= SlamTipDistance)
+        {
+                return true;
+        }
+        return false;
+}
+void AMalkholmCharacter::ApplySlamEffects(AUnshackledCharacterBase* Target)
+{
+        if (Target->Health->IsDead())
+        {
+                return;
+        }
+        FStatModifier SlamSlow;
+        SlamSlow.SourceId = FName("MalkholmSlamSlow");
+        SlamSlow.Stat = ECharacterStat::Speed;
+        SlamSlow.Kind = EModifierKind::Percent;
+        SlamSlow.Amount = 0.0f - SlamSlowFraction;
+        SlamSlow.Duration = SlamSlowDuration;
+        SlamSlow.Rule = EStackRule::RefreshSameSource;
+        Target->Stats->AddModifier(SlamSlow);
+        if (!IsAtSlamTip(Target))
+        {
+                return;
+        }
+        FStatModifier SlamRoot;
+        SlamRoot.SourceId = FName("MalkholmSlamRoot");
+        SlamRoot.Stat = ECharacterStat::Speed;
+        SlamRoot.Kind = EModifierKind::Flat;
+        SlamRoot.Amount = 0.0f;
+        SlamRoot.Duration = SlamRootDuration;
+        SlamRoot.Rule = EStackRule::RefreshSameSource;
+        SlamRoot.Flag = EStatusFlag::Root;
+        Target->Stats->AddModifier(SlamRoot);
 }
