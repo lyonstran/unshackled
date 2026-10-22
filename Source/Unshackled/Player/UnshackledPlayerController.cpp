@@ -1,8 +1,12 @@
-﻿#include "UnshackledPlayerController.h"
+#include "UnshackledPlayerController.h"
 #include "Characters/UnshackledCharacterBase.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "EngineUtils.h"
+AUnshackledPlayerController::AUnshackledPlayerController()
+{
+        Retribution = CreateDefaultSubobject<URetributionComponent>(TEXT("Retribution"));
+}
 void AUnshackledPlayerController::BeginPlay()
 {
         Super::BeginPlay();
@@ -342,6 +346,10 @@ void AUnshackledPlayerController::SwitchTo(APartyMemberCharacter* NewLeader)
                 OldLeader->OnSwappedOut(NewLeader);
         }
         NewLeader->OnSwappedIn(OldLeader);
+        if (Retribution != nullptr)
+        {
+                Retribution->OnLeaderSwitched(NewLeader);
+        }
 }
 void AUnshackledPlayerController::SetupInputComponent()
 {

@@ -8,6 +8,11 @@
 ASiriusCharacter::ASiriusCharacter()
 {
 }
+void ASiriusCharacter::Tick(float DeltaTime)
+{
+        Super::Tick(DeltaTime);
+        TickRetribution(DeltaTime);
+}
 void ASiriusCharacter::OnDealtDamage(AUnshackledCharacterBase* Target, float DamageDealt)
 {
         Super::OnDealtDamage(Target, DamageDealt);
@@ -62,6 +67,70 @@ void ASiriusCharacter::TryExecute(AUnshackledCharacterBase* Target)
                 {
                         GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, TEXT("Executed!"));
                         Target->ApplyHit(ExecuteDamage, true, this);
+                }
+        }
+}
+void ASiriusCharacter::PerformRetribution()
+{
+        Super::PerformRetribution();
+        RetributionTimeLeft = RetributionDuration;
+        RetributionAuraTimer = 0.0f;
+        FStatModifier LifestealModifier;
+        LifestealModifier.SourceId = FName("SiriusRetribution");
+        LifestealModifier.Stat = ECharacterStat::Lifesteal;
+        LifestealModifier.Kind = EModifierKind::Flat;
+        LifestealModifier.Amount = RetributionLifesteal;
+        LifestealModifier.Duration = RetributionDuration;
+        LifestealModifier.Rule = EStackRule::RefreshSameSource;
+        Stats->AddModifier(LifestealModifier);
+        ApplyRetributionToEnemies();
+        GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Cyan, TEXT("Sirius Retribution"));
+}
+void ASiriusCharacter::TickRetribution(float DeltaTime)
+{
+        if (RetributionTimeLeft <= 0.0f)
+        {
+                return;
+        }
+        if (Health->IsDead())
+        {
+                RetributionTimeLeft = 0.0f;
+                return;
+        }
+        RetributionTimeLeft = RetributionTimeLeft - DeltaTime;
+        RetributionAuraTimer = RetributionAuraTimer + DeltaTime;
+        if (RetributionAuraTimer >= RetributionAuraInterval)
+        {
+                RetributionAuraTimer = 0.0f;
+                ApplyRetributionToEnemies();
+        }
+}
+void ASiriusCharacter::ApplyRetributionToEnemies()
+{
+        for (TActorIterator<AUnshackledCharacterBase> It(GetWorld()); It; ++It)
+        {
+                AUnshackledCharacterBase* Candidate = *It;
+                if (Candidate->bIsEnemy != bIsEnemy)
+                {
+                        if (!Candidate->Health->IsDead())
+                        {
+                                FStatModifier DefenseModifier;
+                                DefenseModifier.SourceId = FName("SiriusRetribution");
+                                DefenseModifier.Stat = ECharacterStat::Defense;
+                                DefenseModifier.Kind = EModifierKind::Percent;
+                                DefenseModifier.Amount = 0.0f - RetributionDefenseReduction;
+                                DefenseModifier.Duration = RetributionAuraDuration;
+                                DefenseModifier.Rule = EStackRule::RefreshSameSource;
+                                Candidate->Stats->AddModifier(DefenseModifier);
+                                FStatModifier SlowModifier;
+                                SlowModifier.SourceId = FName("SiriusRetribution");
+                                SlowModifier.Stat = ECharacterStat::Speed;
+                                SlowModifier.Kind = EModifierKind::Percent;
+                                SlowModifier.Amount = 0.0f - RetributionSlow;
+                                SlowModifier.Duration = RetributionAuraDuration;
+                                SlowModifier.Rule = EStackRule::RefreshSameSource;
+                                Candidate->Stats->AddModifier(SlowModifier);
+                        }
                 }
         }
 }

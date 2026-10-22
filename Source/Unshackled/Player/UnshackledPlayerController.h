@@ -1,10 +1,11 @@
-﻿#pragma once
+#pragma once
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
 #include "InputMappingContext.h"
 #include "InputAction.h"
 #include "InputActionValue.h"
 #include "Characters/PartyMemberCharacter.h"
+#include "Components/RetributionComponent.h"
 #include "UnshackledPlayerController.generated.h"
 enum class EPartyMenuMode : uint8
 {
@@ -17,6 +18,9 @@ class UNSHACKLED_API AUnshackledPlayerController : public APlayerController
 {
         GENERATED_BODY()
 public:
+        AUnshackledPlayerController();
+        UPROPERTY(VisibleAnywhere, Category = "Retribution")
+        URetributionComponent* Retribution;
         UPROPERTY(EditAnywhere, Category = "Input")
         UInputMappingContext *MappingContext;
         UPROPERTY(EditAnywhere, Category = "Input")
@@ -50,6 +54,7 @@ public:
         FString GetMenuTitle() const;
         bool CanChooseMember(APartyMemberCharacter* Member) const;
         bool SwitchToFirstLivingAlly();
+        void BuildPartyList();
 protected:
         virtual void BeginPlay() override;
         virtual void SetupInputComponent() override;
@@ -72,7 +77,6 @@ protected:
         void SwitchPrevious();
         void MoveSwitchSelection(int32 Step);
         void SwitchTo(APartyMemberCharacter* NewLeader);
-        void BuildPartyList();
         FVector GetAimDirection(class AUnshackledCharacterBase* MyCharacter);
         bool bAimWithStick = false;
         FVector LastStickAimDirection = FVector(0.0f, 1.0f, 0.0f);

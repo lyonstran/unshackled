@@ -1,9 +1,10 @@
-﻿#include "UI/UnshackledHUD.h"
+#include "UI/UnshackledHUD.h"
 #include "Characters/UnshackledCharacterBase.h"
 #include "Characters/PartyMemberCharacter.h"
 #include "Player/UnshackledPlayerController.h"
 #include "Components/HealthComponent.h"
 #include "Components/StatsComponent.h"
+#include "Components/RetributionComponent.h"
 #include "Engine/Canvas.h"
 #include "EngineUtils.h"
 #include "Engine/World.h"
@@ -24,7 +25,64 @@ void AUnshackledHUD::DrawHUD()
                         }
                 }
         }
+        DrawRetributionTracker();
         DrawSwitchMenu();
+}
+void AUnshackledHUD::DrawRetributionTracker()
+{
+        AUnshackledPlayerController* MyController = Cast<AUnshackledPlayerController>(GetOwningPlayerController());
+        if (MyController == nullptr)
+        {
+                return;
+        }
+        URetributionComponent* Retribution = MyController->Retribution;
+        if (Retribution == nullptr)
+        {
+                return;
+        }
+        float CooldownLeft = Retribution->GetCooldownRemaining();
+        if (CooldownLeft > 0.0f)
+        {
+                int32 SecondsLeft = FMath::CeilToInt(CooldownLeft);
+                FString CooldownText = FString::Printf(TEXT("Retribution recharging %d"), SecondsLeft);
+                FLinearColor CooldownColor = FLinearColor(1.0f, 0.6f, 0.2f, 1.0f);
+                float CooldownLeftEdge = Canvas->SizeX - RetributionRightMargin - 190.0f;
+                float CooldownTop = Canvas->SizeY - RetributionBottomMargin - RetributionStepHeight + 6.0f;
+                DrawText(CooldownText, CooldownColor, CooldownLeftEdge, CooldownTop);
+                return;
+        }
+        int32 StepCount = Retribution->GetSequenceLength();
+        if (StepCount <= 0)
+        {
+                return;
+        }
+        float TotalWidth = (StepCount * RetributionStepWidth) + ((StepCount - 1) * RetributionStepGap);
+        float StartLeft = Canvas->SizeX - RetributionRightMargin - TotalWidth;
+        float StepTop = Canvas->SizeY - RetributionBottomMargin - RetributionStepHeight;
+        float LabelTop = StepTop - 20.0f;
+        FLinearColor TextColor = FLinearColor(1.0f, 1.0f, 1.0f, 1.0f);
+        DrawText(TEXT("Retribution: switch in this order"), TextColor, StartLeft, LabelTop);
+        int32 Progress = Retribution->GetProgress();
+        for (int32 i = 0; i < StepCount; i++)
+        {
+                APartyMemberCharacter* Member = Retribution->GetSequenceMember(i);
+                if (Member != nullptr)
+                {
+                        float StepLeft = StartLeft + (i * (RetributionStepWidth + RetributionStepGap));
+                        FLinearColor BoxColor = FLinearColor(0.15f, 0.15f, 0.2f, 0.85f);
+                        if (i < Progress)
+                        {
+                                BoxColor = FLinearColor(0.1f, 0.55f, 0.2f, 0.9f);
+                        }
+                        if (i == Progress)
+                        {
+                                BoxColor = FLinearColor(0.6f, 0.5f, 0.1f, 0.95f);
+                        }
+                        DrawRect(BoxColor, StepLeft, StepTop, RetributionStepWidth, RetributionStepHeight);
+                        FString StepText = FString::Printf(TEXT("%d. %s"), i + 1, *Member->DisplayName);
+                        DrawText(StepText, TextColor, StepLeft + 8.0f, StepTop + 6.0f);
+                }
+        }
 }
 void AUnshackledHUD::DrawHealthBar(AUnshackledCharacterBase* Character)
 {

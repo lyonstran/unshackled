@@ -12,7 +12,9 @@ class UNSHACKLED_API ASiriusCharacter : public APartyMemberCharacter
 public:
         ASiriusCharacter();
         virtual void OnDealtDamage(AUnshackledCharacterBase* Target, float DamageDealt) override;
+        virtual void Tick(float DeltaTime) override;
         virtual void OnSwappedOut(APartyMemberCharacter* NewLeader) override;
+        virtual void PerformRetribution() override;
         UPROPERTY(EditAnywhere, Category = "Sirius")
         TSubclassOf<AAbilityProjectile> CrescentClass;
         UPROPERTY(EditAnywhere, Category = "Sirius")
@@ -59,6 +61,18 @@ public:
         float AirBladeAllySlow = 0.1f;
         UPROPERTY(EditAnywhere, Category = "Sirius Grounded")
         float AirBladeAllySlowDuration = 2.0f;
+        UPROPERTY(EditAnywhere, Category = "Sirius Retribution")
+        float RetributionDuration = 10.0f;
+        UPROPERTY(EditAnywhere, Category = "Sirius Retribution")
+        float RetributionDefenseReduction = 0.5f;
+        UPROPERTY(EditAnywhere, Category = "Sirius Retribution")
+        float RetributionSlow = 0.25f;
+        UPROPERTY(EditAnywhere, Category = "Sirius Retribution")
+        float RetributionLifesteal = 0.5f;
+        UPROPERTY(EditAnywhere, Category = "Sirius Retribution")
+        float RetributionAuraInterval = 0.25f;
+        UPROPERTY(EditAnywhere, Category = "Sirius Retribution")
+        float RetributionAuraDuration = 0.5f;
 protected:
         virtual void PerformBasicAttack(FVector Direction) override;
         virtual void PerformSpecial(FVector AimDirection) override;
@@ -74,8 +88,12 @@ protected:
         void GiveSwapVeil(APartyMemberCharacter* Ally);
         AUnshackledCharacterBase* FindNearestEnemy();
         void FireAirBlade(AUnshackledCharacterBase* Target);
+        void TickRetribution(float DeltaTime);
+        void ApplyRetributionToEnemies();
         int32 EmpoweredAttacksLeft = 0;
         float AirBladeTimeLeft = 0.0f;
+        float RetributionTimeLeft = 0.0f;
+        float RetributionAuraTimer = 0.0f;
         UPROPERTY()
         AVeilActor* ActiveVeil;
         UPROPERTY()

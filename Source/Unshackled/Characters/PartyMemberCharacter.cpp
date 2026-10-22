@@ -152,6 +152,9 @@ void APartyMemberCharacter::OnSwappedIn(APartyMemberCharacter* PreviousLeader)
 void APartyMemberCharacter::OnSwappedOut(APartyMemberCharacter* NewLeader)
 {
 }
+void APartyMemberCharacter::PerformRetribution()
+{
+}
 void APartyMemberCharacter::FollowLeader()
 {
         APawn* LeaderPawn = UGameplayStatics::GetPlayerPawn(this, 0);

@@ -21,6 +21,7 @@ public:
         void RecallAlly();
         virtual void OnSwappedIn(APartyMemberCharacter* PreviousLeader);
         virtual void OnSwappedOut(APartyMemberCharacter* NewLeader);
+        virtual void PerformRetribution();
         UPROPERTY(VisibleAnywhere, Category = "Camera")
         USpringArmComponent* CameraArm;
         UPROPERTY(VisibleAnywhere, Category = "Camera")
