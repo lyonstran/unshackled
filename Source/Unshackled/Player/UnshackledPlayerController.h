@@ -55,6 +55,7 @@ public:
         bool CanChooseMember(APartyMemberCharacter* Member) const;
         bool SwitchToFirstLivingAlly();
         void BuildPartyList();
+        void SwitchTo(APartyMemberCharacter* NewLeader);
 protected:
         virtual void BeginPlay() override;
         virtual void SetupInputComponent() override;
@@ -76,7 +77,6 @@ protected:
         void SwitchNext();
         void SwitchPrevious();
         void MoveSwitchSelection(int32 Step);
-        void SwitchTo(APartyMemberCharacter* NewLeader);
         FVector GetAimDirection(class AUnshackledCharacterBase* MyCharacter);
         bool bAimWithStick = false;
         FVector LastStickAimDirection = FVector(0.0f, 1.0f, 0.0f);

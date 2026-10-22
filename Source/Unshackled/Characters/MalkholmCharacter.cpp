@@ -7,6 +7,8 @@
 #include "Components/HealthComponent.h"
 #include "Components/StatsComponent.h"
 #include "Stats/StatTypes.h"
+#include "Kismet/GameplayStatics.h"
+#include "Player/UnshackledPlayerController.h"
 AMalkholmCharacter::AMalkholmCharacter()
 {
         DisplayName = TEXT("Mal'Kholm");
@@ -313,4 +315,115 @@ void AMalkholmCharacter::TickPassiveCooldown(float DeltaTime)
         {
                 PassiveCooldownLeft = 0.0f;
         }
+}
+void AMalkholmCharacter::GroundedTick(float DeltaTime)
+{
+        Super::GroundedTick(DeltaTime);
+        if (!Stats->CanAct())
+        {
+                return;
+        }
+        bool bYanked = TryYankLeader();
+        if (bYanked)
+        {
+                return;
+        }
+        WhipTimeLeft = WhipTimeLeft - DeltaTime;
+        if (WhipTimeLeft > 0.0f)
+        {
+                return;
+        }
+        WhipTimeLeft = 0.0f;
+        int32 EnemiesHit = WhipEnemiesInRange();
+        if (EnemiesHit > 0)
+        {
+                WhipTimeLeft = WhipInterval;
+        }
+}
+bool AMalkholmCharacter::TryYankLeader()
+{
+        APartyMemberCharacter* Leader = Cast<APartyMemberCharacter>(UGameplayStatics::GetPlayerPawn(this, 0));
+        if (Leader == nullptr)
+        {
+                return false;
+        }
+        if (Leader == this)
+        {
+                return false;
+        }
+        if (Leader->Health->IsDead())
+        {
+                return false;
+        }
+        float LeaderMaxHealth = Leader->Health->MaxHealth;
+        if (LeaderMaxHealth <= 0.0f)
+        {
+                return false;
+        }
+        float HealthFraction = Leader->Health->CurrentHealth / LeaderMaxHealth;
+        if (HealthFraction > YankHealthFraction)
+        {
+                return false;
+        }
+        AUnshackledPlayerController* LeaderController = Cast<AUnshackledPlayerController>(Leader->GetController());
+        if (LeaderController == nullptr)
+        {
+                return false;
+        }
+        FVector YankLocation = GetActorLocation() + FVector(YankOffset, 0.0f, 0.0f);
+        Leader->SetActorLocation(YankLocation);
+        LeaderController->SwitchTo(this);
+        GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("Mal'Kholm yanked the leader out!"));
+        return true;
+}
+int32 AMalkholmCharacter::WhipEnemiesInRange()
+{
+        TArray<FOverlapResult> OverlapResults;
+        FCollisionQueryParams QueryParams;
+        QueryParams.AddIgnoredActor(this);
+        FCollisionObjectQueryParams ObjectParams;
+        ObjectParams.AddObjectTypesToQuery(ECC_Pawn);
+        FCollisionShape WhipShape = FCollisionShape::MakeSphere(WhipRadius);
+        GetWorld()->OverlapMultiByObjectType(OverlapResults, GetActorLocation(), FQuat::Identity, ObjectParams, WhipShape, QueryParams);
+        TArray<AActor*> ActorsAlreadyHit;
+        int32 EnemiesHit = 0;
+        for (int32 i = 0; i < OverlapResults.Num(); i++)
+        {
+                AActor* HitActor = OverlapResults[i].GetActor();
+                if (HitActor != nullptr)
+                {
+                        if (!ActorsAlreadyHit.Contains(HitActor))
+                        {
+                                ActorsAlreadyHit.Add(HitActor);
+                                AUnshackledCharacterBase* OtherCharacter = Cast<AUnshackledCharacterBase>(HitActor);
+                                if (OtherCharacter != nullptr)
+                                {
+                                        if (OtherCharacter->bIsEnemy != bIsEnemy)
+                                        {
+                                                DealDamage(OtherCharacter, WhipDamageScale, false);
+                                                KnockBack(OtherCharacter);
+                                                EnemiesHit = EnemiesHit + 1;
+                                        }
+                                }
+                        }
+                }
+        }
+        DrawDebugSphere(GetWorld(), GetActorLocation(), WhipRadius, 16, FColor::Yellow, false, 0.3f);
+        return EnemiesHit;
+}
+void AMalkholmCharacter::KnockBack(AUnshackledCharacterBase* Target)
+{
+        if (Target->Health->IsDead())
+        {
+                return;
+        }
+        FVector Direction = Target->GetActorLocation() - GetActorLocation();
+        Direction.Z = 0.0f;
+        if (Direction.IsNearlyZero())
+        {
+                Direction = GetFacingDirection();
+        }
+        Direction.Normalize();
+        FVector NewLocation = Target->GetActorLocation() + (Direction * WhipKnockbackDistance);
+        Target->SetActorLocation(NewLocation);
 }

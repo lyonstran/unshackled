@@ -66,10 +66,23 @@ public:
         float PassiveLifesteal = 0.1f;
         UPROPERTY(EditAnywhere, Category = "Malkholm Passive")
         float PassiveDefenseLoss = 1000.0f;
+        UPROPERTY(EditAnywhere, Category = "Malkholm Grounded")
+        float WhipInterval = 4.0f;
+        UPROPERTY(EditAnywhere, Category = "Malkholm Grounded")
+        float WhipRadius = 220.0f;
+        UPROPERTY(EditAnywhere, Category = "Malkholm Grounded")
+        float WhipDamageScale = 0.5f;
+        UPROPERTY(EditAnywhere, Category = "Malkholm Grounded")
+        float WhipKnockbackDistance = 150.0f;
+        UPROPERTY(EditAnywhere, Category = "Malkholm Grounded")
+        float YankHealthFraction = 0.1f;
+        UPROPERTY(EditAnywhere, Category = "Malkholm Grounded")
+        float YankOffset = 100.0f;
 protected:
         virtual void PerformBasicAttack(FVector Direction) override;
         virtual void PerformSpecial(FVector AimDirection) override;
         virtual bool WouldDie() override;
+        virtual void GroundedTick(float DeltaTime) override;
         bool IsBonusSwing() const;
         bool IsOnEdge(AUnshackledCharacterBase* Target) const;
         bool IsAtSlamTip(AUnshackledCharacterBase* Target) const;
@@ -82,8 +95,12 @@ protected:
         void EndRetribution();
         void TickPassiveCooldown(float DeltaTime);
         void GiveCheatDeathBuffs();
+        bool TryYankLeader();
+        int32 WhipEnemiesInRange();
+        void KnockBack(AUnshackledCharacterBase* Target);
         int32 SwingCount = 0;
         bool bSwingClockwise = true;
         float RetributionTimeLeft = 0.0f;
         float PassiveCooldownLeft = 0.0f;
+        float WhipTimeLeft = 0.0f;
 };
