@@ -4,6 +4,7 @@
 #include "FlowerCharacter.h"
 #include "Abilities/FlowerBombActor.h"
 #include "Abilities/SunTreeActor.h"
+#include "Abilities/PetalActor.h"
 #include "HanuboyCharacter.generated.h"
 enum class EHanuboyGroundedState : uint8
 {
@@ -18,6 +19,7 @@ class UNSHACKLED_API AHanuboyCharacter : public APartyMemberCharacter
 public:
         AHanuboyCharacter();
         virtual void Tick(float DeltaTime) override;
+        virtual void PerformRetribution() override;
         UPROPERTY(EditAnywhere, Category = "Hanuboy")
         float BallLength = 220.0f;
         UPROPERTY(EditAnywhere, Category = "Hanuboy")
@@ -44,6 +46,14 @@ public:
         TSubclassOf<ASunTreeActor> TreeClass;
         UPROPERTY(EditAnywhere, Category = "Hanuboy Ultimate")
         float TreeSpawnOffset = 150.0f;
+        UPROPERTY(EditAnywhere, Category = "Hanuboy Retribution")
+        TSubclassOf<APetalActor> PetalClass;
+        UPROPERTY(EditAnywhere, Category = "Hanuboy Retribution")
+        int32 PetalCount = 12;
+        UPROPERTY(EditAnywhere, Category = "Hanuboy Retribution")
+        float PetalRainDuration = 2.0f;
+        UPROPERTY(EditAnywhere, Category = "Hanuboy Retribution")
+        float PetalScatterRadius = 1200.0f;
         UPROPERTY(EditAnywhere, Category = "Hanuboy Grounded")
         float GroundedBaseRadius = 350.0f;
         UPROPERTY(EditAnywhere, Category = "Hanuboy Grounded")
@@ -73,6 +83,10 @@ protected:
         int32 CountActiveBombs();
         void ThrowBomb(AUnshackledCharacterBase* Target);
         float BombTimeLeft = 3.0f;
+        void TickPetalRain(float DeltaTime);
+        void SpawnPetal();
+        int32 PetalsLeftToSpawn = 0;
+        float PetalSpawnTimer = 0.0f;
         virtual void GroundedTick(float DeltaTime) override;
         void ResetGroundedState();
         void TickGroundedIdle(float DeltaTime);

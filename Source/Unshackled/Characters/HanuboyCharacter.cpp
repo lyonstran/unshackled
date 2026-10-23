@@ -4,6 +4,7 @@
 #include "CollisionQueryParams.h"
 #include "DrawDebugHelpers.h"
 #include "EngineUtils.h"
+#include "Engine/Engine.h"
 #include "Components/HealthComponent.h"
 #include "Components/StatsComponent.h"
 #include "Stats/StatTypes.h"
@@ -20,6 +21,7 @@ void AHanuboyCharacter::Tick(float DeltaTime)
 {
         Super::Tick(DeltaTime);
         TickBombs(DeltaTime);
+        TickPetalRain(DeltaTime);
         if (!IsGrounded())
         {
                 ResetGroundedState();
@@ -112,6 +114,57 @@ void AHanuboyCharacter::SpawnFlower(FVector Direction)
         FActorSpawnParameters SpawnParameters;
         SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
         GetWorld()->SpawnActor<AFlowerCharacter>(ClassToSpawn, SpawnLocation, SpawnRotation, SpawnParameters);
+}
+void AHanuboyCharacter::PerformRetribution()
+{
+        Super::PerformRetribution();
+        if (Health->IsDead())
+        {
+                return;
+        }
+        PetalsLeftToSpawn = PetalsLeftToSpawn + PetalCount;
+        PetalSpawnTimer = 0.0f;
+        GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Magenta, TEXT("Hanuboy Retribution"));
+}
+void AHanuboyCharacter::TickPetalRain(float DeltaTime)
+{
+        if (PetalsLeftToSpawn <= 0)
+        {
+                return;
+        }
+        if (Health->IsDead())
+        {
+                PetalsLeftToSpawn = 0;
+                return;
+        }
+        float SpawnInterval = PetalRainDuration / PetalCount;
+        PetalSpawnTimer = PetalSpawnTimer - DeltaTime;
+        while (PetalSpawnTimer <= 0.0f)
+        {
+                if (PetalsLeftToSpawn <= 0)
+                {
+                        return;
+                }
+                SpawnPetal();
+                PetalsLeftToSpawn = PetalsLeftToSpawn - 1;
+                PetalSpawnTimer = PetalSpawnTimer + SpawnInterval;
+        }
+}
+void AHanuboyCharacter::SpawnPetal()
+{
+        TSubclassOf<APetalActor> ClassToSpawn = PetalClass;
+        if (ClassToSpawn == nullptr)
+        {
+                ClassToSpawn = APetalActor::StaticClass();
+        }
+        float Angle = FMath::FRandRange(0.0f, 6.2831853f);
+        float Distance = PetalScatterRadius * FMath::Sqrt(FMath::FRand());
+        FVector Offset = FVector(FMath::Cos(Angle) * Distance, FMath::Sin(Angle) * Distance, 0.0f);
+        FVector SpawnLocation = GetActorLocation() + Offset;
+        FRotator SpawnRotation = FRotator::ZeroRotator;
+        FActorSpawnParameters SpawnParameters;
+        SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+        GetWorld()->SpawnActor<APetalActor>(ClassToSpawn, SpawnLocation, SpawnRotation, SpawnParameters);
 }
 void AHanuboyCharacter::PerformUltimate(FVector AimDirection)
 {
