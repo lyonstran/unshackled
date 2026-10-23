@@ -3,6 +3,7 @@
 #include "PartyMemberCharacter.h"
 #include "FlowerCharacter.h"
 #include "Abilities/FlowerBombActor.h"
+#include "Abilities/SunTreeActor.h"
 #include "HanuboyCharacter.generated.h"
 enum class EHanuboyGroundedState : uint8
 {
@@ -39,6 +40,10 @@ public:
         float BombSearchRange = 800.0f;
         UPROPERTY(EditAnywhere, Category = "Hanuboy Passive")
         int32 MaxActiveBombs = 3;
+        UPROPERTY(EditAnywhere, Category = "Hanuboy Ultimate")
+        TSubclassOf<ASunTreeActor> TreeClass;
+        UPROPERTY(EditAnywhere, Category = "Hanuboy Ultimate")
+        float TreeSpawnOffset = 150.0f;
         UPROPERTY(EditAnywhere, Category = "Hanuboy Grounded")
         float GroundedBaseRadius = 350.0f;
         UPROPERTY(EditAnywhere, Category = "Hanuboy Grounded")
@@ -58,6 +63,8 @@ public:
 protected:
         virtual void PerformBasicAttack(FVector Direction) override;
         virtual void PerformSpecial(FVector AimDirection) override;
+        virtual void PerformUltimate(FVector AimDirection) override;
+        void SpawnTree(FVector Direction);
         bool IsInBallLane(AUnshackledCharacterBase* Target, FVector Direction) const;
         void KnockBack(AUnshackledCharacterBase* Target);
         void SpawnFlower(FVector Direction);

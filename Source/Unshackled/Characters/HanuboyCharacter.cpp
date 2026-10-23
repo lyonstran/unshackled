@@ -113,6 +113,29 @@ void AHanuboyCharacter::SpawnFlower(FVector Direction)
         SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
         GetWorld()->SpawnActor<AFlowerCharacter>(ClassToSpawn, SpawnLocation, SpawnRotation, SpawnParameters);
 }
+void AHanuboyCharacter::PerformUltimate(FVector AimDirection)
+{
+        SpawnTree(AimDirection);
+}
+void AHanuboyCharacter::SpawnTree(FVector Direction)
+{
+        TSubclassOf<ASunTreeActor> ClassToSpawn = TreeClass;
+        if (ClassToSpawn == nullptr)
+        {
+                ClassToSpawn = ASunTreeActor::StaticClass();
+        }
+        Direction.Z = 0.0f;
+        Direction.Normalize();
+        FVector SpawnLocation = GetActorLocation() + (Direction * TreeSpawnOffset);
+        FRotator SpawnRotation = FRotator::ZeroRotator;
+        FActorSpawnParameters SpawnParameters;
+        SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+        ASunTreeActor* Tree = GetWorld()->SpawnActor<ASunTreeActor>(ClassToSpawn, SpawnLocation, SpawnRotation, SpawnParameters);
+        if (Tree != nullptr)
+        {
+                Tree->Setup(this, FlowerClass);
+        }
+}
 void AHanuboyCharacter::TickBombs(float DeltaTime)
 {
         if (Health->IsDead())
