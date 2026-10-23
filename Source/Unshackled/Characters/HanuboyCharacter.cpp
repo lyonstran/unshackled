@@ -3,6 +3,7 @@
 #include "Engine/OverlapResult.h"
 #include "CollisionQueryParams.h"
 #include "DrawDebugHelpers.h"
+#include "EngineUtils.h"
 #include "Components/HealthComponent.h"
 #include "Components/StatsComponent.h"
 AHanuboyCharacter::AHanuboyCharacter()
@@ -13,6 +14,11 @@ AHanuboyCharacter::AHanuboyCharacter()
         AttackCooldown = 0.6f;
         Health->MaxHealth = 120.0f;
         Stats->BaseDefense = 25.0f;
+}
+void AHanuboyCharacter::Tick(float DeltaTime)
+{
+        Super::Tick(DeltaTime);
+        TickBombs(DeltaTime);
 }
 void AHanuboyCharacter::PerformBasicAttack(FVector Direction)
 {
@@ -101,4 +107,94 @@ void AHanuboyCharacter::SpawnFlower(FVector Direction)
         FActorSpawnParameters SpawnParameters;
         SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
         GetWorld()->SpawnActor<AFlowerCharacter>(ClassToSpawn, SpawnLocation, SpawnRotation, SpawnParameters);
+}
+void AHanuboyCharacter::TickBombs(float DeltaTime)
+{
+        if (Health->IsDead())
+        {
+                return;
+        }
+        if (!Stats->CanAct())
+        {
+                return;
+        }
+        BombTimeLeft = BombTimeLeft - DeltaTime;
+        if (BombTimeLeft > 0.0f)
+        {
+                return;
+        }
+        BombTimeLeft = 0.0f;
+        int32 ActiveBombs = CountActiveBombs();
+        if (ActiveBombs >= MaxActiveBombs)
+        {
+                return;
+        }
+        AUnshackledCharacterBase* Target = FindNearestEnemyInRange();
+        if (Target == nullptr)
+        {
+                return;
+        }
+        ThrowBomb(Target);
+        BombTimeLeft = BombInterval;
+}
+AUnshackledCharacterBase* AHanuboyCharacter::FindNearestEnemyInRange()
+{
+        AUnshackledCharacterBase* NearestEnemy = nullptr;
+        float NearestDistance = BombSearchRange;
+        for (TActorIterator<AUnshackledCharacterBase> It(GetWorld()); It; ++It)
+        {
+                AUnshackledCharacterBase* Candidate = *It;
+                if (Candidate->bIsEnemy != bIsEnemy)
+                {
+                        if (!Candidate->Health->IsDead())
+                        {
+                                float Distance = FVector::Dist2D(GetActorLocation(), Candidate->GetActorLocation());
+                                if (Distance <= NearestDistance)
+                                {
+                                        NearestDistance = Distance;
+                                        NearestEnemy = Candidate;
+                                }
+                        }
+                }
+        }
+        return NearestEnemy;
+}
+int32 AHanuboyCharacter::CountActiveBombs()
+{
+        int32 BombCount = 0;
+        for (TActorIterator<AFlowerBombActor> It(GetWorld()); It; ++It)
+        {
+                BombCount = BombCount + 1;
+        }
+        return BombCount;
+}
+void AHanuboyCharacter::ThrowBomb(AUnshackledCharacterBase* Target)
+{
+        FVector Direction = Target->GetActorLocation() - GetActorLocation();
+        Direction.Z = 0.0f;
+        if (Direction.IsNearlyZero())
+        {
+                Direction = GetFacingDirection();
+        }
+        Direction.Normalize();
+        TSubclassOf<AFlowerBombActor> ClassToSpawn = BombClass;
+        if (ClassToSpawn == nullptr)
+        {
+                ClassToSpawn = AFlowerBombActor::StaticClass();
+        }
+        float ThrowDistance = BombThrowDistance;
+        float DistanceToTarget = FVector::Dist2D(GetActorLocation(), Target->GetActorLocation());
+        if (DistanceToTarget < ThrowDistance)
+        {
+                ThrowDistance = DistanceToTarget;
+        }
+        FVector SpawnLocation = GetActorLocation() + (Direction * ThrowDistance);
+        FRotator SpawnRotation = FRotator::ZeroRotator;
+        FActorSpawnParameters SpawnParameters;
+        SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+        AFlowerBombActor* Bomb = GetWorld()->SpawnActor<AFlowerBombActor>(ClassToSpawn, SpawnLocation, SpawnRotation, SpawnParameters);
+        if (Bomb != nullptr)
+        {
+                Bomb->Setup(this);
+        }
 }
