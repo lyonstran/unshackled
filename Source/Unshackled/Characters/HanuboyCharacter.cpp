@@ -6,6 +6,7 @@
 #include "EngineUtils.h"
 #include "Components/HealthComponent.h"
 #include "Components/StatsComponent.h"
+#include "Stats/StatTypes.h"
 AHanuboyCharacter::AHanuboyCharacter()
 {
         DisplayName = TEXT("Hanuboy");
@@ -19,6 +20,10 @@ void AHanuboyCharacter::Tick(float DeltaTime)
 {
         Super::Tick(DeltaTime);
         TickBombs(DeltaTime);
+        if (!IsGrounded())
+        {
+                ResetGroundedState();
+        }
 }
 void AHanuboyCharacter::PerformBasicAttack(FVector Direction)
 {
@@ -197,4 +202,167 @@ void AHanuboyCharacter::ThrowBomb(AUnshackledCharacterBase* Target)
         {
                 Bomb->Setup(this);
         }
+}
+void AHanuboyCharacter::GroundedTick(float DeltaTime)
+{
+        Super::GroundedTick(DeltaTime);
+        if (!Stats->CanAct())
+        {
+                return;
+        }
+        if (!bHasGroundedHome)
+        {
+                GroundedHome = GetActorLocation();
+                bHasGroundedHome = true;
+        }
+        DrawDebugCircle(GetWorld(), GroundedHome, GetGroundedRadius(), 32, FColor::Green, false, 0.05f, 0, 3.0f, FVector(0.0f, 1.0f, 0.0f), FVector(1.0f, 0.0f, 0.0f), false);
+        if (GroundedState == EHanuboyGroundedState::Idle)
+        {
+                TickGroundedIdle(DeltaTime);
+        }
+        else if (GroundedState == EHanuboyGroundedState::Out)
+        {
+                TickGroundedOut(DeltaTime);
+        }
+        else
+        {
+                TickGroundedBack(DeltaTime);
+        }
+}
+void AHanuboyCharacter::ResetGroundedState()
+{
+        GroundedState = EHanuboyGroundedState::Idle;
+        bHasGroundedHome = false;
+        GroundedWaitLeft = 0.0f;
+        GroundedTarget = nullptr;
+}
+float AHanuboyCharacter::GetGroundedRadius()
+{
+        int32 NearbyAllies = CountNearbyAllies();
+        float Radius = GroundedBaseRadius + (GroundedRadiusPerAlly * NearbyAllies);
+        return Radius;
+}
+int32 AHanuboyCharacter::CountNearbyAllies()
+{
+        int32 AllyCount = 0;
+        for (TActorIterator<APartyMemberCharacter> It(GetWorld()); It; ++It)
+        {
+                APartyMemberCharacter* Member = *It;
+                if (Member != this)
+                {
+                        if (!Member->Health->IsDead())
+                        {
+                                float Distance = FVector::Dist2D(GroundedHome, Member->GetActorLocation());
+                                if (Distance <= GroundedAllyRange)
+                                {
+                                        AllyCount = AllyCount + 1;
+                                }
+                        }
+                }
+        }
+        return AllyCount;
+}
+void AHanuboyCharacter::TickGroundedIdle(float DeltaTime)
+{
+        GroundedWaitLeft = GroundedWaitLeft - DeltaTime;
+        if (GroundedWaitLeft > 0.0f)
+        {
+                return;
+        }
+        GroundedWaitLeft = 0.0f;
+        AUnshackledCharacterBase* Target = FindGroundedTarget(GetGroundedRadius());
+        if (Target == nullptr)
+        {
+                return;
+        }
+        GroundedTarget = Target;
+        GroundedState = EHanuboyGroundedState::Out;
+}
+void AHanuboyCharacter::TickGroundedOut(float DeltaTime)
+{
+        if (GroundedTarget == nullptr)
+        {
+                GroundedState = EHanuboyGroundedState::Back;
+                return;
+        }
+        if (GroundedTarget->Health->IsDead())
+        {
+                GroundedTarget = nullptr;
+                GroundedState = EHanuboyGroundedState::Back;
+                return;
+        }
+        bool bArrived = MoveTowardPoint(GroundedTarget->GetActorLocation(), GroundedStopDistance, DeltaTime);
+        if (bArrived)
+        {
+                BashTarget(GroundedTarget);
+                GroundedTarget = nullptr;
+                GroundedState = EHanuboyGroundedState::Back;
+        }
+}
+void AHanuboyCharacter::TickGroundedBack(float DeltaTime)
+{
+        bool bArrived = MoveTowardPoint(GroundedHome, 10.0f, DeltaTime);
+        if (bArrived)
+        {
+                GroundedState = EHanuboyGroundedState::Idle;
+                GroundedWaitLeft = GroundedInterval;
+        }
+}
+AUnshackledCharacterBase* AHanuboyCharacter::FindGroundedTarget(float SearchRadius)
+{
+        AUnshackledCharacterBase* NearestEnemy = nullptr;
+        float NearestDistance = SearchRadius;
+        for (TActorIterator<AUnshackledCharacterBase> It(GetWorld()); It; ++It)
+        {
+                AUnshackledCharacterBase* Candidate = *It;
+                if (Candidate->bIsEnemy != bIsEnemy)
+                {
+                        if (!Candidate->Health->IsDead())
+                        {
+                                float Distance = FVector::Dist2D(GroundedHome, Candidate->GetActorLocation());
+                                if (Distance <= NearestDistance)
+                                {
+                                        NearestDistance = Distance;
+                                        NearestEnemy = Candidate;
+                                }
+                        }
+                }
+        }
+        return NearestEnemy;
+}
+bool AHanuboyCharacter::MoveTowardPoint(FVector Destination, float StopDistance, float DeltaTime)
+{
+        FVector ToDestination = Destination - GetActorLocation();
+        ToDestination.Z = 0.0f;
+        float Distance = ToDestination.Size();
+        if (Distance <= StopDistance)
+        {
+                return true;
+        }
+        float StepLength = GroundedDashSpeed * DeltaTime;
+        if (StepLength > Distance)
+        {
+                StepLength = Distance;
+        }
+        FVector StepDirection = ToDestination / Distance;
+        SetActorLocation(GetActorLocation() + (StepDirection * StepLength));
+        return false;
+}
+void AHanuboyCharacter::BashTarget(AUnshackledCharacterBase* Target)
+{
+        DealDamage(Target, GroundedBashScale, false);
+        DrawDebugSphere(GetWorld(), Target->GetActorLocation(), 100.0f, 12, FColor::Orange, false, 0.3f);
+        if (Target->Health->IsDead())
+        {
+                return;
+        }
+        FStatModifier BashRoot;
+        BashRoot.SourceId = FName("HanuboyBashRoot");
+        BashRoot.Stat = ECharacterStat::Speed;
+        BashRoot.Kind = EModifierKind::Flat;
+        BashRoot.Amount = 0.0f;
+        BashRoot.Duration = GroundedRootDuration;
+        BashRoot.Rule = EStackRule::RefreshSameSource;
+        BashRoot.Flag = EStatusFlag::Root;
+        Target->Stats->AddModifier(BashRoot);
 }
