@@ -83,3 +83,22 @@ void AHanuboyCharacter::KnockBack(AUnshackledCharacterBase* Target)
         FVector NewLocation = Target->GetActorLocation() + (PushDirection * BallKnockbackDistance);
         Target->SetActorLocation(NewLocation);
 }
+void AHanuboyCharacter::PerformSpecial(FVector AimDirection)
+{
+        SpawnFlower(AimDirection);
+}
+void AHanuboyCharacter::SpawnFlower(FVector Direction)
+{
+        TSubclassOf<AFlowerCharacter> ClassToSpawn = FlowerClass;
+        if (ClassToSpawn == nullptr)
+        {
+                ClassToSpawn = AFlowerCharacter::StaticClass();
+        }
+        Direction.Z = 0.0f;
+        Direction.Normalize();
+        FVector SpawnLocation = GetActorLocation() + (Direction * FlowerSpawnOffset);
+        FRotator SpawnRotation = FRotator::ZeroRotator;
+        FActorSpawnParameters SpawnParameters;
+        SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+        GetWorld()->SpawnActor<AFlowerCharacter>(ClassToSpawn, SpawnLocation, SpawnRotation, SpawnParameters);
+}

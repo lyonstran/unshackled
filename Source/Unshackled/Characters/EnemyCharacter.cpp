@@ -1,5 +1,6 @@
-﻿#include "EnemyCharacter.h"
+#include "EnemyCharacter.h"
 #include "Characters/PartyMemberCharacter.h"
+#include "Characters/FlowerCharacter.h"
 #include "EngineUtils.h"
 #include "GameFramework/CharacterMovementComponent.h"
 AEnemyCharacter::AEnemyCharacter()
@@ -45,6 +46,34 @@ AUnshackledCharacterBase* AEnemyCharacter::FindClosestTarget()
                                 {
                                         ClosestTarget = Member;
                                         ClosestDistance = Distance;
+                                }
+                        }
+                }
+        }
+        for (TActorIterator<AFlowerCharacter> FlowerIt(GetWorld()); FlowerIt; ++FlowerIt)
+        {
+                AFlowerCharacter* Flower = *FlowerIt;
+                if (Flower != nullptr)
+                {
+                        if (!Flower->Health->IsDead())
+                        {
+                                float FlowerDistance = FVector::Dist2D(Flower->GetActorLocation(), GetActorLocation());
+                                bool bFlowerIsCloser = false;
+                                if (ClosestTarget == nullptr)
+                                {
+                                        bFlowerIsCloser = true;
+                                }
+                                else
+                                {
+                                        if (FlowerDistance < ClosestDistance)
+                                        {
+                                                bFlowerIsCloser = true;
+                                        }
+                                }
+                                if (bFlowerIsCloser)
+                                {
+                                        ClosestTarget = Flower;
+                                        ClosestDistance = FlowerDistance;
                                 }
                         }
                 }
