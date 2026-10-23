@@ -10,6 +10,7 @@
 #include "DrawDebugHelpers.h"
 AFlowerCharacter::AFlowerCharacter()
 {
+        StatsRowName = FName("Flower");
         PrimaryActorTick.bCanEverTick = true;
         bIsEnemy = false;
         Health->MaxHealth = 80.0f;

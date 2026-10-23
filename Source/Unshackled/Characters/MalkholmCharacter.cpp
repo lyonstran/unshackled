@@ -12,6 +12,7 @@
 #include "EngineUtils.h"
 AMalkholmCharacter::AMalkholmCharacter()
 {
+        StatsRowName = FName("Malkholm");
         DisplayName = TEXT("Mal'Kholm");
         AuraColor = FLinearColor(1.0f, 0.9f, 0.0f);
         AttackDamage = 22.0f;

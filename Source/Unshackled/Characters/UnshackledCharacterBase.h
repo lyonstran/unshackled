@@ -29,6 +29,8 @@ public:
         UHealthComponent* Health;
         UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
         UStatsComponent* Stats;
+        UPROPERTY(EditAnywhere, Category = "Tuning")
+        FName StatsRowName;
         UPROPERTY(EditAnywhere, Category = "Combat")
         float AttackDamage = 20.0f;
         UPROPERTY(EditAnywhere, Category = "Combat")
@@ -68,6 +70,7 @@ protected:
         virtual void PerformBasicAttack(FVector Direction);
         virtual void PerformSpecial(FVector AimDirection);
         virtual void PerformUltimate(FVector AimDirection);
+        void ApplyStatsRow();
         void ApplyStatEffects();
         void RegenerateMana(float DeltaTime);
         float CalculateFinalDamage(float RawDamage, bool bTrueDamage);

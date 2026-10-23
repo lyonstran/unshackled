@@ -1,0 +1,9 @@
+Name,MaxHealth,Damage,Defense,Speed,MaxMana,ManaRegenPerSecond,AttackCooldown,DashCooldown,SpecialManaCost,SpecialCooldown,SpecialWindup,UltimateManaCost,UltimateCooldown,UltimateWindup
+Sirius,100,25,20,600,100,3,0.5,5,20,6,0,60,30,0
+Malkholm,160,22,40,600,100,3,0.7,5,20,6,1.5,60,30,0
+Kalia,80,28,10,600,100,3,0.45,5,20,6,1.2,60,30,0
+Hanuboy,120,16,25,600,100,3,0.6,5,20,6,0,60,30,0
+Flower,80,0,10,0,0,0,1,5,0,0,0,0,0,0
+BasicGuard,60,10,20,600,0,0,1,5,0,0,0,0,0,0
+CasterGuard,40,12,10,600,0,0,1,5,0,0,0,0,0,0
+FloorDirector,300,25,50,600,0,0,1,5,0,0,0,0,0,0

@@ -7,6 +7,7 @@
 #include "Stats/StatTypes.h"
 ASiriusCharacter::ASiriusCharacter()
 {
+        StatsRowName = FName("Sirius");
 }
 void ASiriusCharacter::Tick(float DeltaTime)
 {

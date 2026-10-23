@@ -12,6 +12,7 @@
 #include "Stats/StatTypes.h"
 AKaliaCharacter::AKaliaCharacter()
 {
+        StatsRowName = FName("Kalia");
         DisplayName = TEXT("Kalia");
         AuraColor = FLinearColor(1.0f, 0.1f, 0.1f);
         AttackDamage = 28.0f;

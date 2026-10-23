@@ -7,6 +7,10 @@
 #include "CollisionQueryParams.h"
 #include "DrawDebugHelpers.h"
 #include "TimerManager.h"
+#include "Engine/DataTable.h"
+#include "Engine/World.h"
+#include "Game/UnshackledGameMode.h"
+#include "Stats/CharacterStatsRow.h"
 AUnshackledCharacterBase::AUnshackledCharacterBase()
 {
         PrimaryActorTick.bCanEverTick = true;
@@ -22,8 +26,55 @@ AUnshackledCharacterBase::AUnshackledCharacterBase()
 void AUnshackledCharacterBase::BeginPlay()
 {
         Super::BeginPlay();
+        ApplyStatsRow();
         Stats->BaseMaxHealth = Health->MaxHealth;
         Stats->BaseDamage = AttackDamage;
+}
+void AUnshackledCharacterBase::ApplyStatsRow()
+{
+        if (StatsRowName.IsNone())
+        {
+                return;
+        }
+        UWorld* World = GetWorld();
+        if (World == nullptr)
+        {
+                return;
+        }
+        AUnshackledGameMode* GameMode = World->GetAuthGameMode<AUnshackledGameMode>();
+        if (GameMode == nullptr)
+        {
+                return;
+        }
+        if (GameMode->CharacterStatsTable == nullptr)
+        {
+                return;
+        }
+        FCharacterStatsRow* Row = GameMode->CharacterStatsTable->FindRow<FCharacterStatsRow>(StatsRowName, TEXT("ApplyStatsRow"));
+        if (Row == nullptr)
+        {
+                UE_LOG(LogTemp, Warning, TEXT("No stats row named %s in the character stats table"), *StatsRowName.ToString());
+                return;
+        }
+        Health->MaxHealth = Row->MaxHealth;
+        Health->CurrentHealth = Row->MaxHealth;
+        AttackDamage = Row->Damage;
+        Stats->BaseDefense = Row->Defense;
+        Stats->BaseSpeed = Row->Speed;
+        Stats->BaseMaxMana = Row->MaxMana;
+        ManaRegenPerSecond = Row->ManaRegenPerSecond;
+        AttackCooldown = Row->AttackCooldown;
+        DashCooldown = Row->DashCooldown;
+        SpecialManaCost = Row->SpecialManaCost;
+        SpecialCooldown = Row->SpecialCooldown;
+        SpecialWindup = Row->SpecialWindup;
+        UltimateManaCost = Row->UltimateManaCost;
+        UltimateCooldown = Row->UltimateCooldown;
+        UltimateWindup = Row->UltimateWindup;
+        if (Stats->bHasMana)
+        {
+                Stats->CurrentMana = Stats->GetFinal(ECharacterStat::MaxMana);
+        }
 }
 void AUnshackledCharacterBase::Tick(float DeltaTime)
 {
