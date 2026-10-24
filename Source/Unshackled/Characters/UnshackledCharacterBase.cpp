@@ -81,6 +81,17 @@ void AUnshackledCharacterBase::Tick(float DeltaTime)
         Super::Tick(DeltaTime);
         ApplyStatEffects();
         RegenerateMana(DeltaTime);
+        DrawDefenseDebug();
+}
+void AUnshackledCharacterBase::DrawDefenseDebug()
+{
+        if (!IsPlayerControlled())
+        {
+                return;
+        }
+        float FinalDefense = Stats->GetFinal(ECharacterStat::Defense);
+        FString Message = FString::Printf(TEXT("Defense: %.1f"), FinalDefense);
+        GEngine->AddOnScreenDebugMessage(9000, 0.0f, FColor::White, Message);
 }
 void AUnshackledCharacterBase::ApplyStatEffects()
 {
