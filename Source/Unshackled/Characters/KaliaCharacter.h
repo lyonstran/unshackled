@@ -64,11 +64,11 @@ public:
         UPROPERTY(EditAnywhere, Category = "Kalia Ultimate")
         float UltimateHealFraction = 0.12f;
         UPROPERTY(EditAnywhere, Category = "Kalia Ultimate")
-        float UltimateMissingDamageFraction = 0.12f;
+        float UltimateMissingDamageFraction = 0.06f;
         UPROPERTY(EditAnywhere, Category = "Kalia Ultimate")
         float UltimateBlinkOffset = 90.0f;
         UPROPERTY(EditAnywhere, Category = "Kalia Ultimate")
-        float UltimateSlashScale = 0.5f;
+        float UltimateSlashScale = 0.25f;
         UPROPERTY(EditAnywhere, Category = "Kalia Ultimate")
         float UltimateCastDamageFraction = 0.012f;
         UPROPERTY(EditAnywhere, Category = "Kalia Ultimate")
@@ -94,6 +94,7 @@ protected:
         void ApplyKnifeDebuff(AUnshackledCharacterBase* Target);
         void RefreshSpecialIfLow(AUnshackledCharacterBase* Target);
         void BlinkBehind(AUnshackledCharacterBase* Target, FVector Direction);
+        void DrawKnifeTelegraph();
         void FreezeEnemiesAround(FVector Center);
         void FreezeEnemy(AUnshackledCharacterBase* Enemy);
         void AddRetributionModifier(ECharacterStat Stat, EModifierKind Kind, float Amount);

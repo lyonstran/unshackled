@@ -92,6 +92,8 @@ public:
         float UltimateDefenseGainFraction = 0.5f;
         UPROPERTY(EditAnywhere, Category = "Malkholm Ultimate")
         float UltimateBuffDuration = 10.0f;
+        UPROPERTY(EditAnywhere, Category = "Malkholm Ultimate")
+        float UltimateSlamManaFraction = 0.5f;
 protected:
         virtual void PerformBasicAttack(FVector Direction) override;
         virtual void PerformSpecial(FVector AimDirection) override;
@@ -118,6 +120,8 @@ protected:
         void TickUltimateDash(float DeltaTime);
         void FinishUltimateDash();
         void TickUltimateBuff(float DeltaTime);
+        void StartSlamBoost();
+        void EndSlamBoost();
         int32 SwingCount = 0;
         bool bSwingClockwise = true;
         float RetributionTimeLeft = 0.0f;
@@ -126,6 +130,9 @@ protected:
         bool bUltimateDashing = false;
         float UltimateDashTimeLeft = 0.0f;
         float UltimateBuffTimeLeft = 0.0f;
+        bool bSlamBoosted = false;
+        float SavedSpecialWindup = 0.0f;
+        float SavedSpecialManaCost = 0.0f;
         float UltimateGainHealth = 0.0f;
         float UltimateGainDefense = 0.0f;
         FVector UltimateTargetLocation = FVector::ZeroVector;

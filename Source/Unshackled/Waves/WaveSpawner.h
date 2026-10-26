@@ -20,6 +20,7 @@ class UNSHACKLED_API AWaveSpawner : public AActor
 public:
       AWaveSpawner();
       virtual void Tick(float DeltaTime) override;
+      bool IsFloorCleared() const;
       UPROPERTY(VisibleAnywhere, Category = "Components")
       UBoxComponent* StartTrigger;
       UPROPERTY(EditAnywhere, Category = "Waves")
@@ -28,6 +29,8 @@ public:
       UDataTable* FloorTable;
       UPROPERTY(EditAnywhere, Category = "Waves")
       int32 FloorNumber = 1;
+      UPROPERTY(EditAnywhere, Category = "Waves")
+      bool bUseGameInstanceFloor = true;
       UPROPERTY(EditAnywhere, Category = "Waves")
       int32 RecruitedPartySize = 2;
       UPROPERTY(EditAnywhere, Category = "Scaling")
@@ -43,6 +46,7 @@ public:
       UPROPERTY(EditAnywhere, Category = "Waves")
       TArray<AActor*> SpawnPoints;
 protected:
+      virtual void BeginPlay() override;
       EWaveState State = EWaveState::WaitingForPlayer;
       int32 CurrentWave = 0;
       float PauseTimer = 0.0f;

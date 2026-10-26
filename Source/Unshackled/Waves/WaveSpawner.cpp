@@ -4,6 +4,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Engine/Engine.h"
 #include "Characters/UnshackledCharacterBase.h"
+#include "Game/UnshackledGameInstance.h"
 AWaveSpawner::AWaveSpawner()
 {
       PrimaryActorTick.bCanEverTick = true;
@@ -13,9 +14,28 @@ AWaveSpawner::AWaveSpawner()
       StartTrigger->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
       StartTrigger->SetGenerateOverlapEvents(true);
 }
+void AWaveSpawner::BeginPlay()
+{
+      Super::BeginPlay();
+      if (!bUseGameInstanceFloor)
+      {
+              return;
+      }
+      UUnshackledGameInstance* GameInstanceRef = Cast<UUnshackledGameInstance>(GetGameInstance());
+      if (GameInstanceRef == nullptr)
+      {
+              return;
+      }
+      FloorNumber = GameInstanceRef->CurrentFloor;
+}
+bool AWaveSpawner::IsFloorCleared() const
+{
+      return State == EWaveState::FloorCleared;
+}
 void AWaveSpawner::Tick(float DeltaTime)
 {
       Super::Tick(DeltaTime);
+      GEngine->AddOnScreenDebugMessage(7002, 0.0f, FColor::Cyan, FString::Printf(TEXT("Floor %d"), FloorNumber)); // DEBUG_FLOOR_LINE
       if (State == EWaveState::WaitingForPlayer)
       {
               CheckForPlayer();

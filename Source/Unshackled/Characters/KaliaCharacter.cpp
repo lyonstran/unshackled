@@ -29,6 +29,29 @@ void AKaliaCharacter::Tick(float DeltaTime)
                 ResetGroundedState();
         }
         TickUltimate(DeltaTime);
+        DrawKnifeTelegraph();
+}
+void AKaliaCharacter::DrawKnifeTelegraph()
+{
+        if (!GetWorldTimerManager().IsTimerActive(SpecialWindupTimer))
+        {
+                return;
+        }
+        FVector Direction = PendingSpecialAim;
+        Direction.Z = 0.0f;
+        Direction.Normalize();
+        FVector Origin = GetActorLocation();
+        FVector LandingPoint = Origin + (Direction * KnifeRange);
+        FColor LineColor = FColor::Silver;
+        AUnshackledCharacterBase* Target = FindKnifeTarget(Direction);
+        if (Target != nullptr)
+        {
+                LandingPoint = Target->GetActorLocation() + (Direction * BlinkBehindDistance);
+                LineColor = FColor::Red;
+        }
+        LandingPoint.Z = Origin.Z;
+        DrawDebugLine(GetWorld(), Origin, LandingPoint, LineColor, false, 0.0f, 0, 4.0f);
+        DrawDebugSphere(GetWorld(), LandingPoint, KnifeWidth, 12, LineColor, false, 0.0f, 0, 3.0f);
 }
 void AKaliaCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {

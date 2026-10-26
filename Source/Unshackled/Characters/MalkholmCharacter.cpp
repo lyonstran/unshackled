@@ -153,6 +153,17 @@ void AMalkholmCharacter::ShowSwingText()
 }
 void AMalkholmCharacter::PerformSpecial(FVector AimDirection)
 {
+        AUnshackledPlayerController* AimController = Cast<AUnshackledPlayerController>(GetController());
+        if (AimController != nullptr)
+        {
+                FVector LatestAim = AimController->GetAimDirection(this);
+                LatestAim.Z = 0.0f;
+                if (!LatestAim.IsNearlyZero())
+                {
+                        LatestAim.Normalize();
+                        AimDirection = LatestAim;
+                }
+        }
         float RangeMultiplier = GetRangeMultiplier();
         float EffectiveRange = SlamRange * RangeMultiplier;
         float EffectiveRadius = SlamRadius * RangeMultiplier;
@@ -540,17 +551,42 @@ void AMalkholmCharacter::FinishUltimateDash()
         DefenseGain.Duration = UltimateBuffDuration;
         DefenseGain.Rule = EStackRule::RefreshSameSource;
         Stats->AddModifier(DefenseGain);
+        StartSlamBoost();
         GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Magenta, TEXT("Mal'Kholm absorbed his target!"));
+}
+void AMalkholmCharacter::StartSlamBoost()
+{
+        if (bSlamBoosted)
+        {
+                return;
+        }
+        bSlamBoosted = true;
+        SavedSpecialWindup = SpecialWindup;
+        SavedSpecialManaCost = SpecialManaCost;
+        SpecialWindup = 0.0f;
+        SpecialManaCost = SpecialManaCost * UltimateSlamManaFraction;
+}
+void AMalkholmCharacter::EndSlamBoost()
+{
+        if (!bSlamBoosted)
+        {
+                return;
+        }
+        bSlamBoosted = false;
+        SpecialWindup = SavedSpecialWindup;
+        SpecialManaCost = SavedSpecialManaCost;
 }
 void AMalkholmCharacter::TickUltimateBuff(float DeltaTime)
 {
         if (UltimateBuffTimeLeft <= 0.0f)
         {
+                EndSlamBoost();
                 return;
         }
         if (Health->IsDead())
         {
                 UltimateBuffTimeLeft = 0.0f;
+                EndSlamBoost();
                 return;
         }
         UltimateBuffTimeLeft = UltimateBuffTimeLeft - DeltaTime;
