@@ -5,6 +5,8 @@
 #include "Engine/Engine.h"
 #include "Characters/UnshackledCharacterBase.h"
 #include "Game/UnshackledGameInstance.h"
+#include "UI/UnshackledHUD.h"
+#include "GameFramework/PlayerController.h"
 AWaveSpawner::AWaveSpawner()
 {
       PrimaryActorTick.bCanEverTick = true;
@@ -58,6 +60,14 @@ void AWaveSpawner::CheckForPlayer()
       }
       if (StartTrigger->IsOverlappingActor(PlayerPawn))
       {
+              if (bUseGameInstanceFloor)
+              {
+                      UUnshackledGameInstance* GameInstanceRef = Cast<UUnshackledGameInstance>(GetGameInstance());
+                      if (GameInstanceRef != nullptr)
+                      {
+                              RecruitedPartySize = GameInstanceRef->GetRecruitedCount();
+                      }
+              }
               StartNextWave();
       }
 }
@@ -242,7 +252,15 @@ void AWaveSpawner::FinishFloor()
 {
       State = EWaveState::FloorCleared;
       ReviveDeadAllies();
-      GEngine->AddOnScreenDebugMessage(-1, 6.0f, FColor::Green, TEXT("Floor cleared!"));
+      APlayerController* PlayerController = UGameplayStatics::GetPlayerController(this, 0);
+      if (PlayerController != nullptr)
+      {
+              AUnshackledHUD* Hud = Cast<AUnshackledHUD>(PlayerController->GetHUD());
+              if (Hud != nullptr)
+              {
+                      Hud->ShowBanner(TEXT("Floor cleared! Find the exit"), FLinearColor(0.4f, 1.0f, 0.5f, 1.0f), 5.0f);
+              }
+      }
       UE_LOG(LogTemp, Warning, TEXT("Floor %d cleared"), FloorNumber);
 }
 void AWaveSpawner::ReviveDeadAllies()

@@ -181,6 +181,19 @@ void AUnshackledPlayerController::BuildPartyList()
                 }
         }
 }
+void AUnshackledPlayerController::AddPartyMember(APartyMemberCharacter* NewMember)
+{
+        BuildPartyList();
+        if (NewMember == nullptr)
+        {
+                return;
+        }
+        if (PartyMembers.Contains(NewMember))
+        {
+                return;
+        }
+        PartyMembers.Add(NewMember);
+}
 void AUnshackledPlayerController::OpenSwitchMenu()
 {
         OpenMenu(EPartyMenuMode::Switch);

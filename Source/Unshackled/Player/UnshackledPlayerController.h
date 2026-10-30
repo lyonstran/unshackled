@@ -55,6 +55,7 @@ public:
         bool CanChooseMember(APartyMemberCharacter* Member) const;
         bool SwitchToFirstLivingAlly();
         void BuildPartyList();
+        void AddPartyMember(APartyMemberCharacter* NewMember);
         void SwitchTo(APartyMemberCharacter* NewLeader);
         FVector GetAimDirection(class AUnshackledCharacterBase* MyCharacter);
 protected:

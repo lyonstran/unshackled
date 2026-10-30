@@ -14,6 +14,7 @@ class UNSHACKLED_API UUnshackledGameInstance : public UGameInstance
 {
 	GENERATED_BODY()
 public:
+	virtual void Init() override;
 	UPROPERTY(VisibleAnywhere, Category = "Progress")
 	int32 CurrentFloor = 1;
 	UPROPERTY(EditAnywhere, Category = "Progress")
@@ -23,7 +24,11 @@ public:
 	void ResetToFirstFloor();
 	void SaveFloorStartStates();
 	bool RestoreCharacterState(APartyMemberCharacter* Member);
+	bool IsRecruited(FName CharacterId) const;
+	void Recruit(FName CharacterId);
+	int32 GetRecruitedCount() const;
 private:
+	TArray<FName> RecruitedIds;
 	TArray<FCharacterState> FloorStartStates;
 	int32 FindStateIndex(FName CharacterId) const;
 };

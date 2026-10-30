@@ -27,6 +27,36 @@ void AUnshackledHUD::DrawHUD()
         }
         DrawRetributionTracker();
         DrawSwitchMenu();
+        DrawBanner();
+}
+void AUnshackledHUD::ShowBanner(FString Text, FLinearColor Color, float Duration)
+{
+        BannerText = Text;
+        BannerColor = Color;
+        BannerEndTime = GetWorld()->GetRealTimeSeconds() + Duration;
+}
+void AUnshackledHUD::DrawBanner()
+{
+        float TimeLeft = BannerEndTime - GetWorld()->GetRealTimeSeconds();
+        if (TimeLeft <= 0.0f)
+        {
+                return;
+        }
+        float Alpha = 1.0f;
+        if (TimeLeft < BannerFadeTime)
+        {
+                Alpha = TimeLeft / BannerFadeTime;
+        }
+        float TextWidth = 0.0f;
+        float TextHeight = 0.0f;
+        GetTextSize(BannerText, TextWidth, TextHeight, nullptr, BannerScale);
+        float TextLeft = (Canvas->SizeX - TextWidth) / 2.0f;
+        float TextTop = Canvas->SizeY * BannerTopFraction;
+        FLinearColor ShadowColor = FLinearColor(0.0f, 0.0f, 0.0f, Alpha);
+        FLinearColor MainColor = BannerColor;
+        MainColor.A = Alpha;
+        DrawText(BannerText, ShadowColor, TextLeft + 2.0f, TextTop + 2.0f, nullptr, BannerScale);
+        DrawText(BannerText, MainColor, TextLeft, TextTop, nullptr, BannerScale);
 }
 void AUnshackledHUD::DrawRetributionTracker()
 {

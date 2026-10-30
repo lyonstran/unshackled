@@ -8,6 +8,7 @@ class UNSHACKLED_API AUnshackledHUD : public AHUD
         GENERATED_BODY()
 public:
         virtual void DrawHUD() override;
+        void ShowBanner(FString Text, FLinearColor Color, float Duration);
         UPROPERTY(EditAnywhere, Category = "Health Bars")
         float BarWidth = 70.0f;
         UPROPERTY(EditAnywhere, Category = "Health Bars")
@@ -28,6 +29,12 @@ public:
         float MenuBottomMargin = 40.0f;
         UPROPERTY(EditAnywhere, Category = "Switch Menu")
         float CardBorder = 4.0f;
+        UPROPERTY(EditAnywhere, Category = "Banner")
+        float BannerScale = 3.0f;
+        UPROPERTY(EditAnywhere, Category = "Banner")
+        float BannerTopFraction = 0.2f;
+        UPROPERTY(EditAnywhere, Category = "Banner")
+        float BannerFadeTime = 1.0f;
         UPROPERTY(EditAnywhere, Category = "Retribution")
         float RetributionStepWidth = 110.0f;
         UPROPERTY(EditAnywhere, Category = "Retribution")
@@ -44,6 +51,11 @@ protected:
         void DrawGroundedTag(class APartyMemberCharacter* Member);
         void DrawSwitchMenu();
         void DrawRetributionTracker();
+        void DrawBanner();
         void DrawSwitchCard(class APartyMemberCharacter* Member, float Left, float Top, bool bSelected, bool bChoosable);
         void DrawCardStatusText(class APartyMemberCharacter* Member, float Left, float TextTop);
+private:
+        FString BannerText;
+        FLinearColor BannerColor = FLinearColor::White;
+        float BannerEndTime = 0.0f;
 };

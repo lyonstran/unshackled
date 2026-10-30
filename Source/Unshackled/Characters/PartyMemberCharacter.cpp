@@ -1,6 +1,8 @@
 #include "PartyMemberCharacter.h"
 #include "Player/UnshackledPlayerController.h"
 #include "Game/UnshackledGameInstance.h"
+#include "UI/UnshackledHUD.h"
+#include "GameFramework/PlayerController.h"
 #include "Engine/Engine.h"
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
@@ -204,9 +206,14 @@ void APartyMemberCharacter::Die()
                         return;
                 }
         }
-        if (GEngine != nullptr)
+        APlayerController* PlayerController = UGameplayStatics::GetPlayerController(this, 0);
+        if (PlayerController != nullptr)
         {
-                GEngine->AddOnScreenDebugMessage(-1, GameOverDelay, FColor::Red, TEXT("Game Over"));
+                AUnshackledHUD* Hud = Cast<AUnshackledHUD>(PlayerController->GetHUD());
+                if (Hud != nullptr)
+                {
+                        Hud->ShowBanner(TEXT("Game Over"), FLinearColor(1.0f, 0.2f, 0.2f, 1.0f), GameOverDelay);
+                }
         }
         GetWorldTimerManager().SetTimer(GameOverTimer, this, &APartyMemberCharacter::RestartLevelAfterDeath, GameOverDelay, false);
 }

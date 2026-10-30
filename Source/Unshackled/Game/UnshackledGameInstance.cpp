@@ -3,6 +3,11 @@
 #include "Components/HealthComponent.h"
 #include "Components/StatsComponent.h"
 #include "EngineUtils.h"
+void UUnshackledGameInstance::Init()
+{
+	Super::Init();
+	ResetToFirstFloor();
+}
 bool UUnshackledGameInstance::IsLastFloor() const
 {
 	return CurrentFloor >= MaxFloor;
@@ -20,6 +25,24 @@ void UUnshackledGameInstance::ResetToFirstFloor()
 {
 	CurrentFloor = 1;
 	FloorStartStates.Empty();
+	RecruitedIds.Empty();
+	RecruitedIds.Add(FName("Sirius"));
+}
+bool UUnshackledGameInstance::IsRecruited(FName CharacterId) const
+{
+	return RecruitedIds.Contains(CharacterId);
+}
+void UUnshackledGameInstance::Recruit(FName CharacterId)
+{
+	if (RecruitedIds.Contains(CharacterId))
+	{
+		return;
+	}
+	RecruitedIds.Add(CharacterId);
+}
+int32 UUnshackledGameInstance::GetRecruitedCount() const
+{
+	return RecruitedIds.Num();
 }
 int32 UUnshackledGameInstance::FindStateIndex(FName CharacterId) const
 {
