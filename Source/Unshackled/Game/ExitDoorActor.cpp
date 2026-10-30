@@ -184,6 +184,7 @@ void AExitDoorActor::TravelToNextFloor()
 		GEngine->AddOnScreenDebugMessage(-1, 6.0f, FColor::Yellow, TEXT("There are no more floors. You escaped!"));
 		return;
 	}
+	GameInstanceRef->SaveFloorStartStates();
 	RemovePortalGlow();
 	FString CurrentLevelName = UGameplayStatics::GetCurrentLevelName(this, true);
 	UGameplayStatics::OpenLevel(this, FName(*CurrentLevelName));

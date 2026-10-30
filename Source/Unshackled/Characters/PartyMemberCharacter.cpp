@@ -1,5 +1,6 @@
 #include "PartyMemberCharacter.h"
 #include "Player/UnshackledPlayerController.h"
+#include "Game/UnshackledGameInstance.h"
 #include "Engine/Engine.h"
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
@@ -22,6 +23,11 @@ APartyMemberCharacter::APartyMemberCharacter()
 void APartyMemberCharacter::BeginPlay()
 {
         Super::BeginPlay();
+        UUnshackledGameInstance* GameInstanceRef = Cast<UUnshackledGameInstance>(GetGameInstance());
+        if (GameInstanceRef != nullptr)
+        {
+                GameInstanceRef->RestoreCharacterState(this);
+        }
         if (!IsPlayerControlled())
         {
                 SetFollowing(true);
