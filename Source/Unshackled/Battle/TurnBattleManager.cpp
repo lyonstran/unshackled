@@ -6,7 +6,6 @@
 #include "Engine/Engine.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerController.h"
-#include "InputCoreTypes.h"
 ATurnBattleManager::ATurnBattleManager()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -75,10 +74,6 @@ void ATurnBattleManager::BuildBossRows()
 	{
 		ShowMessage(Report, FColor::Red);
 	}
-	else
-	{
-		ShowMessage(Report, FColor::Green);
-	}
 }
 const FTelegraphRow* ATurnBattleManager::GetRow(FName RowName) const
 {
@@ -96,7 +91,205 @@ void ATurnBattleManager::StartPlayerPhase()
 	{
 		RestoreManaForNewRound();
 	}
+	ResetMenuToNextMember();
 	ShowMessage(FString::Printf(TEXT("Round %d: your turn"), Round), FColor::Cyan);
+}
+void ATurnBattleManager::ResetMenuToNextMember()
+{
+	MenuStage = EBattleMenuStage::PickMember;
+	MenuActionIndex = 0;
+	int32 NextIndex = FindNextActingMember();
+	if (NextIndex >= 0)
+	{
+		MenuMemberIndex = NextIndex;
+	}
+}
+void ATurnBattleManager::MoveMemberSelection(int32 Step)
+{
+	int32 Count = Party.Num();
+	if (Count == 0)
+	{
+		return;
+	}
+	int32 Candidate = MenuMemberIndex;
+	for (int32 i = 0; i < Count; i++)
+	{
+		Candidate = Candidate + Step;
+		if (Candidate < 0)
+		{
+			Candidate = Count - 1;
+		}
+		if (Candidate >= Count)
+		{
+			Candidate = 0;
+		}
+		if (CanMemberAct(Candidate))
+		{
+			MenuMemberIndex = Candidate;
+			return;
+		}
+	}
+}
+void ATurnBattleManager::MenuStep(int32 Horizontal, int32 Vertical)
+{
+	if (State != EBattleState::PlayerPhase)
+	{
+		return;
+	}
+	if (MenuStage == EBattleMenuStage::PickMember)
+	{
+		if (Horizontal != 0)
+		{
+			MoveMemberSelection(Horizontal);
+		}
+		return;
+	}
+	if (Vertical != 0)
+	{
+		int32 Count = GetMenuActionCount();
+		MenuActionIndex = MenuActionIndex - Vertical;
+		if (MenuActionIndex < 0)
+		{
+			MenuActionIndex = Count - 1;
+		}
+		if (MenuActionIndex >= Count)
+		{
+			MenuActionIndex = 0;
+		}
+	}
+}
+void ATurnBattleManager::MenuConfirm()
+{
+	if (State != EBattleState::PlayerPhase)
+	{
+		return;
+	}
+	if (MenuStage == EBattleMenuStage::PickMember)
+	{
+		if (CanMemberAct(MenuMemberIndex))
+		{
+			MenuStage = EBattleMenuStage::PickAction;
+			MenuActionIndex = 0;
+		}
+		return;
+	}
+	EBattleAction Action = GetMenuAction(MenuActionIndex);
+	if (!IsActionUsable(MenuMemberIndex, Action))
+	{
+		ShowMessage(TEXT("Cannot use that right now"), FColor::Orange);
+		return;
+	}
+	bool bActed = TryPlayerAction(MenuMemberIndex, Action);
+	if (bActed)
+	{
+		ResetMenuToNextMember();
+	}
+}
+void ATurnBattleManager::MenuBack()
+{
+	if (State != EBattleState::PlayerPhase)
+	{
+		return;
+	}
+	if (MenuStage == EBattleMenuStage::PickAction)
+	{
+		MenuStage = EBattleMenuStage::PickMember;
+	}
+}
+EBattleMenuStage ATurnBattleManager::GetMenuStage() const
+{
+	return MenuStage;
+}
+int32 ATurnBattleManager::GetMenuMemberIndex() const
+{
+	return MenuMemberIndex;
+}
+int32 ATurnBattleManager::GetMenuActionIndex() const
+{
+	return MenuActionIndex;
+}
+int32 ATurnBattleManager::GetMenuActionCount() const
+{
+	return 5;
+}
+EBattleAction ATurnBattleManager::GetMenuAction(int32 Index) const
+{
+	if (Index == 0)
+	{
+		return EBattleAction::Attack;
+	}
+	if (Index == 1)
+	{
+		return EBattleAction::Special;
+	}
+	if (Index == 2)
+	{
+		return EBattleAction::Ultimate;
+	}
+	if (Index == 3)
+	{
+		return EBattleAction::Item;
+	}
+	if (Index == 4)
+	{
+		return EBattleAction::Block;
+	}
+	return EBattleAction::None;
+}
+FString ATurnBattleManager::GetActionLabel(EBattleAction Action) const
+{
+	if (Action == EBattleAction::Attack)
+	{
+		return TEXT("Attack");
+	}
+	if (Action == EBattleAction::Special)
+	{
+		return TEXT("Special");
+	}
+	if (Action == EBattleAction::Ultimate)
+	{
+		return TEXT("Ultimate");
+	}
+	if (Action == EBattleAction::Item)
+	{
+		return TEXT("Item");
+	}
+	if (Action == EBattleAction::Block)
+	{
+		return TEXT("Block");
+	}
+	return TEXT("");
+}
+bool ATurnBattleManager::IsActionUsable(int32 MemberIndex, EBattleAction Action) const
+{
+	if (MemberIndex < 0 || MemberIndex >= Party.Num())
+	{
+		return false;
+	}
+	APartyMemberCharacter* Member = Party[MemberIndex];
+	if (Action == EBattleAction::None || Action == EBattleAction::Item)
+	{
+		return false;
+	}
+	if (Action == EBattleAction::Special)
+	{
+		return Member->Stats->CurrentMana >= Member->SpecialManaCost;
+	}
+	if (Action == EBattleAction::Ultimate)
+	{
+		return Member->Stats->CurrentMana >= Member->UltimateManaCost;
+	}
+	return true;
+}
+void ATurnBattleManager::HoldPartyInPlace()
+{
+	for (int32 i = 0; i < Party.Num(); i++)
+	{
+		if (Party[i]->IsFollowing())
+		{
+			Party[i]->SetFollowing(false);
+		}
+	}
 }
 void ATurnBattleManager::StopRealTimeManaRegen()
 {
@@ -136,15 +329,11 @@ void ATurnBattleManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	StopRealTimeManaRegen();
-	if (bUseDebugKeys)
-	{
-		CheckDebugKeys();
-	}
+	HoldPartyInPlace();
 	if (State == EBattleState::BossPhase)
 	{
 		TickBossPhase(DeltaTime);
 	}
-	ShowStatus();
 }
 void ATurnBattleManager::TickBossPhase(float DeltaTime)
 {
@@ -183,39 +372,6 @@ void ATurnBattleManager::DoBossTurn()
 	NewTelegraph.TargetIndex = PickTargetIndex(Row->TargetMode);
 	Pending.Add(NewTelegraph);
 	ShowMessage(FString::Printf(TEXT("Boss sets up %s (lands in %d actions)"), *Row->DisplayName.ToString(), Row->CountdownActions), FColor::Orange);
-}
-void ATurnBattleManager::CheckDebugKeys()
-{
-	if (State != EBattleState::PlayerPhase)
-	{
-		return;
-	}
-	APlayerController* Controller = UGameplayStatics::GetPlayerController(this, 0);
-	if (Controller == nullptr)
-	{
-		return;
-	}
-	int32 MemberIndex = FindNextActingMember();
-	if (MemberIndex < 0)
-	{
-		return;
-	}
-	if (Controller->WasInputKeyJustPressed(EKeys::One))
-	{
-		TryPlayerAction(MemberIndex, EBattleAction::Attack);
-	}
-	else if (Controller->WasInputKeyJustPressed(EKeys::Two))
-	{
-		TryPlayerAction(MemberIndex, EBattleAction::Special);
-	}
-	else if (Controller->WasInputKeyJustPressed(EKeys::Three))
-	{
-		TryPlayerAction(MemberIndex, EBattleAction::Ultimate);
-	}
-	else if (Controller->WasInputKeyJustPressed(EKeys::Four))
-	{
-		TryPlayerAction(MemberIndex, EBattleAction::Block);
-	}
 }
 bool ATurnBattleManager::TryPlayerAction(int32 MemberIndex, EBattleAction Action)
 {
@@ -516,36 +672,6 @@ int32 ATurnBattleManager::PickTargetIndex(EBossTargetMode Mode) const
 	}
 	return PickRandomLivingMember();
 }
-void ATurnBattleManager::ShowStatus()
-{
-	if (GEngine == nullptr)
-	{
-		return;
-	}
-	FString StateText = TEXT("Player phase");
-	if (State == EBattleState::BossPhase)
-	{
-		StateText = TEXT("Boss phase");
-	}
-	if (State == EBattleState::Won)
-	{
-		StateText = TEXT("Won");
-	}
-	if (State == EBattleState::Lost)
-	{
-		StateText = TEXT("Lost");
-	}
-	FString Line = FString::Printf(TEXT("Battle: round %d, %s, %d telegraph rows. Keys 1 attack, 2 special, 3 ultimate, 4 block."), Round, *StateText, BossRowNames.Num());
-	for (int32 i = 0; i < Pending.Num(); i++)
-	{
-		const FTelegraphRow* Row = GetRow(Pending[i].RowName);
-		if (Row != nullptr)
-		{
-			Line = Line + FString::Printf(TEXT("  [%s in %d]"), *Row->DisplayName.ToString(), Pending[i].ActionsLeft);
-		}
-	}
-	GEngine->AddOnScreenDebugMessage(7100, 0.0f, FColor::White, Line);
-}
 void ATurnBattleManager::ShowMessage(FString Text, FColor Color)
 {
 	if (GEngine != nullptr)
@@ -573,6 +699,14 @@ EBattleState ATurnBattleManager::GetState() const
 int32 ATurnBattleManager::GetRound() const
 {
 	return Round;
+}
+bool ATurnBattleManager::IsMemberBlocking(int32 MemberIndex) const
+{
+	if (MemberIndex < 0 || MemberIndex >= IsBlocking.Num())
+	{
+		return false;
+	}
+	return IsBlocking[MemberIndex];
 }
 int32 ATurnBattleManager::GetPartyCount() const
 {

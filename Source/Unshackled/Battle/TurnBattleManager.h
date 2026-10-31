@@ -13,6 +13,11 @@ enum class EBattleState
 	Won,
 	Lost
 };
+enum class EBattleMenuStage
+{
+	PickMember,
+	PickAction
+};
 struct FPendingTelegraph
 {
 	FName RowName;
@@ -28,8 +33,19 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	bool TryPlayerAction(int32 MemberIndex, EBattleAction Action);
 	bool CanMemberAct(int32 MemberIndex) const;
+	void MenuStep(int32 Horizontal, int32 Vertical);
+	void MenuConfirm();
+	void MenuBack();
+	EBattleMenuStage GetMenuStage() const;
+	int32 GetMenuMemberIndex() const;
+	int32 GetMenuActionIndex() const;
+	int32 GetMenuActionCount() const;
+	EBattleAction GetMenuAction(int32 Index) const;
+	FString GetActionLabel(EBattleAction Action) const;
+	bool IsActionUsable(int32 MemberIndex, EBattleAction Action) const;
 	EBattleState GetState() const;
 	int32 GetRound() const;
+	bool IsMemberBlocking(int32 MemberIndex) const;
 	int32 GetPartyCount() const;
 	APartyMemberCharacter* GetPartyMember(int32 Index) const;
 	ABossCharacter* GetBoss() const;
@@ -50,8 +66,6 @@ public:
 	float UltimateScale = 4.0f;
 	UPROPERTY(EditAnywhere, Category = "Battle")
 	float ManaRestoreFraction = 0.25f;
-	UPROPERTY(EditAnywhere, Category = "Battle")
-	bool bUseDebugKeys = true;
 protected:
 	virtual void BeginPlay() override;
 private:
@@ -64,6 +78,9 @@ private:
 	TArray<FPendingTelegraph> Pending;
 	TArray<FName> BossRowNames;
 	EBattleState State = EBattleState::PlayerPhase;
+	EBattleMenuStage MenuStage = EBattleMenuStage::PickMember;
+	int32 MenuMemberIndex = 0;
+	int32 MenuActionIndex = 0;
 	int32 Round = 1;
 	int32 BossTurnsLeft = 0;
 	float BossTurnTimer = 0.0f;
@@ -74,10 +91,11 @@ private:
 	void StartBossPhase();
 	void TickBossPhase(float DeltaTime);
 	void DoBossTurn();
-	void CheckDebugKeys();
+	void MoveMemberSelection(int32 Step);
+	void ResetMenuToNextMember();
+	void HoldPartyInPlace();
 	void StopRealTimeManaRegen();
 	void RestoreManaForNewRound();
-	void ShowStatus();
 	void ShowMessage(FString Text, FColor Color);
 	void ShowBanner(FString Text, FLinearColor Color);
 	void ApplyActionEffect(int32 MemberIndex, EBattleAction Action);
