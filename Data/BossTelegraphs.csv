@@ -1,0 +1,4 @@
+Name,BossId,DisplayName,CountdownActions,DamageScale,TargetMode,CounterMemberId,CounterAction,BlockMultiplier,CounterMultiplier
+Goat_Headbutt,Goat,Headbutt,2,1.5,OneRandom,Malkholm,Special,0.5,0
+Goat_Stampede,Goat,Stampede,3,1.0,WholeParty,Kalia,Attack,0.5,0.25
+Goat_Bleat,Goat,Piercing Bleat,2,1.2,Leader,Sirius,Special,0.5,0
