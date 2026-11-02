@@ -198,6 +198,10 @@ void APartyMemberCharacter::Die()
                 return;
         }
         AUnshackledPlayerController* MyController = Cast<AUnshackledPlayerController>(GetController());
+        if (MyController == nullptr)
+        {
+                return;
+        }
         if (MyController != nullptr)
         {
                 bool bSwitchedToAlly = MyController->SwitchToFirstLivingAlly();

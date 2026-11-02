@@ -2,6 +2,8 @@
 #include "Characters/PartyMemberCharacter.h"
 #include "Characters/BossCharacter.h"
 #include "UI/UnshackledHUD.h"
+#include "Game/UnshackledGameInstance.h"
+#include "InputCoreTypes.h"
 #include "EngineUtils.h"
 #include "Engine/Engine.h"
 #include "Kismet/GameplayStatics.h"
@@ -13,10 +15,100 @@ ATurnBattleManager::ATurnBattleManager()
 void ATurnBattleManager::BeginPlay()
 {
 	Super::BeginPlay();
+	SpawnMissingParty();
+	SpawnBossIfMissing();
 	FindParty();
 	FindBoss();
 	BuildBossRows();
 	StartPlayerPhase();
+}
+FVector ATurnBattleManager::GetBattleOrigin() const
+{
+	APawn* LeaderPawn = UGameplayStatics::GetPlayerPawn(this, 0);
+	if (LeaderPawn != nullptr)
+	{
+		return LeaderPawn->GetActorLocation();
+	}
+	return GetActorLocation();
+}
+APartyMemberCharacter* ATurnBattleManager::FindMemberByRow(FName CharacterId) const
+{
+	for (TActorIterator<APartyMemberCharacter> It(GetWorld()); It; ++It)
+	{
+		APartyMemberCharacter* Member = *It;
+		if (Member->StatsRowName == CharacterId)
+		{
+			return Member;
+		}
+	}
+	return nullptr;
+}
+void ATurnBattleManager::SpawnMissingParty()
+{
+	UWorld* World = GetWorld();
+	if (World == nullptr)
+	{
+		return;
+	}
+	UUnshackledGameInstance* GameInstanceRef = Cast<UUnshackledGameInstance>(GetGameInstance());
+	FVector Origin = GetBattleOrigin();
+	int32 SpawnedCount = 0;
+	for (int32 i = 0; i < PartySlots.Num(); i++)
+	{
+		FBattlePartySlot Slot = PartySlots[i];
+		bool bShouldSpawn = bSpawnWholePartyForTesting;
+		if (GameInstanceRef != nullptr)
+		{
+			if (GameInstanceRef->IsRecruited(Slot.CharacterId))
+			{
+				bShouldSpawn = true;
+			}
+		}
+		if (Slot.MemberClass == nullptr)
+		{
+			bShouldSpawn = false;
+		}
+		if (bShouldSpawn)
+		{
+			if (FindMemberByRow(Slot.CharacterId) == nullptr)
+			{
+				SpawnedCount = SpawnedCount + 1;
+				FVector SpawnLocation = Origin + FVector(0.0f, PartySpacing * SpawnedCount, 0.0f);
+				FActorSpawnParameters SpawnParams;
+				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+				World->SpawnActor<APartyMemberCharacter>(Slot.MemberClass, SpawnLocation, FRotator::ZeroRotator, SpawnParams);
+			}
+		}
+	}
+}
+void ATurnBattleManager::SpawnBossIfMissing()
+{
+	UWorld* World = GetWorld();
+	if (World == nullptr)
+	{
+		return;
+	}
+	for (TActorIterator<ABossCharacter> It(World); It; ++It)
+	{
+		return;
+	}
+	int32 Floor = 1;
+	UUnshackledGameInstance* GameInstanceRef = Cast<UUnshackledGameInstance>(GetGameInstance());
+	if (GameInstanceRef != nullptr)
+	{
+		Floor = GameInstanceRef->CurrentFloor;
+	}
+	for (int32 i = 0; i < BossSlots.Num(); i++)
+	{
+		FBattleBossSlot Slot = BossSlots[i];
+		if (Slot.Floor == Floor && Slot.BossClass != nullptr)
+		{
+			FActorSpawnParameters SpawnParams;
+			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+			World->SpawnActor<ABossCharacter>(Slot.BossClass, GetBattleOrigin() + BossOffset, FRotator::ZeroRotator, SpawnParams);
+			return;
+		}
+	}
 }
 void ATurnBattleManager::FindParty()
 {
@@ -160,6 +252,19 @@ void ATurnBattleManager::MenuStep(int32 Horizontal, int32 Vertical)
 }
 void ATurnBattleManager::MenuConfirm()
 {
+	if (State == EBattleState::Won)
+	{
+		if (bWaitingForContinue)
+		{
+			if (!bEndHandled)
+			{
+				bEndHandled = true;
+				bWaitingForContinue = false;
+				LeaveAfterWin();
+			}
+		}
+		return;
+	}
 	if (State != EBattleState::PlayerPhase)
 	{
 		return;
@@ -330,10 +435,92 @@ void ATurnBattleManager::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	StopRealTimeManaRegen();
 	HoldPartyInPlace();
+	CheckDebugKeys();
 	if (State == EBattleState::BossPhase)
 	{
 		TickBossPhase(DeltaTime);
 	}
+	if (State == EBattleState::Won || State == EBattleState::Lost)
+	{
+		TickEnd(DeltaTime);
+	}
+}
+void ATurnBattleManager::TickEnd(float DeltaTime)
+{
+	if (bEndHandled)
+	{
+		return;
+	}
+	EndTimer = EndTimer + DeltaTime;
+	if (State == EBattleState::Won)
+	{
+		if (EndTimer >= WinInputDelay)
+		{
+			bWaitingForContinue = true;
+			GEngine->AddOnScreenDebugMessage(7100, 0.0f, FColor::Green, TEXT("Press Space to continue"));
+		}
+		return;
+	}
+	if (EndTimer < EndDelay)
+	{
+		return;
+	}
+	bEndHandled = true;
+	LeaveAfterLoss();
+}
+void ATurnBattleManager::CheckDebugKeys()
+{
+	if (!bDebugLoseKey)
+	{
+		return;
+	}
+	if (State == EBattleState::Won || State == EBattleState::Lost)
+	{
+		return;
+	}
+	APlayerController* Controller = UGameplayStatics::GetPlayerController(this, 0);
+	if (Controller == nullptr)
+	{
+		return;
+	}
+	if (Controller->WasInputKeyJustPressed(EKeys::L))
+	{
+		State = EBattleState::Lost;
+		ShowBanner(TEXT("Game Over"), FLinearColor::Red);
+	}
+}
+void ATurnBattleManager::ReviveFallenMembers()
+{
+	for (int32 i = 0; i < Party.Num(); i++)
+	{
+		if (Party[i]->Health->IsDead())
+		{
+			Party[i]->ReviveCharacter();
+		}
+	}
+}
+void ATurnBattleManager::LeaveAfterWin()
+{
+	UUnshackledGameInstance* GameInstanceRef = Cast<UUnshackledGameInstance>(GetGameInstance());
+	if (GameInstanceRef == nullptr)
+	{
+		ShowMessage(TEXT("Battle: set Game Instance Class in Project Settings"), FColor::Red);
+		return;
+	}
+	ReviveFallenMembers();
+	if (GameInstanceRef->IsLastFloor())
+	{
+		ShowBanner(TEXT("You escaped!"), FLinearColor(1.0f, 0.85f, 0.2f, 1.0f));
+		return;
+	}
+	GameInstanceRef->AdvanceFloor();
+	GameInstanceRef->SaveFloorStartStates();
+	UGameplayStatics::OpenLevel(this, OverworldLevelName);
+}
+void ATurnBattleManager::LeaveAfterLoss()
+{
+	FString CurrentLevelName = UGameplayStatics::GetCurrentLevelName(this, true);
+	UGameplayStatics::OpenLevel(this, FName(*CurrentLevelName));
 }
 void ATurnBattleManager::TickBossPhase(float DeltaTime)
 {
@@ -551,6 +738,10 @@ void ATurnBattleManager::RemovePending(int32 Index)
 }
 void ATurnBattleManager::CheckForEnd()
 {
+	if (State == EBattleState::Won || State == EBattleState::Lost)
+	{
+		return;
+	}
 	if (Boss != nullptr)
 	{
 		if (Boss->Health->IsDead())

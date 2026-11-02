@@ -151,7 +151,14 @@ void AExitDoorActor::ShowPrompt() const
 {
 	if (bUnlocked)
 	{
-		GEngine->AddOnScreenDebugMessage(7001, 0.0f, FColor::Green, TEXT("Press E to go to the next floor"));
+		if (DestinationLevelName.IsNone())
+		{
+			GEngine->AddOnScreenDebugMessage(7001, 0.0f, FColor::Green, TEXT("Press E to go to the next floor"));
+		}
+		else
+		{
+			GEngine->AddOnScreenDebugMessage(7001, 0.0f, FColor::Green, TEXT("Press E to face the boss"));
+		}
 	}
 	else
 	{
@@ -178,14 +185,22 @@ void AExitDoorActor::TravelToNextFloor()
 		GEngine->AddOnScreenDebugMessage(-1, 4.0f, FColor::Red, TEXT("Exit door: set Game Instance Class in Project Settings"));
 		return;
 	}
-	bool bAdvanced = GameInstanceRef->AdvanceFloor();
-	if (!bAdvanced)
+	if (DestinationLevelName.IsNone())
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 6.0f, FColor::Yellow, TEXT("There are no more floors. You escaped!"));
-		return;
+		bool bAdvanced = GameInstanceRef->AdvanceFloor();
+		if (!bAdvanced)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 6.0f, FColor::Yellow, TEXT("There are no more floors. You escaped!"));
+			return;
+		}
 	}
 	GameInstanceRef->SaveFloorStartStates();
 	RemovePortalGlow();
+	if (!DestinationLevelName.IsNone())
+	{
+		UGameplayStatics::OpenLevel(this, DestinationLevelName);
+		return;
+	}
 	FString CurrentLevelName = UGameplayStatics::GetCurrentLevelName(this, true);
 	UGameplayStatics::OpenLevel(this, FName(*CurrentLevelName));
 }

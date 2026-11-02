@@ -6,6 +6,24 @@
 #include "TurnBattleManager.generated.h"
 class APartyMemberCharacter;
 class ABossCharacter;
+USTRUCT()
+struct FBattlePartySlot
+{
+	GENERATED_BODY()
+	UPROPERTY(EditAnywhere, Category = "Battle")
+	FName CharacterId;
+	UPROPERTY(EditAnywhere, Category = "Battle")
+	TSubclassOf<APartyMemberCharacter> MemberClass;
+};
+USTRUCT()
+struct FBattleBossSlot
+{
+	GENERATED_BODY()
+	UPROPERTY(EditAnywhere, Category = "Battle")
+	int32 Floor = 1;
+	UPROPERTY(EditAnywhere, Category = "Battle")
+	TSubclassOf<ABossCharacter> BossClass;
+};
 enum class EBattleState
 {
 	PlayerPhase,
@@ -66,6 +84,24 @@ public:
 	float UltimateScale = 4.0f;
 	UPROPERTY(EditAnywhere, Category = "Battle")
 	float ManaRestoreFraction = 0.25f;
+	UPROPERTY(EditAnywhere, Category = "Battle Setup")
+	TArray<FBattlePartySlot> PartySlots;
+	UPROPERTY(EditAnywhere, Category = "Battle Setup")
+	TArray<FBattleBossSlot> BossSlots;
+	UPROPERTY(EditAnywhere, Category = "Battle Setup")
+	float PartySpacing = 160.0f;
+	UPROPERTY(EditAnywhere, Category = "Battle Setup")
+	FVector BossOffset = FVector(700.0f, 0.0f, 0.0f);
+	UPROPERTY(EditAnywhere, Category = "Battle Setup")
+	FName OverworldLevelName = FName("Level_Prototype");
+	UPROPERTY(EditAnywhere, Category = "Battle Setup")
+	float EndDelay = 4.0f;
+	UPROPERTY(EditAnywhere, Category = "Battle Setup")
+	float WinInputDelay = 1.0f;
+	UPROPERTY(EditAnywhere, Category = "Battle Debug")
+	bool bDebugLoseKey = true;
+	UPROPERTY(EditAnywhere, Category = "Battle Debug")
+	bool bSpawnWholePartyForTesting = false;
 protected:
 	virtual void BeginPlay() override;
 private:
@@ -84,6 +120,18 @@ private:
 	int32 Round = 1;
 	int32 BossTurnsLeft = 0;
 	float BossTurnTimer = 0.0f;
+	float EndTimer = 0.0f;
+	bool bEndHandled = false;
+	bool bWaitingForContinue = false;
+	void CheckDebugKeys();
+	void SpawnMissingParty();
+	void SpawnBossIfMissing();
+	FVector GetBattleOrigin() const;
+	APartyMemberCharacter* FindMemberByRow(FName CharacterId) const;
+	void TickEnd(float DeltaTime);
+	void LeaveAfterWin();
+	void LeaveAfterLoss();
+	void ReviveFallenMembers();
 	void FindParty();
 	void FindBoss();
 	void BuildBossRows();

@@ -33,6 +33,8 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Exit Door")
 	float InteractRadius = 250.0f;
 	UPROPERTY(EditAnywhere, Category = "Exit Door")
+	FName DestinationLevelName = FName("Level_Boss");
+	UPROPERTY(EditAnywhere, Category = "Exit Door")
 	FLinearColor LockedColor = FLinearColor(1.0f, 0.1f, 0.1f);
 	UPROPERTY(EditAnywhere, Category = "Exit Door")
 	FLinearColor UnlockedColor = FLinearColor(0.1f, 1.0f, 0.3f);
