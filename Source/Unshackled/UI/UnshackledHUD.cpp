@@ -8,6 +8,8 @@
 #include "Engine/Canvas.h"
 #include "EngineUtils.h"
 #include "Engine/World.h"
+#include "Kismet/GameplayStatics.h"
+#include "GameFramework/PlayerController.h"
 void AUnshackledHUD::DrawHUD()
 {
         Super::DrawHUD();
@@ -27,7 +29,93 @@ void AUnshackledHUD::DrawHUD()
         }
         DrawRetributionTracker();
         DrawSwitchMenu();
+        DrawMessages();
+        DrawPrompt();
         DrawBanner();
+}
+AUnshackledHUD* AUnshackledHUD::FindPlayerHUD(const UObject* WorldContextObject)
+{
+        APlayerController* PlayerController = UGameplayStatics::GetPlayerController(WorldContextObject, 0);
+        if (PlayerController == nullptr)
+        {
+                return nullptr;
+        }
+        AUnshackledHUD* Hud = Cast<AUnshackledHUD>(PlayerController->GetHUD());
+        return Hud;
+}
+void AUnshackledHUD::ShowPrompt(FString Text, FLinearColor Color)
+{
+        PromptText = Text;
+        PromptColor = Color;
+        PromptEndTime = GetWorld()->GetRealTimeSeconds() + PromptHoldTime;
+}
+void AUnshackledHUD::DrawPrompt()
+{
+        float TimeLeft = PromptEndTime - GetWorld()->GetRealTimeSeconds();
+        if (TimeLeft <= 0.0f)
+        {
+                return;
+        }
+        float TextWidth = 0.0f;
+        float TextHeight = 0.0f;
+        GetTextSize(PromptText, TextWidth, TextHeight, nullptr, PromptScale);
+        float TextLeft = (Canvas->SizeX - TextWidth) / 2.0f;
+        float TextTop = Canvas->SizeY * PromptTopFraction;
+        FLinearColor ShadowColor = FLinearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        DrawText(PromptText, ShadowColor, TextLeft + 2.0f, TextTop + 2.0f, nullptr, PromptScale);
+        DrawText(PromptText, PromptColor, TextLeft, TextTop, nullptr, PromptScale);
+}
+void AUnshackledHUD::AddMessage(FString Text, FLinearColor Color, float Duration)
+{
+        float EndTime = GetWorld()->GetRealTimeSeconds() + Duration;
+        MessageTexts.Add(Text);
+        MessageColors.Add(Color);
+        MessageEndTimes.Add(EndTime);
+        while (MessageTexts.Num() > MaxMessages)
+        {
+                MessageTexts.RemoveAt(0);
+                MessageColors.RemoveAt(0);
+                MessageEndTimes.RemoveAt(0);
+        }
+}
+void AUnshackledHUD::RemoveExpiredMessages()
+{
+        float Now = GetWorld()->GetRealTimeSeconds();
+        TArray<FString> KeptTexts;
+        TArray<FLinearColor> KeptColors;
+        TArray<float> KeptEndTimes;
+        for (int32 i = 0; i < MessageTexts.Num(); i++)
+        {
+                if (MessageEndTimes[i] > Now)
+                {
+                        KeptTexts.Add(MessageTexts[i]);
+                        KeptColors.Add(MessageColors[i]);
+                        KeptEndTimes.Add(MessageEndTimes[i]);
+                }
+        }
+        MessageTexts = KeptTexts;
+        MessageColors = KeptColors;
+        MessageEndTimes = KeptEndTimes;
+}
+void AUnshackledHUD::DrawMessages()
+{
+        RemoveExpiredMessages();
+        float Now = GetWorld()->GetRealTimeSeconds();
+        for (int32 i = 0; i < MessageTexts.Num(); i++)
+        {
+                float TimeLeft = MessageEndTimes[i] - Now;
+                float Alpha = 1.0f;
+                if (TimeLeft < MessageFadeTime)
+                {
+                        Alpha = TimeLeft / MessageFadeTime;
+                }
+                FLinearColor ShadowColor = FLinearColor(0.0f, 0.0f, 0.0f, Alpha);
+                FLinearColor MainColor = MessageColors[i];
+                MainColor.A = Alpha;
+                float LineTop = MessageTopMargin + (i * MessageLineHeight);
+                DrawText(MessageTexts[i], ShadowColor, MessageLeftMargin + 1.0f, LineTop + 1.0f, nullptr, MessageScale);
+                DrawText(MessageTexts[i], MainColor, MessageLeftMargin, LineTop, nullptr, MessageScale);
+        }
 }
 void AUnshackledHUD::ShowBanner(FString Text, FLinearColor Color, float Duration)
 {

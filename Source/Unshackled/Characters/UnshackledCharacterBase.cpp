@@ -11,6 +11,7 @@
 #include "Engine/World.h"
 #include "Game/UnshackledGameMode.h"
 #include "Stats/CharacterStatsRow.h"
+#include "UI/UnshackledHUD.h"
 AUnshackledCharacterBase::AUnshackledCharacterBase()
 {
         PrimaryActorTick.bCanEverTick = true;
@@ -332,9 +333,22 @@ bool AUnshackledCharacterBase::TryPayMana(float ManaCost)
         bool bPaid = Stats->SpendMana(ManaCost);
         if (!bPaid)
         {
-                GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Orange, TEXT("Not enough mana"));
+                ShowNotEnoughMana();
         }
         return bPaid;
+}
+void AUnshackledCharacterBase::ShowNotEnoughMana()
+{
+        if (!IsPlayerControlled())
+        {
+                return;
+        }
+        AUnshackledHUD* Hud = AUnshackledHUD::FindPlayerHUD(this);
+        if (Hud == nullptr)
+        {
+                return;
+        }
+        Hud->AddMessage(TEXT("Not enough mana"), FLinearColor(1.0f, 0.6f, 0.2f, 1.0f), 1.0f);
 }
 FVector AUnshackledCharacterBase::CleanAimDirection(FVector AimDirection)
 {

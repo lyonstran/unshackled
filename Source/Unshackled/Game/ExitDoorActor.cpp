@@ -1,8 +1,8 @@
 #include "ExitDoorActor.h"
 #include "Waves/WaveSpawner.h"
 #include "Game/UnshackledGameInstance.h"
+#include "UI/UnshackledHUD.h"
 #include "EngineUtils.h"
-#include "Engine/Engine.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerController.h"
 #include "Components/InputComponent.h"
@@ -149,20 +149,27 @@ bool AExitDoorActor::IsPlayerNearby() const
 }
 void AExitDoorActor::ShowPrompt() const
 {
+	AUnshackledHUD* Hud = AUnshackledHUD::FindPlayerHUD(this);
+	if (Hud == nullptr)
+	{
+		return;
+	}
+	FLinearColor OpenColor = FLinearColor(0.4f, 1.0f, 0.5f, 1.0f);
+	FLinearColor SealedColor = FLinearColor(1.0f, 0.35f, 0.3f, 1.0f);
 	if (bUnlocked)
 	{
 		if (DestinationLevelName.IsNone())
 		{
-			GEngine->AddOnScreenDebugMessage(7001, 0.0f, FColor::Green, TEXT("Press E to go to the next floor"));
+			Hud->ShowPrompt(TEXT("Press E to go to the next floor"), OpenColor);
 		}
 		else
 		{
-			GEngine->AddOnScreenDebugMessage(7001, 0.0f, FColor::Green, TEXT("Press E to face the boss"));
+			Hud->ShowPrompt(TEXT("Press E to face the boss"), OpenColor);
 		}
 	}
 	else
 	{
-		GEngine->AddOnScreenDebugMessage(7001, 0.0f, FColor::Red, TEXT("The door is sealed. Clear the floor first."));
+		Hud->ShowPrompt(TEXT("The door is sealed. Clear the floor first."), SealedColor);
 	}
 }
 void AExitDoorActor::TryUseDoor()
@@ -190,7 +197,11 @@ void AExitDoorActor::TravelToNextFloor()
 		bool bAdvanced = GameInstanceRef->AdvanceFloor();
 		if (!bAdvanced)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 6.0f, FColor::Yellow, TEXT("There are no more floors. You escaped!"));
+			AUnshackledHUD* Hud = AUnshackledHUD::FindPlayerHUD(this);
+			if (Hud != nullptr)
+			{
+				Hud->ShowBanner(TEXT("You escaped!"), FLinearColor(1.0f, 0.85f, 0.2f, 1.0f), 6.0f);
+			}
 			return;
 		}
 	}

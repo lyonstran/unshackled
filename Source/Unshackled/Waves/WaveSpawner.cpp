@@ -76,8 +76,12 @@ void AWaveSpawner::StartNextWave()
       BuildWave(CurrentWave);
       SpawnTimer = 0.0f;
       State = EWaveState::SpawningWave;
-      FString Message = FString::Printf(TEXT("Wave %d: %d enemies"), CurrentWave, PendingEnemies.Num());
-      GEngine->AddOnScreenDebugMessage(-1, 4.0f, FColor::Yellow, Message);
+      AUnshackledHUD* Hud = AUnshackledHUD::FindPlayerHUD(this);
+      if (Hud != nullptr)
+      {
+              FString Message = FString::Printf(TEXT("Wave %d"), CurrentWave);
+              Hud->ShowBanner(Message, FLinearColor(1.0f, 0.85f, 0.2f, 1.0f), 2.0f);
+      }
 }
 void AWaveSpawner::UpdateSpawning(float DeltaTime)
 {

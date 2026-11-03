@@ -76,6 +76,7 @@ protected:
         float CalculateFinalDamage(float RawDamage, bool bTrueDamage);
         void CheckForDeath(AUnshackledCharacterBase* Attacker);
         bool TryPayMana(float ManaCost);
+        void ShowNotEnoughMana();
         FVector CleanAimDirection(FVector AimDirection);
         FVector FacingDirection = FVector(0.0f, 1.0f, 0.0f);
         bool bCanAttack = true;

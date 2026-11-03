@@ -3,7 +3,6 @@
 #include "Player/UnshackledPlayerController.h"
 #include "Game/UnshackledGameInstance.h"
 #include "UI/UnshackledHUD.h"
-#include "Engine/Engine.h"
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerController.h"
@@ -102,8 +101,13 @@ bool ARecruitPointActor::IsPlayerNearby() const
 }
 void ARecruitPointActor::ShowPrompt() const
 {
+	AUnshackledHUD* Hud = AUnshackledHUD::FindPlayerHUD(this);
+	if (Hud == nullptr)
+	{
+		return;
+	}
 	FString Message = FString::Printf(TEXT("Press E to recruit %s"), *GetMemberName());
-	GEngine->AddOnScreenDebugMessage(7003, 0.0f, FColor::Yellow, Message);
+	Hud->ShowPrompt(Message, FLinearColor(1.0f, 0.85f, 0.2f, 1.0f));
 }
 void ARecruitPointActor::TryRecruit()
 {

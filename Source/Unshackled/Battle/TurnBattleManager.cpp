@@ -136,12 +136,12 @@ void ATurnBattleManager::BuildBossRows()
 	BossRowNames.Empty();
 	if (TelegraphTable == nullptr)
 	{
-		ShowMessage(TEXT("Battle: no telegraph table set"), FColor::Red);
+		UE_LOG(LogTemp, Warning, TEXT("Battle: no telegraph table set"));
 		return;
 	}
 	if (Boss == nullptr)
 	{
-		ShowMessage(TEXT("Battle: no boss in the level"), FColor::Red);
+		UE_LOG(LogTemp, Warning, TEXT("Battle: no boss in the level"));
 		return;
 	}
 	FName BossKey = Boss->BossId;
@@ -164,7 +164,7 @@ void ATurnBattleManager::BuildBossRows()
 	FString Report = FString::Printf(TEXT("Battle: %d of %d table rows match boss '%s'"), BossRowNames.Num(), AllNames.Num(), *BossKey.ToString());
 	if (BossRowNames.Num() == 0)
 	{
-		ShowMessage(Report, FColor::Red);
+		UE_LOG(LogTemp, Warning, TEXT("%s"), *Report);
 	}
 }
 const FTelegraphRow* ATurnBattleManager::GetRow(FName RowName) const
@@ -457,7 +457,11 @@ void ATurnBattleManager::TickEnd(float DeltaTime)
 		if (EndTimer >= WinInputDelay)
 		{
 			bWaitingForContinue = true;
-			GEngine->AddOnScreenDebugMessage(7100, 0.0f, FColor::Green, TEXT("Press Space to continue"));
+			AUnshackledHUD* Hud = AUnshackledHUD::FindPlayerHUD(this);
+			if (Hud != nullptr)
+			{
+				Hud->ShowPrompt(TEXT("Press Space to continue"), FLinearColor(0.4f, 1.0f, 0.5f, 1.0f));
+			}
 		}
 		return;
 	}
@@ -504,7 +508,7 @@ void ATurnBattleManager::LeaveAfterWin()
 	UUnshackledGameInstance* GameInstanceRef = Cast<UUnshackledGameInstance>(GetGameInstance());
 	if (GameInstanceRef == nullptr)
 	{
-		ShowMessage(TEXT("Battle: set Game Instance Class in Project Settings"), FColor::Red);
+		UE_LOG(LogTemp, Warning, TEXT("Battle: set Game Instance Class in Project Settings"));
 		return;
 	}
 	ReviveFallenMembers();
@@ -543,7 +547,7 @@ void ATurnBattleManager::DoBossTurn()
 {
 	if (BossRowNames.Num() == 0)
 	{
-		ShowMessage(TEXT("Boss has no telegraphs to set up"), FColor::Red);
+		UE_LOG(LogTemp, Warning, TEXT("Battle: boss has no telegraphs to set up"));
 		return;
 	}
 	int32 RowIndex = FMath::RandRange(0, BossRowNames.Num() - 1);
@@ -558,7 +562,7 @@ void ATurnBattleManager::DoBossTurn()
 	NewTelegraph.ActionsLeft = Row->CountdownActions;
 	NewTelegraph.TargetIndex = PickTargetIndex(Row->TargetMode);
 	Pending.Add(NewTelegraph);
-	ShowMessage(FString::Printf(TEXT("Boss sets up %s (lands in %d actions)"), *Row->DisplayName.ToString(), Row->CountdownActions), FColor::Orange);
+	ShowMessage(FString::Printf(TEXT("Boss sets up %s"), *Row->DisplayName.ToString()), FColor::Orange);
 }
 bool ATurnBattleManager::TryPlayerAction(int32 MemberIndex, EBattleAction Action)
 {
@@ -865,10 +869,13 @@ int32 ATurnBattleManager::PickTargetIndex(EBossTargetMode Mode) const
 }
 void ATurnBattleManager::ShowMessage(FString Text, FColor Color)
 {
-	if (GEngine != nullptr)
+	AUnshackledHUD* Hud = AUnshackledHUD::FindPlayerHUD(this);
+	if (Hud == nullptr)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 4.0f, Color, Text);
+		return;
 	}
+	FLinearColor MessageColor = FLinearColor(Color);
+	Hud->AddMessage(Text, MessageColor, MessageDuration);
 }
 void ATurnBattleManager::ShowBanner(FString Text, FLinearColor Color)
 {

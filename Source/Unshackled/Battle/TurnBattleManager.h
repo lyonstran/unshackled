@@ -98,6 +98,8 @@ public:
 	float EndDelay = 4.0f;
 	UPROPERTY(EditAnywhere, Category = "Battle Setup")
 	float WinInputDelay = 1.0f;
+	UPROPERTY(EditAnywhere, Category = "Battle Setup")
+	float MessageDuration = 4.0f;
 	UPROPERTY(EditAnywhere, Category = "Battle Debug")
 	bool bDebugLoseKey = false;
 	UPROPERTY(EditAnywhere, Category = "Battle Debug")
