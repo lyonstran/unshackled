@@ -115,7 +115,6 @@ void AHoundCharacter::StartHunting()
 	HuntHaste.Rule = EStackRule::RefreshSameSource;
 	Stats->AddModifier(HuntHaste);
 	State = EHoundState::Hunting;
-	GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Yellow, TEXT("Hound caught a scent!"));
 }
 void AHoundCharacter::TickHunting(float DeltaTime)
 {
@@ -188,7 +187,6 @@ void AHoundCharacter::BiteTarget(AUnshackledCharacterBase* Target)
 {
 	float HealthBefore = Target->Health->CurrentHealth;
 	DealDamage(Target, PounceDamageScale, false);
-	GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow, TEXT("Hound bite!"));
 	if (Target->Health->IsDead())
 	{
 		return;

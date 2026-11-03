@@ -76,7 +76,6 @@ void AFlowerBombActor::Explode()
                 }
         }
         DrawDebugSphere(GetWorld(), GetActorLocation(), BlastRadius, 20, FColor::Orange, false, 0.5f);
-        GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Orange, TEXT("Flower bomb!"));
         Destroy();
 }
 void AFlowerBombActor::ApplyDebuffs(AUnshackledCharacterBase* Target)

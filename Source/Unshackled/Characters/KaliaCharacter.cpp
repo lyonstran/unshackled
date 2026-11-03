@@ -111,7 +111,6 @@ void AKaliaCharacter::PerformSpecial(FVector AimDirection)
         if (Target == nullptr)
         {
                 DrawDebugLine(GetWorld(), Origin, Origin + (Direction * KnifeRange), FColor::Silver, false, 0.4f, 0, 3.0f);
-                GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Silver, TEXT("Knife missed"));
                 return;
         }
         DrawDebugLine(GetWorld(), Origin, Target->GetActorLocation(), FColor::Red, false, 0.4f, 0, 3.0f);
@@ -119,7 +118,6 @@ void AKaliaCharacter::PerformSpecial(FVector AimDirection)
         ApplyKnifeDebuff(Target);
         RefreshSpecialIfLow(Target);
         BlinkBehind(Target, Direction);
-        GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, TEXT("Knife hit!"));
 }
 AUnshackledCharacterBase* AKaliaCharacter::FindKnifeTarget(FVector Direction)
 {
@@ -192,7 +190,6 @@ void AKaliaCharacter::RefreshSpecialIfLow(AUnshackledCharacterBase* Target)
         {
                 GetWorldTimerManager().ClearTimer(SpecialCooldownTimer);
                 bCanUseSpecial = true;
-                GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow, TEXT("Knife refreshed!"));
         }
 }
 void AKaliaCharacter::BlinkBehind(AUnshackledCharacterBase* Target, FVector Direction)
@@ -244,7 +241,6 @@ void AKaliaCharacter::FreezeEnemiesAround(FVector Center)
                 }
         }
         DrawDebugSphere(GetWorld(), Center, ExplosionRadius, 16, FColor::Cyan, false, 0.5f);
-        GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Cyan, TEXT("Kalia freeze explosion!"));
 }
 void AKaliaCharacter::FreezeEnemy(AUnshackledCharacterBase* Enemy)
 {
@@ -273,7 +269,6 @@ void AKaliaCharacter::PerformRetribution()
         AddRetributionModifier(ECharacterStat::Defense, EModifierKind::Percent, RetributionDefenseBonus);
         AddRetributionModifier(ECharacterStat::Damage, EModifierKind::Percent, RetributionDamageBonus);
         AddRetributionModifier(ECharacterStat::Lifesteal, EModifierKind::Flat, RetributionLifesteal);
-        GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("Kalia Retribution"));
 }
 void AKaliaCharacter::AddRetributionModifier(ECharacterStat Stat, EModifierKind Kind, float Amount)
 {
@@ -334,7 +329,6 @@ void AKaliaCharacter::StartUltimate()
         UGameplayStatics::SetGlobalTimeDilation(this, UltimateTimeDilation);
         bDilationSynced = false;
         DamageEnemiesOnCast();
-        GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Purple, TEXT("Kalia stops time!"));
 }
 void AKaliaCharacter::DamageEnemiesOnCast()
 {
@@ -363,7 +357,6 @@ void AKaliaCharacter::EndUltimate()
         bCanUseUltimate = false;
         GetWorldTimerManager().SetTimer(UltimateCooldownTimer, this, &AKaliaCharacter::ResetUltimate, UltimateCooldown, false);
         ApplyEcho();
-        GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Purple, TEXT("Time resumes"));
 }
 void AKaliaCharacter::RestoreTimeDilation()
 {
@@ -445,7 +438,6 @@ void AKaliaCharacter::BlinkToRandomTarget()
         }
         if (Candidates.Num() == 0)
         {
-                GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Silver, TEXT("No blink targets"));
                 return;
         }
         int32 ChosenIndex = FMath::RandRange(0, Candidates.Num() - 1);

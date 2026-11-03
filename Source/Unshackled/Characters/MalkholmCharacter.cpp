@@ -75,7 +75,6 @@ void AMalkholmCharacter::PerformBasicAttack(FVector Direction)
                 GainDefenseStack();
         }
         DrawDebugSphere(GetWorld(), SwingCenter, EffectiveRadius, 16, FColor::Orange, false, 0.2f);
-        ShowSwingText();
         bSwingClockwise = !bSwingClockwise;
 }
 bool AMalkholmCharacter::IsBonusSwing() const
@@ -141,16 +140,6 @@ void AMalkholmCharacter::GainDefenseStack()
         DefenseGain.MaxStacks = MaxDefenseStacks;
         Stats->AddModifier(DefenseGain);
 }
-void AMalkholmCharacter::ShowSwingText()
-{
-        FString DirectionName = TEXT("Counterclockwise");
-        if (bSwingClockwise)
-        {
-                DirectionName = TEXT("Clockwise");
-        }
-        FString Message = FString::Printf(TEXT("Chain swing %d: %s"), SwingCount, *DirectionName);
-        GEngine->AddOnScreenDebugMessage(-1, 0.6f, FColor::Orange, Message);
-}
 void AMalkholmCharacter::PerformSpecial(FVector AimDirection)
 {
         AUnshackledPlayerController* AimController = Cast<AUnshackledPlayerController>(GetController());
@@ -197,7 +186,6 @@ void AMalkholmCharacter::PerformSpecial(FVector AimDirection)
                 }
         }
         DrawDebugSphere(GetWorld(), SlamCenter, EffectiveRadius, 16, FColor::Red, false, 0.5f);
-        GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, TEXT("Chain slam!"));
 }
 bool AMalkholmCharacter::IsAtSlamTip(AUnshackledCharacterBase* Target) const
 {
@@ -255,7 +243,6 @@ void AMalkholmCharacter::PerformRetribution()
         DamageBonus.Duration = RetributionDuration;
         DamageBonus.Rule = EStackRule::RefreshSameSource;
         Stats->AddModifier(DamageBonus);
-        GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Orange, TEXT("Mal'Kholm Retribution"));
 }
 void AMalkholmCharacter::TickRetribution(float DeltaTime)
 {
@@ -281,7 +268,6 @@ void AMalkholmCharacter::EndRetribution()
         float MissingHeal = MissingHealth * RetributionMissingHealHeal;
         float MaxHeal = Health->MaxHealth * RetributionMaxHealHeal;
         Health->Heal(MissingHeal + MaxHeal);
-        GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, TEXT("Mal'Kholm Retribution ended"));
 }
 bool AMalkholmCharacter::WouldDie()
 {
@@ -297,7 +283,6 @@ bool AMalkholmCharacter::WouldDie()
         Health->CurrentHealth = Health->MaxHealth;
         PassiveCooldownLeft = PassiveCooldown;
         GiveCheatDeathBuffs();
-        GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("Mal'Kholm cheated death!"));
         return true;
 }
 void AMalkholmCharacter::GiveCheatDeathBuffs()
@@ -388,7 +373,6 @@ bool AMalkholmCharacter::TryYankLeader()
         FVector YankLocation = GetActorLocation() + FVector(YankOffset, 0.0f, 0.0f);
         Leader->SetActorLocation(YankLocation);
         LeaderController->SwitchTo(this);
-        GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("Mal'Kholm yanked the leader out!"));
         return true;
 }
 int32 AMalkholmCharacter::WhipEnemiesInRange()
@@ -448,7 +432,6 @@ void AMalkholmCharacter::PerformUltimate(FVector AimDirection)
         if (Target == nullptr)
         {
                 RefundUltimate();
-                GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Silver, TEXT("No target for the chain yank"));
                 return;
         }
         UltimateTarget = Target;
@@ -552,7 +535,6 @@ void AMalkholmCharacter::FinishUltimateDash()
         DefenseGain.Rule = EStackRule::RefreshSameSource;
         Stats->AddModifier(DefenseGain);
         StartSlamBoost();
-        GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Magenta, TEXT("Mal'Kholm absorbed his target!"));
 }
 void AMalkholmCharacter::StartSlamBoost()
 {

@@ -95,7 +95,6 @@ void ACasterWardenCharacter::FireComets()
 	}
 	float CometDamage = LockedTarget->Health->CurrentHealth * CometCurrentHealthFraction;
 	float DamageDealt = LockedTarget->ApplyHit(CometDamage, true, this);
-	GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Magenta, TEXT("Caster warden comet cluster!"));
 	if (DamageDealt <= 0.0f)
 	{
 		return;

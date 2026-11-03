@@ -109,5 +109,4 @@ void AWardenCharacter::TickShield()
         ShieldBonus.Duration = 0.0f;
         ShieldBonus.Rule = EStackRule::RefreshSameSource;
         Stats->AddModifier(ShieldBonus);
-        GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Yellow, TEXT("Warden raised its shield!"));
 }

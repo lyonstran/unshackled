@@ -103,7 +103,6 @@ void AMagicFloorDirectorCharacter::StartFiring()
 	LaserHitTargets.Empty();
 	FiringTimeLeft = LaserDuration;
 	State = EMagicDirectorState::Firing;
-	GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Purple, TEXT("Magic director laser!"));
 }
 void AMagicFloorDirectorCharacter::TickFiring(float DeltaTime)
 {
@@ -272,7 +271,7 @@ void AMagicFloorDirectorCharacter::SummonPair()
 	}
 	if (ChosenClass == nullptr)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, TEXT("Magic director: summon class not set"));
+		UE_LOG(LogTemp, Warning, TEXT("Magic director: summon class not set"));
 		return;
 	}
 	bSummonGuardsNext = !bSummonGuardsNext;
@@ -290,7 +289,6 @@ void AMagicFloorDirectorCharacter::SummonPair()
 			SummonedEnemies.Add(NewEnemy);
 		}
 	}
-	GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Purple, TEXT("Magic director summons!"));
 }
 void AMagicFloorDirectorCharacter::TickMagicCircle(float DeltaTime)
 {

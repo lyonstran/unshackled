@@ -114,12 +114,12 @@ void ARecruitPointActor::TryRecruit()
 	UUnshackledGameInstance* GameInstanceRef = Cast<UUnshackledGameInstance>(GetGameInstance());
 	if (GameInstanceRef == nullptr)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 4.0f, FColor::Red, TEXT("Recruit point: set Game Instance Class in Project Settings"));
+		UE_LOG(LogTemp, Warning, TEXT("Recruit point: set Game Instance Class in Project Settings"));
 		return;
 	}
 	if (MemberClass == nullptr)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 4.0f, FColor::Red, TEXT("Recruit point: Member Class is not set"));
+		UE_LOG(LogTemp, Warning, TEXT("Recruit point: Member Class is not set"));
 		return;
 	}
 	GameInstanceRef->Recruit(RecruitId);

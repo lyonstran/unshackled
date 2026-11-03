@@ -157,11 +157,9 @@ void URetributionComponent::FailSequence()
         Sequence.Empty();
         Progress = 0;
         CooldownRemaining = FailCooldown;
-        GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Orange, TEXT("Retribution failed"));
 }
 void URetributionComponent::CompleteSequence(APartyMemberCharacter* Finisher)
 {
-        GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, TEXT("Retribution!"));
         Finisher->PerformRetribution();
         RollSequence();
 }

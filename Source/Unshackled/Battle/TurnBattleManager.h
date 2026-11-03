@@ -99,7 +99,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Battle Setup")
 	float WinInputDelay = 1.0f;
 	UPROPERTY(EditAnywhere, Category = "Battle Debug")
-	bool bDebugLoseKey = true;
+	bool bDebugLoseKey = false;
 	UPROPERTY(EditAnywhere, Category = "Battle Debug")
 	bool bSpawnWholePartyForTesting = false;
 protected:

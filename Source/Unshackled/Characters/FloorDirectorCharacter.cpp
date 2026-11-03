@@ -195,7 +195,6 @@ void AFloorDirectorCharacter::HitVictim(AUnshackledCharacterBase* Victim)
 {
         float RamDamage = Victim->Health->MaxHealth * RamMaxHealthFraction;
         float DamageDealt = Victim->ApplyHit(RamDamage, true, this);
-        GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Red, TEXT("Floor director rammed!"));
         if (DamageDealt <= 0.0f)
         {
                 return;

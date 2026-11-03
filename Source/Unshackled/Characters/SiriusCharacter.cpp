@@ -43,8 +43,6 @@ void ASiriusCharacter::GiveSwapVeil(APartyMemberCharacter* Ally)
         SwapVeil.Rule = EStackRule::ConsumeOnHit;
         SwapVeil.HitsRemaining = SwapVeilHits;
         Ally->Stats->AddModifier(SwapVeil);
-        FString Message = FString::Printf(TEXT("Swap veil on %s"), *Ally->DisplayName);
-        GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Cyan, Message);
 }
 void ASiriusCharacter::TryExecute(AUnshackledCharacterBase* Target)
 {
@@ -66,7 +64,6 @@ void ASiriusCharacter::TryExecute(AUnshackledCharacterBase* Target)
                 float HealthFraction = Target->Health->CurrentHealth / MaxHealthValue;
                 if (HealthFraction < ExecuteThreshold)
                 {
-                        GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, TEXT("Executed!"));
                         Target->ApplyHit(ExecuteDamage, true, this);
                 }
         }
@@ -85,7 +82,6 @@ void ASiriusCharacter::PerformRetribution()
         LifestealModifier.Rule = EStackRule::RefreshSameSource;
         Stats->AddModifier(LifestealModifier);
         ApplyRetributionToEnemies();
-        GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Cyan, TEXT("Sirius Retribution"));
 }
 void ASiriusCharacter::TickRetribution(float DeltaTime)
 {
@@ -209,8 +205,6 @@ void ASiriusCharacter::PerformBasicAttack(FVector Direction)
         {
                 FireCrescent(Direction, EmpoweredDamageScale, EmpoweredSizeScale);
                 EmpoweredAttacksLeft = EmpoweredAttacksLeft - 1;
-                FString Message = FString::Printf(TEXT("Empowered attacks left: %d"), EmpoweredAttacksLeft);
-                GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Cyan, Message);
                 if (EmpoweredAttacksLeft == 0)
                 {
                         SpawnTornado(Direction);
@@ -224,8 +218,6 @@ void ASiriusCharacter::PerformBasicAttack(FVector Direction)
 void ASiriusCharacter::PerformSpecial(FVector AimDirection)
 {
         EmpoweredAttacksLeft = EmpoweredAttackCount;
-        FString Message = FString::Printf(TEXT("Empowered attacks: %d"), EmpoweredAttacksLeft);
-        GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Cyan, Message);
 }
 void ASiriusCharacter::PerformUltimate(FVector AimDirection)
 {

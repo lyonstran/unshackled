@@ -106,7 +106,6 @@ protected:
         void ApplyEdgeDebuffs(AUnshackledCharacterBase* Target);
         void ApplySlamEffects(AUnshackledCharacterBase* Target);
         void GainDefenseStack();
-        void ShowSwingText();
         float GetRangeMultiplier() const;
         void TickRetribution(float DeltaTime);
         void EndRetribution();

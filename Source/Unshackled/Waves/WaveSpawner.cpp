@@ -37,7 +37,6 @@ bool AWaveSpawner::IsFloorCleared() const
 void AWaveSpawner::Tick(float DeltaTime)
 {
       Super::Tick(DeltaTime);
-      GEngine->AddOnScreenDebugMessage(7002, 0.0f, FColor::Cyan, FString::Printf(TEXT("Floor %d"), FloorNumber)); // DEBUG_FLOOR_LINE
       if (State == EWaveState::WaitingForPlayer)
       {
               CheckForPlayer();

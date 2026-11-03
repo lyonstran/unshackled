@@ -214,7 +214,6 @@ void AHybridFloorDirectorCharacter::StartBeam()
 	BeamTimeLeft = BeamDuration;
 	BeamTickTimer = 0.0f;
 	State = EHybridDirectorState::Beaming;
-	GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Purple, TEXT("Hybrid director beam!"));
 }
 void AHybridFloorDirectorCharacter::TurnBeamToward(AUnshackledCharacterBase* Target, float DeltaTime)
 {
@@ -305,7 +304,6 @@ void AHybridFloorDirectorCharacter::HitWithRam(AUnshackledCharacterBase* Victim)
 {
 	float RamDamage = Victim->Health->MaxHealth * RamMaxHealthFraction;
 	float DamageDealt = Victim->ApplyHit(RamDamage, true, this);
-	GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Red, TEXT("Hybrid director rammed!"));
 	if (DamageDealt <= 0.0f)
 	{
 		return;
@@ -422,7 +420,7 @@ void AHybridFloorDirectorCharacter::SummonPair()
 	}
 	if (ChosenClass == nullptr)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, TEXT("Hybrid director: summon class not set"));
+		UE_LOG(LogTemp, Warning, TEXT("Hybrid director: summon class not set"));
 		return;
 	}
 	bSummonGuardsNext = !bSummonGuardsNext;
@@ -440,7 +438,6 @@ void AHybridFloorDirectorCharacter::SummonPair()
 			SummonedEnemies.Add(NewEnemy);
 		}
 	}
-	GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Purple, TEXT("Hybrid director summons!"));
 }
 void AHybridFloorDirectorCharacter::TickMagicCircle(float DeltaTime)
 {

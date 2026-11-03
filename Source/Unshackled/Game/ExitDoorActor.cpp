@@ -182,7 +182,7 @@ void AExitDoorActor::TravelToNextFloor()
 	UUnshackledGameInstance* GameInstanceRef = Cast<UUnshackledGameInstance>(GetGameInstance());
 	if (GameInstanceRef == nullptr)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 4.0f, FColor::Red, TEXT("Exit door: set Game Instance Class in Project Settings"));
+		UE_LOG(LogTemp, Warning, TEXT("Exit door: set Game Instance Class in Project Settings"));
 		return;
 	}
 	if (DestinationLevelName.IsNone())

@@ -125,7 +125,6 @@ void AHanuboyCharacter::PerformRetribution()
         }
         PetalsLeftToSpawn = PetalsLeftToSpawn + PetalCount;
         PetalSpawnTimer = 0.0f;
-        GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Magenta, TEXT("Hanuboy Retribution"));
 }
 void AHanuboyCharacter::TickPetalRain(float DeltaTime)
 {

@@ -73,7 +73,6 @@ protected:
         void ApplyStatsRow();
         void ApplyStatEffects();
         void RegenerateMana(float DeltaTime);
-        void DrawDefenseDebug();
         float CalculateFinalDamage(float RawDamage, bool bTrueDamage);
         void CheckForDeath(AUnshackledCharacterBase* Attacker);
         bool TryPayMana(float ManaCost);
