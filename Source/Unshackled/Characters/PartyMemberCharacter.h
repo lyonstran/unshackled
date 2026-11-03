@@ -15,6 +15,7 @@ public:
         void SetFollowing(bool bShouldFollow);
         bool IsFollowing() const;
         bool IsGrounded() const;
+        bool IsInTurnBattle() const;
         bool CanBeGrounded() const;
         float GetGroundCooldownRemaining() const;
         void GroundAlly();

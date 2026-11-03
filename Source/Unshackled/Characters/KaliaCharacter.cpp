@@ -201,6 +201,10 @@ void AKaliaCharacter::BlinkBehind(AUnshackledCharacterBase* Target, FVector Dire
 void AKaliaCharacter::OnKilledTarget(AUnshackledCharacterBase* Target)
 {
         Super::OnKilledTarget(Target);
+        if (IsInTurnBattle())
+        {
+                return;
+        }
         if (Target == nullptr)
         {
                 return;

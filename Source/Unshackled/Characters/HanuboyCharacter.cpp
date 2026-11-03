@@ -195,6 +195,10 @@ void AHanuboyCharacter::TickBombs(float DeltaTime)
         {
                 return;
         }
+        if (IsInTurnBattle())
+        {
+                return;
+        }
         if (!Stats->CanAct())
         {
                 return;

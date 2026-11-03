@@ -276,6 +276,10 @@ bool AMalkholmCharacter::WouldDie()
         {
                 return true;
         }
+        if (IsInTurnBattle())
+        {
+                return false;
+        }
         if (PassiveCooldownLeft > 0.0f)
         {
                 return false;

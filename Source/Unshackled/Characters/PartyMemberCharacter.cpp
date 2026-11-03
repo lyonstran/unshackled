@@ -2,6 +2,8 @@
 #include "Player/UnshackledPlayerController.h"
 #include "Game/UnshackledGameInstance.h"
 #include "UI/UnshackledHUD.h"
+#include "Battle/TurnBattleManager.h"
+#include "EngineUtils.h"
 #include "GameFramework/PlayerController.h"
 #include "Engine/Engine.h"
 #include "Kismet/GameplayStatics.h"
@@ -103,6 +105,14 @@ bool APartyMemberCharacter::IsFollowing() const
 bool APartyMemberCharacter::IsGrounded() const
 {
         return bIsGrounded;
+}
+bool APartyMemberCharacter::IsInTurnBattle() const
+{
+        for (TActorIterator<ATurnBattleManager> It(GetWorld()); It; ++It)
+        {
+                return true;
+        }
+        return false;
 }
 float APartyMemberCharacter::GetGroundCooldownRemaining() const
 {

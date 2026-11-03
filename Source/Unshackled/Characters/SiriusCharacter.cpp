@@ -17,6 +17,10 @@ void ASiriusCharacter::Tick(float DeltaTime)
 void ASiriusCharacter::OnDealtDamage(AUnshackledCharacterBase* Target, float DamageDealt)
 {
         Super::OnDealtDamage(Target, DamageDealt);
+        if (IsInTurnBattle())
+        {
+                return;
+        }
         TryExecute(Target);
 }
 void ASiriusCharacter::OnSwappedOut(APartyMemberCharacter* NewLeader)
