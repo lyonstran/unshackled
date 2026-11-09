@@ -56,3 +56,34 @@
       * they will periodically summon basic guards, or caster guards, 2 at a time, alternating
       * They are surrounded by a magic circle that reduce player defenses by 15% if in it. They have infinite range.
       * nearby enemies are rallied, gaining 25% defense, and 10% attack.
+
+I do need to add base stats to abilities on top of the other scalings present in the existing abilities <- applies to both overworld and turn-based stuff
+
+# Core turn based stuff
+Every character will have a basic attack, block (damage reduction by like 50% maybe?), option to use items, and .... pending anything else that comes to mind. Actual mana costs of abailites are yet to be determined... also, not all abilities will be avaliable at the start, as the player progresses, abilities unlock respectively for each character.
+   * Sirius
+     * passive: attacks and abilities apply stacks to enemies. Each stack reduces enemy damage by 1% percent. At 25 stacks, enemies are are executed by Sirius's attacks if they are below 5% health. 
+     * basic attack: an option for the player to go for a simple attack (similar to the overworld basic attack), except it only locks onto one target. 
+     * Specific moves:
+       * gale: a strong blast of wind magic. Single-target. 
+       * veil: surrounds allies, providing 15% damage reduction, and reflects back 10% of damage back towards enemies. This effect lasts 3 turns. 
+       * winds unbound: raise attack by 15%. This effect lasts 3 turns. This effect does not stack. 
+       * gale unleased: inflicts powerful tornado(AOE) onto all enemies, where they take initial flat damage and for the next three turns, enemies take weaker flat damage again (maybe like 10% of what the initial tornado damage was)
+       * wind wall: sets up a shield that consumes the next damaging attack from enemy (directed towards sirius). 20% of that damage is restored as mana. Subsequent use reduces chance of successful abilitiy cast (-10%) for the rest of the battle, starting at 100% successs rate 
+       * winds of war: raise attack stat of allies and enemies by 10%
+     * retribution: sirius's next damaging ability restores 25% max health.
+   * Mal'Kholm Ecks
+     * passive: The first time Mal'Kholm would die, he instead survives at 1 hp, his defense is increased by 50%, any and all sources of healing or shielding(if implemented) are doubled. This effect lasts for 3 turns. Also, the lower Mal'Kholm's health is, the stronger he gets (+0.25% attack per 1% missing health)
+     * basic attack: Mal'Kholm strikes twice, and is able to select up to two targets; if both attacks are directed at one target, he gains 1.5% defense -> this increase is permanent for the remainder of the battle
+     * Specific moves;
+       * revolution: at the start of the following round, all healing, shielding, damage, and buffs in the previous round is repeated at 25% effectiveness (would have to define what that looks like for each kind of staat alteration) -> allies only. This move is disabled for one round afterwards. 
+       * sacrifice: forfeit 5% current health, and the following turn, Mal'Kholm is granted an additional turn. 
+       * Might: Mal'Kholm slams both chains down onto an enemy. Single-target.
+       * Freedom: grants an ally +7.5% defense for 3 turns. This effect can stack up to 3 times. Stacks refresh turn duration.
+       * Confrontation: Mal'Kohlm hooks onto an enemy and takes 15% of their defense as his own, heals himself for 50% of enemy current hp, and deals 10%  of his missing health + 5% max enemy health as damage.
+       * power: Mal'Kholm grants allies 5% of his defense + 5% of his missing health as a shield to all allies. This shielf can stack (shields are essentially health with 0 defense).
+     * Retribution: 
+       * Player gains an additional turn (able to reselect another character after making a move on Mal'Kholm).
+   * Hanuboy
+     * passive: Every other round, an enemy or has a flower bomb dropped onto them, where they take 5% current health damage (enemy) or heal for 10% missing hp (ally)
+     * 
