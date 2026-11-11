@@ -10,6 +10,11 @@ public:
         AMalkholmCharacter();
         virtual void Tick(float DeltaTime) override;
         virtual void PerformRetribution() override;
+        virtual void PerformBattleMove(ATurnBattleManager* Manager, FName MoveId, const FBattleMoveRow* Move, int32 TargetIndex) override;
+        virtual void OnBattleRoundEnd(ATurnBattleManager* Manager) override;
+        virtual void OnBattlePlayerPhaseStart(ATurnBattleManager* Manager) override;
+        virtual void OnBattlePlayerPhaseEnd(ATurnBattleManager* Manager) override;
+        virtual bool CanUseBattleMove(FName MoveId) const override;
         UPROPERTY(EditAnywhere, Category = "Malkholm")
         float ChainRadius = 160.0f;
         UPROPERTY(EditAnywhere, Category = "Malkholm")
@@ -94,6 +99,18 @@ public:
         float UltimateBuffDuration = 10.0f;
         UPROPERTY(EditAnywhere, Category = "Malkholm Ultimate")
         float UltimateSlamManaFraction = 0.5f;
+        UPROPERTY(EditAnywhere, Category = "Malkholm Battle")
+        float RageDamageAtNoHealth = 0.25f;
+        UPROPERTY(EditAnywhere, Category = "Malkholm Battle")
+        int32 DoubleStrikeMaxStacks = 99;
+        UPROPERTY(EditAnywhere, Category = "Malkholm Battle")
+        int32 LastStandRounds = 3;
+        UPROPERTY(EditAnywhere, Category = "Malkholm Battle")
+        float LastStandDefenseBonus = 0.5f;
+        UPROPERTY(EditAnywhere, Category = "Malkholm Battle")
+        float LastStandHealMultiplier = 2.0f;
+        UPROPERTY(EditAnywhere, Category = "Malkholm Battle")
+        int32 RevolutionEchoBuffRounds = 2;
 protected:
         virtual void PerformBasicAttack(FVector Direction) override;
         virtual void PerformSpecial(FVector AimDirection) override;
@@ -121,6 +138,19 @@ protected:
         void TickUltimateBuff(float DeltaTime);
         void StartSlamBoost();
         void EndSlamBoost();
+        void UpdateBattleRage();
+        void CastDoubleStrike(ATurnBattleManager* Manager, const FBattleMoveRow* Move);
+        void CastRevolution(const FBattleMoveRow* Move);
+        void CastSacrifice(ATurnBattleManager* Manager, const FBattleMoveRow* Move);
+        void CastFreedom(ATurnBattleManager* Manager, const FBattleMoveRow* Move, int32 TargetIndex);
+        void CastConfrontation(ATurnBattleManager* Manager, const FBattleMoveRow* Move);
+        void CastPower(ATurnBattleManager* Manager, const FBattleMoveRow* Move);
+        bool TryBattleLastStand();
+        void TakeRoundSnapshot(ATurnBattleManager* Manager);
+        float GainOnly(float Before, float After) const;
+        void RecordRevolutionRound(ATurnBattleManager* Manager);
+        void ApplyRevolutionEcho(ATurnBattleManager* Manager);
+        void ApplyEchoToAlly(APartyMemberCharacter* Ally, float Healing, float ShieldAmount, float DamageBuff, float DefenseBuff);
         int32 SwingCount = 0;
         bool bSwingClockwise = true;
         float RetributionTimeLeft = 0.0f;
@@ -135,6 +165,22 @@ protected:
         float UltimateGainHealth = 0.0f;
         float UltimateGainDefense = 0.0f;
         FVector UltimateTargetLocation = FVector::ZeroVector;
+        bool bLastStandUsed = false;
+        int32 LastStandRoundsLeft = 0;
+        int32 RevolutionLockRoundsLeft = 0;
+        bool bRevolutionThisRound = false;
+        bool bRevolutionEchoReady = false;
+        float RevolutionFraction = 0.0f;
+        float SnapshotBossHealth = 0.0f;
+        TArray<float> SnapshotHealth;
+        TArray<float> SnapshotShield;
+        TArray<float> SnapshotDamage;
+        TArray<float> SnapshotDefense;
+        float EchoBossDamage = 0.0f;
+        TArray<float> EchoHealing;
+        TArray<float> EchoShield;
+        TArray<float> EchoDamageBuff;
+        TArray<float> EchoDefenseBuff;
         UPROPERTY()
         AUnshackledCharacterBase* UltimateTarget;
 };

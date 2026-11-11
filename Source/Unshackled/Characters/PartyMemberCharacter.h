@@ -27,6 +27,9 @@ public:
         virtual void PerformRetribution();
         virtual void PerformBattleMove(ATurnBattleManager* Manager, FName MoveId, const FBattleMoveRow* Move, int32 TargetIndex);
         virtual void OnBattleRoundEnd(ATurnBattleManager* Manager);
+        virtual void OnBattlePlayerPhaseStart(ATurnBattleManager* Manager);
+        virtual void OnBattlePlayerPhaseEnd(ATurnBattleManager* Manager);
+        virtual bool CanUseBattleMove(FName MoveId) const;
         UPROPERTY(VisibleAnywhere, Category = "Camera")
         USpringArmComponent* CameraArm;
         UPROPERTY(VisibleAnywhere, Category = "Camera")

@@ -26,7 +26,7 @@ void UHealthComponent::Heal(float Amount)
 	{
 		return;
 	}
-	CurrentHealth = CurrentHealth + Amount;
+	CurrentHealth = CurrentHealth + (Amount * HealMultiplier);
 	if (CurrentHealth > MaxHealth)
 	{
 		CurrentHealth = MaxHealth;
@@ -50,7 +50,7 @@ void UHealthComponent::AddShield(float Amount)
 	{
 		return;
 	}
-	Shield = Shield + Amount;
+	Shield = Shield + (Amount * ShieldMultiplier);
 }
 float UHealthComponent::AbsorbWithShield(float Amount)
 {

@@ -135,6 +135,16 @@ void APartyMemberCharacter::PerformBattleMove(ATurnBattleManager* Manager, FName
 void APartyMemberCharacter::OnBattleRoundEnd(ATurnBattleManager* Manager)
 {
 }
+void APartyMemberCharacter::OnBattlePlayerPhaseStart(ATurnBattleManager* Manager)
+{
+}
+void APartyMemberCharacter::OnBattlePlayerPhaseEnd(ATurnBattleManager* Manager)
+{
+}
+bool APartyMemberCharacter::CanUseBattleMove(FName MoveId) const
+{
+        return true;
+}
 float APartyMemberCharacter::HitBattleBoss(ATurnBattleManager* Manager, float Power, bool bTrueDamage)
 {
         if (Manager == nullptr)

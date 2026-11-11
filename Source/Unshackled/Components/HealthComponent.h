@@ -16,6 +16,10 @@ public:
         float HealthFloor = 0.0f;
         UPROPERTY(BlueprintReadOnly, Category = "Health")
         float Shield = 0.0f;
+        UPROPERTY(BlueprintReadWrite, Category = "Health")
+        float HealMultiplier = 1.0f;
+        UPROPERTY(BlueprintReadWrite, Category = "Health")
+        float ShieldMultiplier = 1.0f;
         void TakeHit(float Amount);
         void Heal(float Amount);
         void Revive();

@@ -68,6 +68,7 @@ public:
 	const FBattleMoveRow* GetMove(FName MoveId) const;
 	int32 FindPartyIndex(APartyMemberCharacter* Member) const;
 	void ShowMessage(FString Text, FColor Color);
+	void GrantExtraActionNextRound(APartyMemberCharacter* Member);
 	EBattleState GetState() const;
 	int32 GetRound() const;
 	bool IsMemberBlocking(int32 MemberIndex) const;
@@ -116,6 +117,9 @@ private:
 	ABossCharacter* Boss = nullptr;
 	TArray<bool> HasActed;
 	TArray<bool> IsBlocking;
+	bool bPhaseStartPending = false;
+	TArray<int32> BonusActionsNow;
+	TArray<int32> BonusActionsNext;
 	TArray<FPendingTelegraph> Pending;
 	TArray<FName> BossRowNames;
 	EBattleState State = EBattleState::PlayerPhase;
@@ -151,6 +155,10 @@ private:
 	void HoldPartyInPlace();
 	void StopRealTimeManaRegen();
 	void RestoreManaForNewRound();
+	void FlushPhaseStart();
+	void NotifyPlayerPhaseStart();
+	void NotifyPlayerPhaseEnd();
+	void UseBonusActionIfAny(int32 MemberIndex);
 	void ShowBanner(FString Text, FLinearColor Color);
 	void BuildMenuEntries(int32 MemberIndex);
 	void StartTargetPick();

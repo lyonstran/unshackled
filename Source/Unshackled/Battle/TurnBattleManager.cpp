@@ -119,6 +119,8 @@ void ATurnBattleManager::FindParty()
 	}
 	HasActed.Init(false, Party.Num());
 	IsBlocking.Init(false, Party.Num());
+	BonusActionsNow.Init(0, Party.Num());
+	BonusActionsNext.Init(0, Party.Num());
 }
 void ATurnBattleManager::FindBoss()
 {
@@ -179,10 +181,13 @@ void ATurnBattleManager::StartPlayerPhase()
 {
 	State = EBattleState::PlayerPhase;
 	HasActed.Init(false, Party.Num());
+	BonusActionsNow = BonusActionsNext;
+	BonusActionsNext.Init(0, Party.Num());
 	if (Round > 1)
 	{
 		RestoreManaForNewRound();
 	}
+	bPhaseStartPending = true;
 	ResetMenuToNextMember();
 	ShowMessage(FString::Printf(TEXT("Round %d: your turn"), Round), FColor::Cyan);
 }
@@ -468,6 +473,10 @@ bool ATurnBattleManager::IsEntryUsable(int32 MemberIndex, FName EntryName) const
 		return false;
 	}
 	APartyMemberCharacter* Member = Party[MemberIndex];
+	if (!Member->CanUseBattleMove(EntryName))
+	{
+		return false;
+	}
 	return Member->Stats->CurrentMana >= Move->ManaCost;
 }
 bool ATurnBattleManager::NeedsAllyTarget(FName EntryName) const
@@ -566,8 +575,70 @@ void ATurnBattleManager::RestoreManaForNewRound()
 		}
 	}
 }
+void ATurnBattleManager::NotifyPlayerPhaseStart()
+{
+	for (int32 i = 0; i < Party.Num(); i++)
+	{
+		if (Party[i] != nullptr)
+		{
+			Party[i]->OnBattlePlayerPhaseStart(this);
+		}
+	}
+}
+void ATurnBattleManager::FlushPhaseStart()
+{
+	if (!bPhaseStartPending)
+	{
+		return;
+	}
+	bPhaseStartPending = false;
+	NotifyPlayerPhaseStart();
+	CheckForEnd();
+}
+void ATurnBattleManager::NotifyPlayerPhaseEnd()
+{
+	for (int32 i = 0; i < Party.Num(); i++)
+	{
+		if (Party[i] != nullptr)
+		{
+			Party[i]->OnBattlePlayerPhaseEnd(this);
+		}
+	}
+}
+void ATurnBattleManager::GrantExtraActionNextRound(APartyMemberCharacter* Member)
+{
+	int32 MemberIndex = FindPartyIndex(Member);
+	if (MemberIndex < 0)
+	{
+		return;
+	}
+	if (MemberIndex >= BonusActionsNext.Num())
+	{
+		return;
+	}
+	BonusActionsNext[MemberIndex] = BonusActionsNext[MemberIndex] + 1;
+}
+void ATurnBattleManager::UseBonusActionIfAny(int32 MemberIndex)
+{
+	if (MemberIndex < 0 || MemberIndex >= BonusActionsNow.Num())
+	{
+		return;
+	}
+	if (BonusActionsNow[MemberIndex] <= 0)
+	{
+		return;
+	}
+	if (Party[MemberIndex]->Health->IsDead())
+	{
+		return;
+	}
+	BonusActionsNow[MemberIndex] = BonusActionsNow[MemberIndex] - 1;
+	HasActed[MemberIndex] = false;
+	ShowMessage(FString::Printf(TEXT("%s can act again"), *Party[MemberIndex]->DisplayName), FColor::Yellow);
+}
 void ATurnBattleManager::StartBossPhase()
 {
+	NotifyPlayerPhaseEnd();
 	State = EBattleState::BossPhase;
 	int32 Turns = CountLivingMembers();
 	if (Boss != nullptr)
@@ -588,6 +659,10 @@ void ATurnBattleManager::Tick(float DeltaTime)
 	StopRealTimeManaRegen();
 	HoldPartyInPlace();
 	CheckDebugKeys();
+	if (State == EBattleState::PlayerPhase)
+	{
+		FlushPhaseStart();
+	}
 	if (State == EBattleState::BossPhase)
 	{
 		TickBossPhase(DeltaTime);
@@ -749,6 +824,11 @@ bool ATurnBattleManager::TryPlayerMove(int32 MemberIndex, FName EntryName, int32
 	{
 		return false;
 	}
+	FlushPhaseStart();
+	if (State != EBattleState::PlayerPhase)
+	{
+		return false;
+	}
 	if (!CanMemberAct(MemberIndex))
 	{
 		return false;
@@ -797,6 +877,7 @@ bool ATurnBattleManager::TryPlayerMove(int32 MemberIndex, FName EntryName, int32
 		ShowMessage(FString::Printf(TEXT("%s uses %s"), *Member->DisplayName, *Move->DisplayName.ToString()), FColor::Cyan);
 		Member->PerformBattleMove(this, EntryName, Move, TargetIndex);
 	}
+	UseBonusActionIfAny(MemberIndex);
 	CheckForEnd();
 	if (State == EBattleState::Won)
 	{
