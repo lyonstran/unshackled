@@ -5,6 +5,8 @@
 #include "Camera/CameraComponent.h"
 #include "Engine/Texture2D.h"
 #include "PartyMemberCharacter.generated.h"
+class ATurnBattleManager;
+struct FBattleMoveRow;
 UCLASS()
 class UNSHACKLED_API APartyMemberCharacter : public AUnshackledCharacterBase
 {
@@ -23,6 +25,7 @@ public:
         virtual void OnSwappedIn(APartyMemberCharacter* PreviousLeader);
         virtual void OnSwappedOut(APartyMemberCharacter* NewLeader);
         virtual void PerformRetribution();
+        virtual void PerformBattleMove(ATurnBattleManager* Manager, FName MoveId, const FBattleMoveRow* Move, int32 TargetIndex);
         UPROPERTY(VisibleAnywhere, Category = "Camera")
         USpringArmComponent* CameraArm;
         UPROPERTY(VisibleAnywhere, Category = "Camera")

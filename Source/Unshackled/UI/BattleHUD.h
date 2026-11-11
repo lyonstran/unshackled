@@ -20,7 +20,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Battle Cards")
 	float BattleBottomMargin = 30.0f;
 	UPROPERTY(EditAnywhere, Category = "Battle Actions")
-	float ActionPanelWidth = 170.0f;
+	float ActionPanelWidth = 230.0f;
 	UPROPERTY(EditAnywhere, Category = "Battle Actions")
 	float ActionRowHeight = 24.0f;
 	UPROPERTY(EditAnywhere, Category = "Battle Actions")

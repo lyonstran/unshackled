@@ -236,6 +236,14 @@ void ATurnBattleManager::MenuStep(int32 Horizontal, int32 Vertical)
 		}
 		return;
 	}
+	if (MenuStage == EBattleMenuStage::PickTarget)
+	{
+		if (Horizontal != 0)
+		{
+			MoveTargetSelection(Horizontal);
+		}
+		return;
+	}
 	if (Vertical != 0)
 	{
 		int32 Count = GetMenuActionCount();
@@ -273,18 +281,32 @@ void ATurnBattleManager::MenuConfirm()
 	{
 		if (CanMemberAct(MenuMemberIndex))
 		{
+			BuildMenuEntries(MenuMemberIndex);
 			MenuStage = EBattleMenuStage::PickAction;
 			MenuActionIndex = 0;
 		}
 		return;
 	}
-	EBattleAction Action = GetMenuAction(MenuActionIndex);
-	if (!IsActionUsable(MenuMemberIndex, Action))
+	FName EntryName = GetMenuEntry(MenuActionIndex);
+	int32 TargetIndex = MenuMemberIndex;
+	if (MenuStage == EBattleMenuStage::PickAction)
 	{
-		ShowMessage(TEXT("Cannot use that right now"), FColor::Orange);
-		return;
+		if (!IsEntryUsable(MenuMemberIndex, EntryName))
+		{
+			ShowMessage(TEXT("Cannot use that right now"), FColor::Orange);
+			return;
+		}
+		if (NeedsAllyTarget(EntryName))
+		{
+			StartTargetPick();
+			return;
+		}
 	}
-	bool bActed = TryPlayerAction(MenuMemberIndex, Action);
+	if (MenuStage == EBattleMenuStage::PickTarget)
+	{
+		TargetIndex = MenuTargetIndex;
+	}
+	bool bActed = TryPlayerMove(MenuMemberIndex, EntryName, TargetIndex);
 	if (bActed)
 	{
 		ResetMenuToNextMember();
@@ -296,7 +318,11 @@ void ATurnBattleManager::MenuBack()
 	{
 		return;
 	}
-	if (MenuStage == EBattleMenuStage::PickAction)
+	if (MenuStage == EBattleMenuStage::PickTarget)
+	{
+		MenuStage = EBattleMenuStage::PickAction;
+	}
+	else if (MenuStage == EBattleMenuStage::PickAction)
 	{
 		MenuStage = EBattleMenuStage::PickMember;
 	}
@@ -315,76 +341,202 @@ int32 ATurnBattleManager::GetMenuActionIndex() const
 }
 int32 ATurnBattleManager::GetMenuActionCount() const
 {
-	return 5;
+	return MenuEntries.Num();
 }
-EBattleAction ATurnBattleManager::GetMenuAction(int32 Index) const
+FName ATurnBattleManager::GetMenuEntry(int32 Index) const
 {
-	if (Index == 0)
+	if (Index < 0)
 	{
-		return EBattleAction::Attack;
+		return NAME_None;
 	}
-	if (Index == 1)
+	if (Index >= MenuEntries.Num())
 	{
-		return EBattleAction::Special;
+		return NAME_None;
 	}
-	if (Index == 2)
-	{
-		return EBattleAction::Ultimate;
-	}
-	if (Index == 3)
-	{
-		return EBattleAction::Item;
-	}
-	if (Index == 4)
-	{
-		return EBattleAction::Block;
-	}
-	return EBattleAction::None;
+	return MenuEntries[Index];
 }
-FString ATurnBattleManager::GetActionLabel(EBattleAction Action) const
+int32 ATurnBattleManager::GetMenuTargetIndex() const
 {
-	if (Action == EBattleAction::Attack)
+	return MenuTargetIndex;
+}
+bool ATurnBattleManager::IsBlockEntry(FName EntryName) const
+{
+	return EntryName == FName(TEXT("Block"));
+}
+bool ATurnBattleManager::IsItemEntry(FName EntryName) const
+{
+	return EntryName == FName(TEXT("Item"));
+}
+const FBattleMoveRow* ATurnBattleManager::GetMove(FName MoveId) const
+{
+	if (MoveTable == nullptr)
 	{
-		return TEXT("Attack");
+		return nullptr;
 	}
-	if (Action == EBattleAction::Special)
+	if (MoveId.IsNone())
 	{
-		return TEXT("Special");
+		return nullptr;
 	}
-	if (Action == EBattleAction::Ultimate)
+	return MoveTable->FindRow<FBattleMoveRow>(MoveId, TEXT("TurnBattleManager"), false);
+}
+void ATurnBattleManager::BuildMenuEntries(int32 MemberIndex)
+{
+	MenuEntries.Empty();
+	APartyMemberCharacter* Member = GetPartyMember(MemberIndex);
+	if (Member == nullptr)
 	{
-		return TEXT("Ultimate");
+		return;
 	}
-	if (Action == EBattleAction::Item)
+	if (MoveTable == nullptr)
 	{
-		return TEXT("Item");
+		UE_LOG(LogTemp, Warning, TEXT("Battle: no move table set"));
 	}
-	if (Action == EBattleAction::Block)
+	else
+	{
+		TArray<FName> AllNames = MoveTable->GetRowNames();
+		for (int32 i = 0; i < AllNames.Num(); i++)
+		{
+			const FBattleMoveRow* Move = GetMove(AllNames[i]);
+			if (Move != nullptr)
+			{
+				if (Move->MemberId == Member->StatsRowName)
+				{
+					MenuEntries.Add(AllNames[i]);
+				}
+			}
+		}
+	}
+	MenuEntries.Add(FName(TEXT("Block")));
+	MenuEntries.Add(FName(TEXT("Item")));
+}
+FString ATurnBattleManager::GetEntryLabel(FName EntryName) const
+{
+	if (IsBlockEntry(EntryName))
 	{
 		return TEXT("Block");
 	}
-	return TEXT("");
+	if (IsItemEntry(EntryName))
+	{
+		return TEXT("Item");
+	}
+	const FBattleMoveRow* Move = GetMove(EntryName);
+	if (Move == nullptr)
+	{
+		return EntryName.ToString();
+	}
+	FString Label = Move->DisplayName.ToString();
+	if (Move->ManaCost > 0.0f)
+	{
+		Label = Label + FString::Printf(TEXT(" (%d MP)"), FMath::RoundToInt(Move->ManaCost));
+	}
+	return Label;
 }
-bool ATurnBattleManager::IsActionUsable(int32 MemberIndex, EBattleAction Action) const
+FString ATurnBattleManager::GetEntryDescription(FName EntryName) const
+{
+	if (IsBlockEntry(EntryName))
+	{
+		return TEXT("Take less damage until this member acts again");
+	}
+	if (IsItemEntry(EntryName))
+	{
+		return TEXT("No items yet");
+	}
+	const FBattleMoveRow* Move = GetMove(EntryName);
+	if (Move == nullptr)
+	{
+		return FString();
+	}
+	return Move->Description.ToString();
+}
+bool ATurnBattleManager::IsEntryUsable(int32 MemberIndex, FName EntryName) const
 {
 	if (MemberIndex < 0 || MemberIndex >= Party.Num())
 	{
 		return false;
 	}
-	APartyMemberCharacter* Member = Party[MemberIndex];
-	if (Action == EBattleAction::None || Action == EBattleAction::Item)
+	if (IsBlockEntry(EntryName))
+	{
+		return true;
+	}
+	if (IsItemEntry(EntryName))
 	{
 		return false;
 	}
-	if (Action == EBattleAction::Special)
+	const FBattleMoveRow* Move = GetMove(EntryName);
+	if (Move == nullptr)
 	{
-		return Member->Stats->CurrentMana >= Member->SpecialManaCost;
+		return false;
 	}
-	if (Action == EBattleAction::Ultimate)
+	APartyMemberCharacter* Member = Party[MemberIndex];
+	return Member->Stats->CurrentMana >= Move->ManaCost;
+}
+bool ATurnBattleManager::NeedsAllyTarget(FName EntryName) const
+{
+	const FBattleMoveRow* Move = GetMove(EntryName);
+	if (Move == nullptr)
 	{
-		return Member->Stats->CurrentMana >= Member->UltimateManaCost;
+		return false;
 	}
-	return true;
+	return Move->TargetKind == EBattleTargetKind::Ally;
+}
+EBattleAction ATurnBattleManager::GetEntryCategory(FName EntryName) const
+{
+	if (IsBlockEntry(EntryName))
+	{
+		return EBattleAction::Block;
+	}
+	if (IsItemEntry(EntryName))
+	{
+		return EBattleAction::Item;
+	}
+	const FBattleMoveRow* Move = GetMove(EntryName);
+	if (Move == nullptr)
+	{
+		return EBattleAction::None;
+	}
+	return Move->Category;
+}
+void ATurnBattleManager::StartTargetPick()
+{
+	MenuStage = EBattleMenuStage::PickTarget;
+	MenuTargetIndex = MenuMemberIndex;
+}
+void ATurnBattleManager::MoveTargetSelection(int32 Step)
+{
+	int32 Count = Party.Num();
+	if (Count == 0)
+	{
+		return;
+	}
+	int32 Candidate = MenuTargetIndex;
+	for (int32 i = 0; i < Count; i++)
+	{
+		Candidate = Candidate + Step;
+		if (Candidate < 0)
+		{
+			Candidate = Count - 1;
+		}
+		if (Candidate >= Count)
+		{
+			Candidate = 0;
+		}
+		if (!Party[Candidate]->Health->IsDead())
+		{
+			MenuTargetIndex = Candidate;
+			return;
+		}
+	}
+}
+int32 ATurnBattleManager::FindPartyIndex(APartyMemberCharacter* Member) const
+{
+	for (int32 i = 0; i < Party.Num(); i++)
+	{
+		if (Party[i] == Member)
+		{
+			return i;
+		}
+	}
+	return -1;
 }
 void ATurnBattleManager::HoldPartyInPlace()
 {
@@ -535,6 +687,7 @@ void ATurnBattleManager::TickBossPhase(float DeltaTime)
 	}
 	if (BossTurnsLeft <= 0)
 	{
+		EndRound();
 		Round = Round + 1;
 		StartPlayerPhase();
 		return;
@@ -542,6 +695,20 @@ void ATurnBattleManager::TickBossPhase(float DeltaTime)
 	DoBossTurn();
 	BossTurnsLeft = BossTurnsLeft - 1;
 	BossTurnTimer = BossTurnDelay;
+}
+void ATurnBattleManager::EndRound()
+{
+	for (int32 i = 0; i < Party.Num(); i++)
+	{
+		if (Party[i] != nullptr)
+		{
+			Party[i]->Stats->CountDownTurns();
+		}
+	}
+	if (Boss != nullptr)
+	{
+		Boss->Stats->CountDownTurns();
+	}
 }
 void ATurnBattleManager::DoBossTurn()
 {
@@ -564,7 +731,7 @@ void ATurnBattleManager::DoBossTurn()
 	Pending.Add(NewTelegraph);
 	ShowMessage(FString::Printf(TEXT("Boss sets up %s"), *Row->DisplayName.ToString()), FColor::Orange);
 }
-bool ATurnBattleManager::TryPlayerAction(int32 MemberIndex, EBattleAction Action)
+bool ATurnBattleManager::TryPlayerMove(int32 MemberIndex, FName EntryName, int32 TargetIndex)
 {
 	if (State != EBattleState::PlayerPhase)
 	{
@@ -574,30 +741,33 @@ bool ATurnBattleManager::TryPlayerAction(int32 MemberIndex, EBattleAction Action
 	{
 		return false;
 	}
-	if (Action == EBattleAction::None || Action == EBattleAction::Item)
+	if (!IsEntryUsable(MemberIndex, EntryName))
 	{
+		ShowMessage(TEXT("Cannot use that right now"), FColor::Orange);
 		return false;
 	}
 	APartyMemberCharacter* Member = Party[MemberIndex];
-	if (Action == EBattleAction::Special)
+	const FBattleMoveRow* Move = nullptr;
+	if (!IsBlockEntry(EntryName))
 	{
-		if (!Member->Stats->SpendMana(Member->SpecialManaCost))
+		Move = GetMove(EntryName);
+		if (Move == nullptr)
 		{
-			ShowMessage(TEXT("Not enough mana"), FColor::Orange);
 			return false;
 		}
-	}
-	if (Action == EBattleAction::Ultimate)
-	{
-		if (!Member->Stats->SpendMana(Member->UltimateManaCost))
+		if (Move->ManaCost > 0.0f)
 		{
-			ShowMessage(TEXT("Not enough mana"), FColor::Orange);
-			return false;
+			if (!Member->Stats->SpendMana(Move->ManaCost))
+			{
+				ShowMessage(TEXT("Not enough mana"), FColor::Orange);
+				return false;
+			}
 		}
 	}
 	HasActed[MemberIndex] = true;
 	IsBlocking[MemberIndex] = false;
-	int32 CounterIndex = FindCounterIndex(Member, Action);
+	EBattleAction Category = GetEntryCategory(EntryName);
+	int32 CounterIndex = FindCounterIndex(Member, Category);
 	if (CounterIndex >= 0)
 	{
 		FPendingTelegraph Countered = Pending[CounterIndex];
@@ -605,7 +775,16 @@ bool ATurnBattleManager::TryPlayerAction(int32 MemberIndex, EBattleAction Action
 		ShowMessage(TEXT("Counter!"), FColor::Green);
 		ResolveTelegraph(Countered, true);
 	}
-	ApplyActionEffect(MemberIndex, Action);
+	if (Move == nullptr)
+	{
+		IsBlocking[MemberIndex] = true;
+		ShowMessage(FString::Printf(TEXT("%s blocks"), *Member->DisplayName), FColor::Cyan);
+	}
+	else
+	{
+		ShowMessage(FString::Printf(TEXT("%s uses %s"), *Member->DisplayName, *Move->DisplayName.ToString()), FColor::Cyan);
+		Member->PerformBattleMove(this, EntryName, Move, TargetIndex);
+	}
 	CheckForEnd();
 	if (State == EBattleState::Won)
 	{
@@ -621,31 +800,6 @@ bool ATurnBattleManager::TryPlayerAction(int32 MemberIndex, EBattleAction Action
 		}
 	}
 	return true;
-}
-void ATurnBattleManager::ApplyActionEffect(int32 MemberIndex, EBattleAction Action)
-{
-	APartyMemberCharacter* Member = Party[MemberIndex];
-	if (Action == EBattleAction::Block)
-	{
-		IsBlocking[MemberIndex] = true;
-		ShowMessage(FString::Printf(TEXT("%s blocks"), *Member->DisplayName), FColor::Cyan);
-		return;
-	}
-	if (Boss == nullptr)
-	{
-		return;
-	}
-	float Scale = AttackScale;
-	if (Action == EBattleAction::Special)
-	{
-		Scale = SpecialScale;
-	}
-	if (Action == EBattleAction::Ultimate)
-	{
-		Scale = UltimateScale;
-	}
-	Member->DealDamage(Boss, Scale, false);
-	ShowMessage(FString::Printf(TEXT("%s hits the boss"), *Member->DisplayName), FColor::Cyan);
 }
 void ATurnBattleManager::AdvanceTelegraphs()
 {

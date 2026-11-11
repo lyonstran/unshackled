@@ -1,0 +1,33 @@
+Name,MemberId,DisplayName,Description,Category,TargetKind,ManaCost,Power,Amount1,Amount2,Amount3,Amount4,Turns
+Sirius_Attack,Sirius,Wind Blade,Slice one enemy with a blade of wind,Attack,Enemy,0,1.0,0,0,0,0,0
+Sirius_Gale,Sirius,Gale,A strong blast of wind magic at one enemy,Special,Enemy,20,2.0,0,0,0,0,0
+Sirius_Veil,Sirius,Veil,Allies take less damage and reflect some of it back,Special,AllAllies,25,0,0.15,0.10,0,0,3
+Sirius_WindsUnbound,Sirius,Winds Unbound,Raise Sirius's attack (does not stack),Special,Caster,20,0,0.15,0,0,0,3
+Sirius_GaleUnleashed,Sirius,Gale Unleashed,A tornado hits every enemy then lingers,Ultimate,AllEnemies,45,1.8,0.10,0,0,0,3
+Sirius_WindWall,Sirius,Wind Wall,Stop the next hit on Sirius and turn part of it into mana,Special,Caster,25,0,0.20,0.10,0,0,0
+Sirius_WindsOfWar,Sirius,Winds of War,Raise the attack of everyone including enemies,Special,Everyone,15,0,0.10,0,0,0,3
+Sirius_Submission,Sirius,Submission,Lower one enemy's attack and defense,Special,Enemy,20,0,0.15,0,0,0,3
+Malkholm_Attack,Malkholm,Double Strike,Strike twice; both on one target hardens Mal'Kholm,Attack,Enemy,0,0.6,0.015,0,0,0,0
+Malkholm_Might,Malkholm,Might,Slam both chains down onto one enemy,Special,Enemy,25,2.2,0,0,0,0,0
+Malkholm_Revolution,Malkholm,Revolution,Next round repeats this round's help for allies at reduced strength,Ultimate,AllAllies,40,0,0.25,0,0,0,1
+Malkholm_Sacrifice,Malkholm,Sacrifice,Give up some health to act again next round,Special,Caster,0,0,0.05,0,0,0,0
+Malkholm_Freedom,Malkholm,Freedom,Raise one ally's defense (stacks),Special,Ally,15,0,0.075,3,0,0,3
+Malkholm_Confrontation,Malkholm,Confrontation,Hook an enemy; steal defense and health and strike,Ultimate,Enemy,35,0,0.15,0.5,0.10,0.05,3
+Malkholm_Power,Malkholm,Power,Shield every ally based on Mal'Kholm's defense and wounds,Special,AllAllies,30,0,0.05,0.05,0,0,0
+Malkholm_Unity,Malkholm,Unity,Restart the Retribution order on Mal'Kholm,Special,Caster,20,0,0.05,0.10,0,0,3
+Hanuboy_Attack,Hanuboy,Chain Ball,Smack one enemy; may make the boss lose a turn,Attack,Enemy,0,1.0,0.10,0,0,0,0
+Hanuboy_Sprout,Hanuboy,Sprout,Summon a flower that heals all allies each round,Special,Caster,20,0,0.02,2,0,0,5
+Hanuboy_Blossom,Hanuboy,Blossom,Summon a tree that hurts every enemy and softens debuffs on allies,Ultimate,AllEnemies,50,0,0.05,0.025,0.5,0,3
+Hanuboy_Harvest,Hanuboy,Harvest,Destroy all spawns to gain damage for each,Special,Caster,10,0,0.03,0,0,0,3
+Hanuboy_Territory,Hanuboy,Territory,Summon a mushroom that restores mana to all allies each round,Special,Caster,20,0,8,2,0,0,3
+Hanuboy_Squeak,Hanuboy,Squeak,Raise one ally's defense,Special,Ally,15,0,0.15,0,0,0,3
+Hanuboy_LoudSqueak,Hanuboy,Super Loud Squeak,Heal every ally by a random amount,Special,AllAllies,30,0,0.05,0.10,0,0,0
+Hanuboy_Shelter,Hanuboy,Shelter,Share the damage one ally takes next turn,Special,Ally,15,0,0.5,0,0,0,1
+Kalia_Attack,Kalia,Sickle Slash,Slice one enemy with her sickle,Attack,Enemy,0,1.0,0,0,0,0,0
+Kalia_Chaos,Kalia,Chaos,A random ally gets a random boost for a random time,Special,Caster,15,0,0.012,0.12,1,5,0
+Kalia_Sever,Kalia,Sever,Throw the sickle; it lands next turn and weakens the enemy,Ultimate,Enemy,30,0,0.012,0.12,0.12,0.12,3
+Kalia_Battlesong,Kalia,Battlesong,Boost one ally's next attack,Special,Ally,15,0,0.12,0,0,0,0
+Kalia_Riposte,Kalia,Riposte,Parry the next hit; reflect damage and debuffs,Special,Caster,20,0,0.5,0.5,0,0,1
+Kalia_Barrage,Kalia,Barrage,Strike one enemy many times,Special,Enemy,25,0.4,4,0,0,0,0
+Kalia_Concentration,Kalia,Concentration,Kalia's next attack lowers the target's defense,Special,Caster,10,0,0.12,0,0,0,0
+Kalia_Slayer,Kalia,Slayer,A wound that hurts the enemy every time it attacks,Ultimate,Enemy,30,0,0.012,0,0,0,0

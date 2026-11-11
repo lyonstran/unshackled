@@ -131,7 +131,7 @@ void ABattleHUD::DrawPartyCards(ATurnBattleManager* Manager)
 		{
 			if (Manager->GetState() == EBattleState::PlayerPhase)
 			{
-				if (Manager->GetMenuStage() == EBattleMenuStage::PickAction)
+				if (Manager->GetMenuStage() != EBattleMenuStage::PickMember)
 				{
 					DrawActionList(Manager, Left, Top);
 				}
@@ -159,6 +159,16 @@ void ABattleHUD::DrawPartyCard(ATurnBattleManager* Manager, int32 MemberIndex, f
 	if (bHovered)
 	{
 		BorderColor = FLinearColor(1.0f, 0.85f, 0.2f, 1.0f);
+	}
+	if (Manager->GetState() == EBattleState::PlayerPhase)
+	{
+		if (Manager->GetMenuStage() == EBattleMenuStage::PickTarget)
+		{
+			if (MemberIndex == Manager->GetMenuTargetIndex())
+			{
+				BorderColor = FLinearColor(0.3f, 0.9f, 1.0f, 1.0f);
+			}
+		}
 	}
 	DrawRect(BorderColor, Left - BattleCardBorder, Top - BattleCardBorder, BattleCardWidth + (BattleCardBorder * 2.0f), BattleCardHeight + (BattleCardBorder * 2.0f));
 	FLinearColor BackColor = FLinearColor(0.08f, 0.08f, 0.12f, 0.95f);
@@ -206,6 +216,11 @@ void ABattleHUD::DrawPartyCard(ATurnBattleManager* Manager, int32 MemberIndex, f
 		StatusColor = FLinearColor(0.6f, 0.6f, 0.6f, 1.0f);
 	}
 	DrawText(StatusText, StatusColor, Left + 6.0f, Top + 69.0f, nullptr, 0.85f);
+	if (Member->Health->Shield > 0.0f)
+	{
+		FString ShieldText = FString::Printf(TEXT("Shield %d"), FMath::CeilToInt(Member->Health->Shield));
+		DrawText(ShieldText, FLinearColor(0.85f, 0.85f, 1.0f, 1.0f), Left + 62.0f, Top + 69.0f, nullptr, 0.75f);
+	}
 	if (Member->Health->IsDead() || !Manager->CanMemberAct(MemberIndex))
 	{
 		FLinearColor DimColor = FLinearColor(0.0f, 0.0f, 0.0f, 0.45f);
@@ -223,29 +238,17 @@ void ABattleHUD::DrawActionList(ATurnBattleManager* Manager, float CardLeft, flo
 	FLinearColor BackColor = FLinearColor(0.06f, 0.06f, 0.1f, 0.97f);
 	DrawRect(BackColor, PanelLeft, PanelTop, ActionPanelWidth, PanelHeight);
 	int32 MemberIndex = Manager->GetMenuMemberIndex();
-	APartyMemberCharacter* Member = Manager->GetPartyMember(MemberIndex);
 	for (int32 i = 0; i < Count; i++)
 	{
 		float RowTop = PanelTop + 6.0f + (i * ActionRowHeight);
-		EBattleAction Action = Manager->GetMenuAction(i);
-		bool bUsable = Manager->IsActionUsable(MemberIndex, Action);
+		FName EntryName = Manager->GetMenuEntry(i);
+		bool bUsable = Manager->IsEntryUsable(MemberIndex, EntryName);
 		if (i == Manager->GetMenuActionIndex())
 		{
 			FLinearColor HighlightColor = FLinearColor(0.25f, 0.22f, 0.05f, 1.0f);
 			DrawRect(HighlightColor, PanelLeft + 4.0f, RowTop, ActionPanelWidth - 8.0f, ActionRowHeight - 2.0f);
 		}
-		FString RowText = Manager->GetActionLabel(Action);
-		if (Member != nullptr)
-		{
-			if (Action == EBattleAction::Special)
-			{
-				RowText = RowText + FString::Printf(TEXT(" (%d MP)"), FMath::RoundToInt(Member->SpecialManaCost));
-			}
-			if (Action == EBattleAction::Ultimate)
-			{
-				RowText = RowText + FString::Printf(TEXT(" (%d MP)"), FMath::RoundToInt(Member->UltimateManaCost));
-			}
-		}
+		FString RowText = Manager->GetEntryLabel(EntryName);
 		FLinearColor TextColor = FLinearColor::White;
 		if (!bUsable)
 		{
@@ -264,6 +267,17 @@ void ABattleHUD::DrawHintText(ATurnBattleManager* Manager)
 	if (Manager->GetMenuStage() == EBattleMenuStage::PickAction)
 	{
 		Hint = TEXT("Up / Down: choose action     Space: confirm     Esc: back");
+	}
+	if (Manager->GetMenuStage() == EBattleMenuStage::PickTarget)
+	{
+		Hint = TEXT("Left / Right: choose ally     Space: confirm     Esc: back");
+	}
+	if (Manager->GetMenuStage() != EBattleMenuStage::PickMember)
+	{
+		FName EntryName = Manager->GetMenuEntry(Manager->GetMenuActionIndex());
+		FString Description = Manager->GetEntryDescription(EntryName);
+		float DescriptionTop = BossTopMargin + 22.0f + BossBarHeight + 52.0f;
+		DrawCenteredText(Description, FLinearColor(1.0f, 0.95f, 0.7f, 1.0f), Canvas->SizeX / 2.0f, DescriptionTop, 1.0f);
 	}
 	DrawCenteredText(Hint, FLinearColor(0.8f, 0.8f, 0.8f, 1.0f), Canvas->SizeX / 2.0f, Canvas->SizeY - 22.0f, 0.85f);
 }

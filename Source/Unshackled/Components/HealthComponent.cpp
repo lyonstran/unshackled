@@ -40,6 +40,32 @@ bool UHealthComponent::IsDead() const
 {
 	return CurrentHealth <= 0.0f;
 }
+void UHealthComponent::AddShield(float Amount)
+{
+	if (IsDead())
+	{
+		return;
+	}
+	if (Amount <= 0.0f)
+	{
+		return;
+	}
+	Shield = Shield + Amount;
+}
+float UHealthComponent::AbsorbWithShield(float Amount)
+{
+	if (Shield <= 0.0f)
+	{
+		return 0.0f;
+	}
+	float Absorbed = Amount;
+	if (Absorbed > Shield)
+	{
+		Absorbed = Shield;
+	}
+	Shield = Shield - Absorbed;
+	return Absorbed;
+}
 void UHealthComponent::SetMaxHealthFromStats(float NewMaxHealth)
 {
 	float OldMaxHealth = MaxHealth;

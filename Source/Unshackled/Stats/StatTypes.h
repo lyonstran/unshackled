@@ -41,4 +41,5 @@ struct FStatModifier
 	int32 MaxStacks = 1;
 	int32 HitsRemaining = 0;
 	EStatusFlag Flag = EStatusFlag::None;
+	int32 TurnsLeft = 0;
 };

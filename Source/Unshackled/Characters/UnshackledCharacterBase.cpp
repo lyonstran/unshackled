@@ -138,7 +138,7 @@ float AUnshackledCharacterBase::ApplyHit(float RawDamage, bool bTrueDamage, AUns
         {
                 return 0.0f;
         }
-        float FinalDamage = CalculateFinalDamage(RawDamage, bTrueDamage);
+        float FinalDamage = CalculateDamageAfterShield(RawDamage, bTrueDamage);
         Stats->ConsumeHit();
         float HealthBefore = Health->CurrentHealth;
         Health->TakeHit(FinalDamage);
@@ -164,6 +164,22 @@ float AUnshackledCharacterBase::CalculateFinalDamage(float RawDamage, bool bTrue
         float IncomingMultiplier = Stats->GetFinal(ECharacterStat::IncomingDamage);
         FinalDamage = FinalDamage * IncomingMultiplier;
         return FinalDamage;
+}
+float AUnshackledCharacterBase::CalculateDamageAfterShield(float RawDamage, bool bTrueDamage)
+{
+        if (Health->Shield <= 0.0f)
+        {
+                return CalculateFinalDamage(RawDamage, bTrueDamage);
+        }
+        float ShieldHit = CalculateFinalDamage(RawDamage, true);
+        if (ShieldHit <= 0.0f)
+        {
+                return 0.0f;
+        }
+        float Absorbed = Health->AbsorbWithShield(ShieldHit);
+        float FractionLeft = (ShieldHit - Absorbed) / ShieldHit;
+        float RawDamageLeft = RawDamage * FractionLeft;
+        return CalculateFinalDamage(RawDamageLeft, bTrueDamage);
 }
 void AUnshackledCharacterBase::CheckForDeath(AUnshackledCharacterBase* Attacker)
 {
@@ -210,6 +226,7 @@ bool AUnshackledCharacterBase::WouldDie()
 }
 void AUnshackledCharacterBase::Die()
 {
+        Health->Shield = 0.0f;
         GetCharacterMovement()->DisableMovement();
         SetActorEnableCollision(false);
 }

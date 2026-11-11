@@ -3,6 +3,8 @@
 #include "Game/UnshackledGameInstance.h"
 #include "UI/UnshackledHUD.h"
 #include "Battle/TurnBattleManager.h"
+#include "Battle/BattleMoveRow.h"
+#include "Characters/BossCharacter.h"
 #include "EngineUtils.h"
 #include "GameFramework/PlayerController.h"
 #include "Engine/Engine.h"
@@ -113,6 +115,27 @@ bool APartyMemberCharacter::IsInTurnBattle() const
                 return true;
         }
         return false;
+}
+void APartyMemberCharacter::PerformBattleMove(ATurnBattleManager* Manager, FName MoveId, const FBattleMoveRow* Move, int32 TargetIndex)
+{
+        if (Manager == nullptr)
+        {
+                return;
+        }
+        if (Move == nullptr)
+        {
+                return;
+        }
+        if (Move->Power <= 0.0f)
+        {
+                return;
+        }
+        ABossCharacter* Boss = Manager->GetBoss();
+        if (Boss == nullptr)
+        {
+                return;
+        }
+        DealDamage(Boss, Move->Power, false);
 }
 float APartyMemberCharacter::GetGroundCooldownRemaining() const
 {

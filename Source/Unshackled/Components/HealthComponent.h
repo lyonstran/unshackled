@@ -14,11 +14,15 @@ public:
         float CurrentHealth = 100.0f;
         UPROPERTY(BlueprintReadWrite, Category = "Health")
         float HealthFloor = 0.0f;
+        UPROPERTY(BlueprintReadOnly, Category = "Health")
+        float Shield = 0.0f;
         void TakeHit(float Amount);
         void Heal(float Amount);
         void Revive();
         bool IsDead() const;
         void SetMaxHealthFromStats(float NewMaxHealth);
+        void AddShield(float Amount);
+        float AbsorbWithShield(float Amount);
 protected:
         virtual void BeginPlay() override;
 };

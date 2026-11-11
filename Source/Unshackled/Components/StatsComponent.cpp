@@ -73,6 +73,7 @@ void UStatsComponent::AddModifier(FStatModifier NewModifier)
                         Modifiers[ExistingIndex].Stacks = CurrentStacks + 1;
                 }
                 Modifiers[ExistingIndex].TimeLeft = NewModifier.Duration;
+                Modifiers[ExistingIndex].TurnsLeft = NewModifier.TurnsLeft;
                 return;
         }
         NewModifier.Stacks = 1;
@@ -304,4 +305,25 @@ void UStatsComponent::RestoreMana(float Amount)
         {
                 CurrentMana = MaxMana;
         }
+}
+void UStatsComponent::CountDownTurns()
+{
+        TArray<FStatModifier> StillActive;
+        for (int32 i = 0; i < Modifiers.Num(); i++)
+        {
+                FStatModifier Current = Modifiers[i];
+                if (Current.TurnsLeft <= 0)
+                {
+                        StillActive.Add(Current);
+                }
+                else
+                {
+                        Current.TurnsLeft = Current.TurnsLeft - 1;
+                        if (Current.TurnsLeft > 0)
+                        {
+                                StillActive.Add(Current);
+                        }
+                }
+        }
+        Modifiers = StillActive;
 }

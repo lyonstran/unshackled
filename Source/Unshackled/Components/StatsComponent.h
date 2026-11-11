@@ -33,6 +33,7 @@ public:
         bool CanAct() const;
         bool SpendMana(float Amount);
         void RestoreMana(float Amount);
+        void CountDownTurns();
         virtual void TickComponent(float DeltaTime, ELevelTick TickType,
                 FActorComponentTickFunction* ThisTickFunction) override;
 protected:

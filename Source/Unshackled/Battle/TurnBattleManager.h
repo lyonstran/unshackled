@@ -3,6 +3,7 @@
 #include "GameFramework/Actor.h"
 #include "Engine/DataTable.h"
 #include "Battle/TelegraphRow.h"
+#include "Battle/BattleMoveRow.h"
 #include "TurnBattleManager.generated.h"
 class APartyMemberCharacter;
 class ABossCharacter;
@@ -34,7 +35,8 @@ enum class EBattleState
 enum class EBattleMenuStage
 {
 	PickMember,
-	PickAction
+	PickAction,
+	PickTarget
 };
 struct FPendingTelegraph
 {
@@ -49,7 +51,7 @@ class UNSHACKLED_API ATurnBattleManager : public AActor
 public:
 	ATurnBattleManager();
 	virtual void Tick(float DeltaTime) override;
-	bool TryPlayerAction(int32 MemberIndex, EBattleAction Action);
+	bool TryPlayerMove(int32 MemberIndex, FName EntryName, int32 TargetIndex);
 	bool CanMemberAct(int32 MemberIndex) const;
 	void MenuStep(int32 Horizontal, int32 Vertical);
 	void MenuConfirm();
@@ -58,9 +60,14 @@ public:
 	int32 GetMenuMemberIndex() const;
 	int32 GetMenuActionIndex() const;
 	int32 GetMenuActionCount() const;
-	EBattleAction GetMenuAction(int32 Index) const;
-	FString GetActionLabel(EBattleAction Action) const;
-	bool IsActionUsable(int32 MemberIndex, EBattleAction Action) const;
+	FName GetMenuEntry(int32 Index) const;
+	int32 GetMenuTargetIndex() const;
+	FString GetEntryLabel(FName EntryName) const;
+	FString GetEntryDescription(FName EntryName) const;
+	bool IsEntryUsable(int32 MemberIndex, FName EntryName) const;
+	const FBattleMoveRow* GetMove(FName MoveId) const;
+	int32 FindPartyIndex(APartyMemberCharacter* Member) const;
+	void ShowMessage(FString Text, FColor Color);
 	EBattleState GetState() const;
 	int32 GetRound() const;
 	bool IsMemberBlocking(int32 MemberIndex) const;
@@ -77,11 +84,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Battle")
 	float ExtraTurnHealthFraction = 0.5f;
 	UPROPERTY(EditAnywhere, Category = "Battle")
-	float AttackScale = 1.0f;
-	UPROPERTY(EditAnywhere, Category = "Battle")
-	float SpecialScale = 2.0f;
-	UPROPERTY(EditAnywhere, Category = "Battle")
-	float UltimateScale = 4.0f;
+	UDataTable* MoveTable = nullptr;
 	UPROPERTY(EditAnywhere, Category = "Battle")
 	float ManaRestoreFraction = 0.25f;
 	UPROPERTY(EditAnywhere, Category = "Battle Setup")
@@ -119,6 +122,8 @@ private:
 	EBattleMenuStage MenuStage = EBattleMenuStage::PickMember;
 	int32 MenuMemberIndex = 0;
 	int32 MenuActionIndex = 0;
+	int32 MenuTargetIndex = 0;
+	TArray<FName> MenuEntries;
 	int32 Round = 1;
 	int32 BossTurnsLeft = 0;
 	float BossTurnTimer = 0.0f;
@@ -146,9 +151,15 @@ private:
 	void HoldPartyInPlace();
 	void StopRealTimeManaRegen();
 	void RestoreManaForNewRound();
-	void ShowMessage(FString Text, FColor Color);
 	void ShowBanner(FString Text, FLinearColor Color);
-	void ApplyActionEffect(int32 MemberIndex, EBattleAction Action);
+	void BuildMenuEntries(int32 MemberIndex);
+	void StartTargetPick();
+	void MoveTargetSelection(int32 Step);
+	bool NeedsAllyTarget(FName EntryName) const;
+	EBattleAction GetEntryCategory(FName EntryName) const;
+	bool IsBlockEntry(FName EntryName) const;
+	bool IsItemEntry(FName EntryName) const;
+	void EndRound();
 	void AdvanceTelegraphs();
 	void ResolveTelegraph(FPendingTelegraph Telegraph, bool bCountered);
 	void HitMember(int32 MemberIndex, const FTelegraphRow* Row, float Multiplier);
