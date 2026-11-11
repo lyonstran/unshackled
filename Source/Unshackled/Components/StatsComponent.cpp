@@ -306,6 +306,15 @@ void UStatsComponent::RestoreMana(float Amount)
                 CurrentMana = MaxMana;
         }
 }
+int32 UStatsComponent::GetStacks(FName SourceId, ECharacterStat Stat, EModifierKind Kind) const
+{
+        int32 Index = FindModifierIndex(SourceId, Stat, Kind);
+        if (Index == -1)
+        {
+                return 0;
+        }
+        return Modifiers[Index].Stacks;
+}
 void UStatsComponent::CountDownTurns()
 {
         TArray<FStatModifier> StillActive;

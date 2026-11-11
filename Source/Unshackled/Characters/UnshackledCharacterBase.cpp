@@ -138,6 +138,7 @@ float AUnshackledCharacterBase::ApplyHit(float RawDamage, bool bTrueDamage, AUns
         {
                 return 0.0f;
         }
+        RawDamage = FilterIncomingDamage(RawDamage, bTrueDamage, Attacker);
         float FinalDamage = CalculateDamageAfterShield(RawDamage, bTrueDamage);
         Stats->ConsumeHit();
         float HealthBefore = Health->CurrentHealth;
@@ -149,6 +150,7 @@ float AUnshackledCharacterBase::ApplyHit(float RawDamage, bool bTrueDamage, AUns
         {
                 Attacker->OnDealtDamage(this, DamageDealt);
         }
+        ReflectDamage(DamageDealt, Attacker);
         return DamageDealt;
 }
 float AUnshackledCharacterBase::CalculateFinalDamage(float RawDamage, bool bTrueDamage)
@@ -164,6 +166,27 @@ float AUnshackledCharacterBase::CalculateFinalDamage(float RawDamage, bool bTrue
         float IncomingMultiplier = Stats->GetFinal(ECharacterStat::IncomingDamage);
         FinalDamage = FinalDamage * IncomingMultiplier;
         return FinalDamage;
+}
+float AUnshackledCharacterBase::FilterIncomingDamage(float RawDamage, bool bTrueDamage, AUnshackledCharacterBase* Attacker)
+{
+        return RawDamage;
+}
+void AUnshackledCharacterBase::ReflectDamage(float DamageTaken, AUnshackledCharacterBase* Attacker)
+{
+        if (Attacker == nullptr)
+        {
+                return;
+        }
+        if (DamageTaken <= 0.0f)
+        {
+                return;
+        }
+        float ReflectFraction = Stats->GetFinal(ECharacterStat::Reflect);
+        if (ReflectFraction <= 0.0f)
+        {
+                return;
+        }
+        Attacker->ApplyHit(DamageTaken * ReflectFraction, true, nullptr);
 }
 float AUnshackledCharacterBase::CalculateDamageAfterShield(float RawDamage, bool bTrueDamage)
 {

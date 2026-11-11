@@ -130,12 +130,65 @@ void APartyMemberCharacter::PerformBattleMove(ATurnBattleManager* Manager, FName
         {
                 return;
         }
+        HitBattleBoss(Manager, Move->Power, false);
+}
+void APartyMemberCharacter::OnBattleRoundEnd(ATurnBattleManager* Manager)
+{
+}
+float APartyMemberCharacter::HitBattleBoss(ATurnBattleManager* Manager, float Power, bool bTrueDamage)
+{
+        if (Manager == nullptr)
+        {
+                return 0.0f;
+        }
+        if (Power <= 0.0f)
+        {
+                return 0.0f;
+        }
         ABossCharacter* Boss = Manager->GetBoss();
         if (Boss == nullptr)
         {
+                return 0.0f;
+        }
+        float DamageStat = Stats->GetFinal(ECharacterStat::Damage);
+        float RawDamage = DamageStat * Power;
+        return Boss->ApplyHit(RawDamage, bTrueDamage, this);
+}
+void APartyMemberCharacter::AddBattleModifier(AUnshackledCharacterBase* Target, FName SourceId, ECharacterStat Stat, EModifierKind Kind, float Amount, int32 Turns)
+{
+        if (Target == nullptr)
+        {
                 return;
         }
-        DealDamage(Boss, Move->Power, false);
+        if (Target->Health->IsDead())
+        {
+                return;
+        }
+        FStatModifier NewModifier;
+        NewModifier.SourceId = SourceId;
+        NewModifier.Stat = Stat;
+        NewModifier.Kind = Kind;
+        NewModifier.Amount = Amount;
+        NewModifier.Duration = 0.0f;
+        NewModifier.TurnsLeft = Turns;
+        NewModifier.Rule = EStackRule::RefreshSameSource;
+        Target->Stats->AddModifier(NewModifier);
+}
+ATurnBattleManager* APartyMemberCharacter::FindBattleManager() const
+{
+        for (TActorIterator<ATurnBattleManager> It(GetWorld()); It; ++It)
+        {
+                return *It;
+        }
+        return nullptr;
+}
+void APartyMemberCharacter::ShowBattleMessage(FString Text, FColor Color)
+{
+        ATurnBattleManager* Manager = FindBattleManager();
+        if (Manager != nullptr)
+        {
+                Manager->ShowMessage(Text, Color);
+        }
 }
 float APartyMemberCharacter::GetGroundCooldownRemaining() const
 {

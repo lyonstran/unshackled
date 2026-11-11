@@ -688,6 +688,11 @@ void ATurnBattleManager::TickBossPhase(float DeltaTime)
 	if (BossTurnsLeft <= 0)
 	{
 		EndRound();
+		CheckForEnd();
+		if (State != EBattleState::BossPhase)
+		{
+			return;
+		}
 		Round = Round + 1;
 		StartPlayerPhase();
 		return;
@@ -698,6 +703,13 @@ void ATurnBattleManager::TickBossPhase(float DeltaTime)
 }
 void ATurnBattleManager::EndRound()
 {
+	for (int32 i = 0; i < Party.Num(); i++)
+	{
+		if (Party[i] != nullptr)
+		{
+			Party[i]->OnBattleRoundEnd(this);
+		}
+	}
 	for (int32 i = 0; i < Party.Num(); i++)
 	{
 		if (Party[i] != nullptr)

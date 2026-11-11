@@ -64,6 +64,15 @@ void ABattleHUD::DrawBossPanel(ATurnBattleManager* Manager)
 	DrawRect(FrontColor, BarLeft, BarTop, BossBarWidth * HealthFraction, BossBarHeight);
 	FString HealthText = FString::Printf(TEXT("%d / %d"), FMath::CeilToInt(Boss->Health->CurrentHealth), FMath::CeilToInt(MaxHealth));
 	DrawCenteredText(HealthText, FLinearColor::White, CenterX, BarTop + BossBarHeight + 4.0f, 0.9f);
+	int32 BossDamage = FMath::RoundToInt(Boss->Stats->GetFinal(ECharacterStat::Damage));
+	int32 BossDefense = FMath::RoundToInt(Boss->Stats->GetFinal(ECharacterStat::Defense));
+	FString StatText = FString::Printf(TEXT("Damage %d   Defense %d"), BossDamage, BossDefense);
+	int32 Marks = Boss->Stats->GetStacks(FName("SiriusMarks"), ECharacterStat::Damage, EModifierKind::Percent);
+	if (Marks > 0)
+	{
+		StatText = StatText + FString::Printf(TEXT("   Marks %d"), Marks);
+	}
+	DrawCenteredText(StatText, FLinearColor(0.75f, 0.75f, 0.75f, 1.0f), CenterX, BarTop + BossBarHeight + 22.0f, 0.8f);
 }
 void ABattleHUD::DrawPhaseLabel(ATurnBattleManager* Manager)
 {
@@ -79,7 +88,7 @@ void ABattleHUD::DrawPhaseLabel(ATurnBattleManager* Manager)
 		Label = FString::Printf(TEXT("Round %d  -  Boss turn"), Manager->GetRound());
 		Color = FLinearColor(1.0f, 0.6f, 0.2f, 1.0f);
 	}
-	float LabelTop = BossTopMargin + 22.0f + BossBarHeight + 24.0f;
+	float LabelTop = BossTopMargin + 22.0f + BossBarHeight + 42.0f;
 	DrawCenteredText(Label, Color, Canvas->SizeX / 2.0f, LabelTop, 1.1f);
 }
 void ABattleHUD::DrawTelegraphList(ATurnBattleManager* Manager)
@@ -276,7 +285,7 @@ void ABattleHUD::DrawHintText(ATurnBattleManager* Manager)
 	{
 		FName EntryName = Manager->GetMenuEntry(Manager->GetMenuActionIndex());
 		FString Description = Manager->GetEntryDescription(EntryName);
-		float DescriptionTop = BossTopMargin + 22.0f + BossBarHeight + 52.0f;
+		float DescriptionTop = BossTopMargin + 22.0f + BossBarHeight + 68.0f;
 		DrawCenteredText(Description, FLinearColor(1.0f, 0.95f, 0.7f, 1.0f), Canvas->SizeX / 2.0f, DescriptionTop, 1.0f);
 	}
 	DrawCenteredText(Hint, FLinearColor(0.8f, 0.8f, 0.8f, 1.0f), Canvas->SizeX / 2.0f, Canvas->SizeY - 22.0f, 0.85f);

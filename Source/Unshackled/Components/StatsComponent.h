@@ -34,6 +34,7 @@ public:
         bool SpendMana(float Amount);
         void RestoreMana(float Amount);
         void CountDownTurns();
+        int32 GetStacks(FName SourceId, ECharacterStat Stat, EModifierKind Kind) const;
         virtual void TickComponent(float DeltaTime, ELevelTick TickType,
                 FActorComponentTickFunction* ThisTickFunction) override;
 protected:

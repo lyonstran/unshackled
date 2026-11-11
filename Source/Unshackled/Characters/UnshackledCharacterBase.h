@@ -75,6 +75,8 @@ protected:
         void RegenerateMana(float DeltaTime);
         float CalculateFinalDamage(float RawDamage, bool bTrueDamage);
         float CalculateDamageAfterShield(float RawDamage, bool bTrueDamage);
+        virtual float FilterIncomingDamage(float RawDamage, bool bTrueDamage, AUnshackledCharacterBase* Attacker);
+        void ReflectDamage(float DamageTaken, AUnshackledCharacterBase* Attacker);
         void CheckForDeath(AUnshackledCharacterBase* Attacker);
         bool TryPayMana(float ManaCost);
         void ShowNotEnoughMana();

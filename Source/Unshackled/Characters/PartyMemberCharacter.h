@@ -26,6 +26,7 @@ public:
         virtual void OnSwappedOut(APartyMemberCharacter* NewLeader);
         virtual void PerformRetribution();
         virtual void PerformBattleMove(ATurnBattleManager* Manager, FName MoveId, const FBattleMoveRow* Move, int32 TargetIndex);
+        virtual void OnBattleRoundEnd(ATurnBattleManager* Manager);
         UPROPERTY(VisibleAnywhere, Category = "Camera")
         USpringArmComponent* CameraArm;
         UPROPERTY(VisibleAnywhere, Category = "Camera")
@@ -48,6 +49,10 @@ protected:
         virtual void BeginPlay() override;
         virtual void Die() override;
         virtual void GroundedTick(float DeltaTime);
+        float HitBattleBoss(ATurnBattleManager* Manager, float Power, bool bTrueDamage);
+        void AddBattleModifier(AUnshackledCharacterBase* Target, FName SourceId, ECharacterStat Stat, EModifierKind Kind, float Amount, int32 Turns);
+        ATurnBattleManager* FindBattleManager() const;
+        void ShowBattleMessage(FString Text, FColor Color);
         void FollowLeader();
         void UpdateGroundCooldown(float DeltaTime);
         void DrainGroundedMana(float DeltaTime);

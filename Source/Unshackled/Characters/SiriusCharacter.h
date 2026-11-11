@@ -15,6 +15,8 @@ public:
         virtual void Tick(float DeltaTime) override;
         virtual void OnSwappedOut(APartyMemberCharacter* NewLeader) override;
         virtual void PerformRetribution() override;
+        virtual void PerformBattleMove(ATurnBattleManager* Manager, FName MoveId, const FBattleMoveRow* Move, int32 TargetIndex) override;
+        virtual void OnBattleRoundEnd(ATurnBattleManager* Manager) override;
         UPROPERTY(EditAnywhere, Category = "Sirius")
         TSubclassOf<AAbilityProjectile> CrescentClass;
         UPROPERTY(EditAnywhere, Category = "Sirius")
@@ -73,11 +75,28 @@ public:
         float RetributionAuraInterval = 0.25f;
         UPROPERTY(EditAnywhere, Category = "Sirius Retribution")
         float RetributionAuraDuration = 0.5f;
+        UPROPERTY(EditAnywhere, Category = "Sirius Battle")
+        int32 MarkMaxStacks = 25;
+        UPROPERTY(EditAnywhere, Category = "Sirius Battle")
+        float MarkDamageReductionPerStack = 0.01f;
+        UPROPERTY(EditAnywhere, Category = "Sirius Battle")
+        float MarkExecuteThreshold = 0.05f;
 protected:
         virtual void PerformBasicAttack(FVector Direction) override;
         virtual void PerformSpecial(FVector AimDirection) override;
         virtual void PerformUltimate(FVector AimDirection) override;
         virtual void GroundedTick(float DeltaTime) override;
+        virtual float FilterIncomingDamage(float RawDamage, bool bTrueDamage, AUnshackledCharacterBase* Attacker) override;
+        bool MoveTouchesEnemy(const FBattleMoveRow* Move) const;
+        void AddMarkToBoss(ATurnBattleManager* Manager);
+        void TryBattleExecute(ATurnBattleManager* Manager);
+        void CastBattleVeil(ATurnBattleManager* Manager, const FBattleMoveRow* Move);
+        void CastWindsUnbound(const FBattleMoveRow* Move);
+        void CastGaleUnleashed(ATurnBattleManager* Manager, const FBattleMoveRow* Move);
+        void CastWindWall(const FBattleMoveRow* Move);
+        void CastWindsOfWar(ATurnBattleManager* Manager, const FBattleMoveRow* Move);
+        void CastSubmission(ATurnBattleManager* Manager, const FBattleMoveRow* Move);
+        void TickBattleTornado(ATurnBattleManager* Manager);
         void FireCrescent(FVector Direction, float DamageScale, float SizeScale);
         void SpawnTornado(FVector Direction);
         void SpawnVeil();
@@ -94,6 +113,11 @@ protected:
         float AirBladeTimeLeft = 0.0f;
         float RetributionTimeLeft = 0.0f;
         float RetributionAuraTimer = 0.0f;
+        float BattleTornadoDamage = 0.0f;
+        int32 BattleTornadoRoundsLeft = 0;
+        bool bWindWallUp = false;
+        int32 WindWallUses = 0;
+        float WindWallManaFraction = 0.0f;
         UPROPERTY()
         AVeilActor* ActiveVeil;
         UPROPERTY()
