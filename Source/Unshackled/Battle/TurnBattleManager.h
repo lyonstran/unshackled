@@ -70,6 +70,8 @@ public:
 	void ShowMessage(FString Text, FColor Color);
 	void GrantExtraActionNextRound(APartyMemberCharacter* Member);
 	void SkipBossTurns(int32 Count);
+	void NegateBossTurns(int32 Count);
+	int32 GetNegatedBossTurnsLeft() const;
 	EBattleState GetState() const;
 	int32 GetRound() const;
 	bool IsMemberBlocking(int32 MemberIndex) const;
@@ -132,6 +134,7 @@ private:
 	int32 Round = 1;
 	int32 BossTurnsLeft = 0;
 	int32 BossTurnsToSkip = 0;
+	int32 NegatedBossTurnsLeft = 0;
 	float BossTurnTimer = 0.0f;
 	float EndTimer = 0.0f;
 	bool bEndHandled = false;
@@ -152,6 +155,7 @@ private:
 	void StartBossPhase();
 	void TickBossPhase(float DeltaTime);
 	void DoBossTurn();
+	void NotifyBossTurn();
 	void MoveMemberSelection(int32 Step);
 	void ResetMenuToNextMember();
 	void HoldPartyInPlace();

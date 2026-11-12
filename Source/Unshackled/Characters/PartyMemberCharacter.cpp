@@ -147,11 +147,77 @@ bool APartyMemberCharacter::CanUseBattleMove(FName MoveId) const
 }
 FString APartyMemberCharacter::GetBattleCardNote() const
 {
+        FString Note;
         if (ShelterGuardian != nullptr)
         {
-                return TEXT("Sheltered");
+                Note = Note + TEXT("Sheltered ");
         }
-        return FString();
+        if (NextAttackBonus > 0.0f)
+        {
+                Note = Note + TEXT("Song ");
+        }
+        return Note;
+}
+void APartyMemberCharacter::OnBattleBossTurn(ATurnBattleManager* Manager)
+{
+}
+void APartyMemberCharacter::OnBattleActionChosen(ATurnBattleManager* Manager, FName EntryName)
+{
+}
+void APartyMemberCharacter::SetNextAttackBonus(float Bonus)
+{
+        NextAttackBonus = Bonus;
+}
+bool APartyMemberCharacter::MoveTargetsEnemy(const FBattleMoveRow* Move) const
+{
+        if (Move == nullptr)
+        {
+                return false;
+        }
+        if (Move->TargetKind == EBattleTargetKind::Enemy)
+        {
+                return true;
+        }
+        if (Move->TargetKind == EBattleTargetKind::AllEnemies)
+        {
+                return true;
+        }
+        if (Move->TargetKind == EBattleTargetKind::Everyone)
+        {
+                return true;
+        }
+        return false;
+}
+void APartyMemberCharacter::UseBattleMove(ATurnBattleManager* Manager, FName MoveId, const FBattleMoveRow* Move, int32 TargetIndex)
+{
+        if (Manager == nullptr)
+        {
+                return;
+        }
+        if (Move == nullptr)
+        {
+                return;
+        }
+        ABossCharacter* Boss = Manager->GetBoss();
+        bool bBoosted = false;
+        if (NextAttackBonus > 0.0f)
+        {
+                if (MoveTargetsEnemy(Move))
+                {
+                        if (Boss != nullptr)
+                        {
+                                AddBattleModifier(Boss, FName("BattlesongBoost"), ECharacterStat::IncomingDamage, EModifierKind::Percent, NextAttackBonus, 0);
+                                bBoosted = true;
+                        }
+                }
+        }
+        PerformBattleMove(Manager, MoveId, Move, TargetIndex);
+        if (bBoosted)
+        {
+                Boss->Stats->RemoveModifiersFromSource(FName("BattlesongBoost"));
+                NextAttackBonus = 0.0f;
+                ShowBattleMessage(FString::Printf(TEXT("Battlesong empowers %s's move"), *DisplayName), FColor::Magenta);
+        }
 }
 void APartyMemberCharacter::SetBattleShelter(APartyMemberCharacter* Guardian, float Share)
 {

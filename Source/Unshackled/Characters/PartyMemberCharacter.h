@@ -31,6 +31,11 @@ public:
         virtual void OnBattlePlayerPhaseEnd(ATurnBattleManager* Manager);
         virtual bool CanUseBattleMove(FName MoveId) const;
         virtual FString GetBattleCardNote() const;
+        virtual void OnBattleBossTurn(ATurnBattleManager* Manager);
+        virtual void OnBattleActionChosen(ATurnBattleManager* Manager, FName EntryName);
+        void UseBattleMove(ATurnBattleManager* Manager, FName MoveId, const FBattleMoveRow* Move, int32 TargetIndex);
+        void SetNextAttackBonus(float Bonus);
+        bool MoveTargetsEnemy(const FBattleMoveRow* Move) const;
         void SetBattleShelter(APartyMemberCharacter* Guardian, float Share);
         void ClearBattleShelter();
         APartyMemberCharacter* GetShelterGuardian() const;
@@ -70,6 +75,7 @@ protected:
         UPROPERTY()
         APartyMemberCharacter* ShelterGuardian = nullptr;
         float ShelterShare = 0.0f;
+        float NextAttackBonus = 0.0f;
         FTimerHandle GameOverTimer;
         UFUNCTION()
         void RestartLevelAfterDeath();

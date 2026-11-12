@@ -26,6 +26,7 @@ public:
         float BaseMaxHealth = 100.0f;
         float CurrentMana = 0.0f;
         float DebuffScale = 1.0f;
+        bool bRepelDebuffs = false;
         void AddModifier(FStatModifier NewModifier);
         void RemoveModifiersFromSource(FName SourceId);
         void ConsumeHit();

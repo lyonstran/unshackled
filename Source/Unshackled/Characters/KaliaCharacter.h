@@ -19,6 +19,14 @@ public:
         virtual void OnDealtDamage(AUnshackledCharacterBase* Target, float DamageDealt) override;
         virtual void OnKilledTarget(AUnshackledCharacterBase* Target) override;
         virtual void PerformRetribution() override;
+        virtual void PerformBattleMove(ATurnBattleManager* Manager, FName MoveId, const FBattleMoveRow* Move, int32 TargetIndex) override;
+        virtual void OnBattleRoundEnd(ATurnBattleManager* Manager) override;
+        virtual void OnBattlePlayerPhaseStart(ATurnBattleManager* Manager) override;
+        virtual void OnBattlePlayerPhaseEnd(ATurnBattleManager* Manager) override;
+        virtual void OnBattleBossTurn(ATurnBattleManager* Manager) override;
+        virtual void OnBattleActionChosen(ATurnBattleManager* Manager, FName EntryName) override;
+        virtual bool CanUseBattleMove(FName MoveId) const override;
+        virtual FString GetBattleCardNote() const override;
         UPROPERTY(EditAnywhere, Category = "Kalia")
         float DaggerRange = 110.0f;
         UPROPERTY(EditAnywhere, Category = "Kalia")
@@ -85,7 +93,57 @@ public:
         float RetributionDamageBonus = 0.12f;
         UPROPERTY(EditAnywhere, Category = "Kalia Retribution")
         float RetributionLifesteal = 0.012f;
+        UPROPERTY(EditAnywhere, Category = "Kalia Battle")
+        float ProxyBlockWeight = 0.5f;
+        UPROPERTY(EditAnywhere, Category = "Kalia Battle")
+        float ProxyItemWeight = 0.25f;
+        UPROPERTY(EditAnywhere, Category = "Kalia Battle")
+        float ProxyStackDamage = 0.012f;
+        UPROPERTY(EditAnywhere, Category = "Kalia Battle")
+        int32 ProxyMaxStacks = 12;
+        UPROPERTY(EditAnywhere, Category = "Kalia Battle")
+        int32 ProxyFreezeTurns = 12;
+        UPROPERTY(EditAnywhere, Category = "Kalia Battle")
+        float ProxyDecayPerRound = 0.012f;
+        UPROPERTY(EditAnywhere, Category = "Kalia Battle")
+        int32 ProxyDecayMaxStacks = 99;
+        UPROPERTY(EditAnywhere, Category = "Kalia Battle")
+        float SeverMaxFailChance = 0.96f;
 protected:
+        virtual float FilterIncomingDamage(float RawDamage, bool bTrueDamage, AUnshackledCharacterBase* Attacker) override;
+        void CastChaos(ATurnBattleManager* Manager, const FBattleMoveRow* Move);
+        void CastSever(const FBattleMoveRow* Move);
+        void LandSever(ATurnBattleManager* Manager);
+        void CastBattlesong(ATurnBattleManager* Manager, const FBattleMoveRow* Move, int32 TargetIndex);
+        void CastRiposte(const FBattleMoveRow* Move);
+        void CastBarrage(ATurnBattleManager* Manager, const FBattleMoveRow* Move);
+        void CastConcentration(const FBattleMoveRow* Move);
+        void ApplyConcentration(ATurnBattleManager* Manager);
+        void CastSlayer(const FBattleMoveRow* Move);
+        int32 PickRandomLivingAlly(ATurnBattleManager* Manager) const;
+        void PickProxySuggestion(ATurnBattleManager* Manager);
+        FName PickRandomOwnMove(ATurnBattleManager* Manager) const;
+        void GainProxyStack(ATurnBattleManager* Manager);
+        int32 GetProxyStacks() const;
+        void ApplyProxyDecay(ATurnBattleManager* Manager);
+        FName ProxySuggestion = NAME_None;
+        FString ProxySuggestionLabel;
+        bool bProxyTakeoverUsed = false;
+        int32 SeverCasts = 0;
+        bool bSeverPending = false;
+        float SeverFailChance = 0.0f;
+        float SeverMaxHealthFraction = 0.0f;
+        float SeverMissingHealthFraction = 0.0f;
+        float SeverDebuff = 0.0f;
+        int32 SeverRounds = 0;
+        bool bRiposteReady = false;
+        float RiposteReduction = 0.0f;
+        float RiposteReturn = 0.0f;
+        bool bConcentrationReady = false;
+        float ConcentrationAmount = 0.0f;
+        int32 ConcentrationRounds = 0;
+        bool bSlayerApplied = false;
+        float SlayerFraction = 0.0f;
         virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
         virtual void PerformBasicAttack(FVector Direction) override;
         virtual void PerformUltimate(FVector AimDirection) override;

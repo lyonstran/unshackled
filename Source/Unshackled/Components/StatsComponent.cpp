@@ -75,6 +75,10 @@ void UStatsComponent::AddModifier(FStatModifier NewModifier)
 {
         if (IsHarmful(NewModifier))
         {
+                if (bRepelDebuffs)
+                {
+                        return;
+                }
                 NewModifier.Amount = NewModifier.Amount * DebuffScale;
         }
         int32 ExistingIndex = FindModifierIndex(NewModifier.SourceId, NewModifier.Stat, NewModifier.Kind);

@@ -626,6 +626,28 @@ void ATurnBattleManager::SkipBossTurns(int32 Count)
 	}
 	BossTurnsToSkip = BossTurnsToSkip + Count;
 }
+void ATurnBattleManager::NegateBossTurns(int32 Count)
+{
+	if (Count <= 0)
+	{
+		return;
+	}
+	NegatedBossTurnsLeft = NegatedBossTurnsLeft + Count;
+}
+int32 ATurnBattleManager::GetNegatedBossTurnsLeft() const
+{
+	return NegatedBossTurnsLeft;
+}
+void ATurnBattleManager::NotifyBossTurn()
+{
+	for (int32 i = 0; i < Party.Num(); i++)
+	{
+		if (Party[i] != nullptr)
+		{
+			Party[i]->OnBattleBossTurn(this);
+		}
+	}
+}
 void ATurnBattleManager::UseBonusActionIfAny(int32 MemberIndex)
 {
 	if (MemberIndex < 0 || MemberIndex >= BonusActionsNow.Num())
@@ -817,6 +839,18 @@ void ATurnBattleManager::EndRound()
 }
 void ATurnBattleManager::DoBossTurn()
 {
+	if (NegatedBossTurnsLeft > 0)
+	{
+		NegatedBossTurnsLeft = NegatedBossTurnsLeft - 1;
+		ShowMessage(FString::Printf(TEXT("The boss is frozen in time (%d left)"), NegatedBossTurnsLeft), FColor::Cyan);
+		return;
+	}
+	NotifyBossTurn();
+	CheckForEnd();
+	if (State != EBattleState::BossPhase)
+	{
+		return;
+	}
 	if (BossRowNames.Num() == 0)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Battle: boss has no telegraphs to set up"));
@@ -885,6 +919,7 @@ bool ATurnBattleManager::TryPlayerMove(int32 MemberIndex, FName EntryName, int32
 		ShowMessage(TEXT("Counter!"), FColor::Green);
 		ResolveTelegraph(Countered, true);
 	}
+	Member->OnBattleActionChosen(this, EntryName);
 	if (Move == nullptr)
 	{
 		IsBlocking[MemberIndex] = true;
@@ -893,7 +928,7 @@ bool ATurnBattleManager::TryPlayerMove(int32 MemberIndex, FName EntryName, int32
 	else
 	{
 		ShowMessage(FString::Printf(TEXT("%s uses %s"), *Member->DisplayName, *Move->DisplayName.ToString()), FColor::Cyan);
-		Member->PerformBattleMove(this, EntryName, Move, TargetIndex);
+		Member->UseBattleMove(this, EntryName, Move, TargetIndex);
 	}
 	UseBonusActionIfAny(MemberIndex);
 	CheckForEnd();

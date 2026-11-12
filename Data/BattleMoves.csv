@@ -29,5 +29,5 @@ Kalia_Sever,Kalia,Sever,Throw the sickle; it lands next turn and weakens the ene
 Kalia_Battlesong,Kalia,Battlesong,Boost one ally's next attack,Special,Ally,15,0,0.12,0,0,0,0
 Kalia_Riposte,Kalia,Riposte,Parry the next hit; reflect damage and debuffs,Special,Caster,20,0,0.5,0.5,0,0,1
 Kalia_Barrage,Kalia,Barrage,Strike one enemy many times,Special,Enemy,25,0.4,4,0,0,0,0
-Kalia_Concentration,Kalia,Concentration,Kalia's next attack lowers the target's defense,Special,Caster,10,0,0.12,0,0,0,0
+Kalia_Concentration,Kalia,Concentration,Kalia's next attack lowers the target's defense,Special,Caster,10,0,0.12,0,0,0,3
 Kalia_Slayer,Kalia,Slayer,A wound that hurts the enemy every time it attacks,Ultimate,Enemy,30,0,0.012,0,0,0,0
