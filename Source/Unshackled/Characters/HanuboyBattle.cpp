@@ -501,7 +501,7 @@ void AHanuboyCharacter::DropBomb(ATurnBattleManager* Manager)
         }
         else
         {
-                int32 AllyIndex = PickRandomLivingAlly(Manager);
+                int32 AllyIndex = Manager->PickRandomLivingMember();
                 if (AllyIndex < 0)
                 {
                         return;
@@ -511,27 +511,6 @@ void AHanuboyCharacter::DropBomb(ATurnBattleManager* Manager)
         }
         Bombs.Add(NewBomb);
         ShowBattleMessage(FString::Printf(TEXT("A flower bomb drops on %s (goes off next round)"), *TargetName), FColor::Green);
-}
-int32 AHanuboyCharacter::PickRandomLivingAlly(ATurnBattleManager* Manager) const
-{
-        TArray<int32> LivingIndices;
-        for (int32 i = 0; i < Manager->GetPartyCount(); i++)
-        {
-                APartyMemberCharacter* Ally = Manager->GetPartyMember(i);
-                if (Ally != nullptr)
-                {
-                        if (!Ally->Health->IsDead())
-                        {
-                                LivingIndices.Add(i);
-                        }
-                }
-        }
-        if (LivingIndices.Num() == 0)
-        {
-                return -1;
-        }
-        int32 Pick = FMath::RandRange(0, LivingIndices.Num() - 1);
-        return LivingIndices[Pick];
 }
 void AHanuboyCharacter::PerformBattleRetribution(ATurnBattleManager* Manager)
 {

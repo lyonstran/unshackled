@@ -121,7 +121,6 @@ protected:
         void CastConcentration(const FBattleMoveRow* Move);
         void ApplyConcentration(ATurnBattleManager* Manager);
         void CastSlayer(const FBattleMoveRow* Move);
-        int32 PickRandomLivingAlly(ATurnBattleManager* Manager) const;
         void PickProxySuggestion(ATurnBattleManager* Manager);
         FName PickRandomOwnMove(ATurnBattleManager* Manager) const;
         void GainProxyStack(ATurnBattleManager* Manager);

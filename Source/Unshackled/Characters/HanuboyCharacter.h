@@ -124,7 +124,6 @@ protected:
         void DetonateBombs(ATurnBattleManager* Manager);
         void DetonateBomb(ATurnBattleManager* Manager, FHanuboyBomb Bomb);
         void DropBomb(ATurnBattleManager* Manager);
-        int32 PickRandomLivingAlly(ATurnBattleManager* Manager) const;
         void ClearMyShelters(ATurnBattleManager* Manager);
         TArray<FHanuboySpawn> FragileSpawns;
         TArray<FHanuboyBomb> Bombs;

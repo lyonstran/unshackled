@@ -81,6 +81,7 @@ public:
 	bool IsRetributionFailed() const;
 	bool IsRetributionDone() const;
 	bool IsUnityActive() const;
+	int32 PickRandomLivingMember() const;
 	EBattleState GetState() const;
 	int32 GetRound() const;
 	bool IsMemberBlocking(int32 MemberIndex) const;
@@ -207,7 +208,6 @@ private:
 	int32 CountLivingMembers() const;
 	int32 FindNextActingMember() const;
 	int32 FindCounterIndex(APartyMemberCharacter* Member, EBattleAction Action) const;
-	int32 PickRandomLivingMember() const;
 	int32 PickTargetIndex(EBossTargetMode Mode) const;
 	int32 FindLeaderIndex() const;
 	const FTelegraphRow* GetRow(FName RowName) const;
