@@ -15,6 +15,7 @@ public:
         virtual void OnBattlePlayerPhaseStart(ATurnBattleManager* Manager) override;
         virtual void OnBattlePlayerPhaseEnd(ATurnBattleManager* Manager) override;
         virtual bool CanUseBattleMove(FName MoveId) const override;
+        virtual void PerformBattleRetribution(ATurnBattleManager* Manager) override;
         UPROPERTY(EditAnywhere, Category = "Malkholm")
         float ChainRadius = 160.0f;
         UPROPERTY(EditAnywhere, Category = "Malkholm")
@@ -145,6 +146,7 @@ protected:
         void CastFreedom(ATurnBattleManager* Manager, const FBattleMoveRow* Move, int32 TargetIndex);
         void CastConfrontation(ATurnBattleManager* Manager, const FBattleMoveRow* Move);
         void CastPower(ATurnBattleManager* Manager, const FBattleMoveRow* Move);
+        void CastUnity(ATurnBattleManager* Manager, const FBattleMoveRow* Move);
         bool TryBattleLastStand();
         void TakeRoundSnapshot(ATurnBattleManager* Manager);
         float GainOnly(float Before, float After) const;

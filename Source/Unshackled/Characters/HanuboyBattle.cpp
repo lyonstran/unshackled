@@ -533,3 +533,31 @@ int32 AHanuboyCharacter::PickRandomLivingAlly(ATurnBattleManager* Manager) const
         int32 Pick = FMath::RandRange(0, LivingIndices.Num() - 1);
         return LivingIndices[Pick];
 }
+void AHanuboyCharacter::PerformBattleRetribution(ATurnBattleManager* Manager)
+{
+        Super::PerformBattleRetribution(Manager);
+        for (int32 i = 0; i < Manager->GetPartyCount(); i++)
+        {
+                APartyMemberCharacter* Ally = Manager->GetPartyMember(i);
+                if (Ally != nullptr)
+                {
+                        if (!Ally->Health->IsDead())
+                        {
+                                FHanuboyBomb AllyBomb;
+                                AllyBomb.AllyIndex = i;
+                                Bombs.Add(AllyBomb);
+                        }
+                }
+        }
+        ABossCharacter* Boss = Manager->GetBoss();
+        if (Boss != nullptr)
+        {
+                if (!Boss->Health->IsDead())
+                {
+                        FHanuboyBomb BossBomb;
+                        BossBomb.bOnBoss = true;
+                        Bombs.Add(BossBomb);
+                }
+        }
+        ShowBattleMessage(TEXT("Hanuboy's retribution: flower bombs drop on everyone"), FColor::Green);
+}

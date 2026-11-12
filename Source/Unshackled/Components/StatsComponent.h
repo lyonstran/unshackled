@@ -29,6 +29,7 @@ public:
         bool bRepelDebuffs = false;
         void AddModifier(FStatModifier NewModifier);
         void RemoveModifiersFromSource(FName SourceId);
+        void RemoveHarmfulModifiers();
         void ConsumeHit();
         float GetFinal(ECharacterStat Stat) const;
         bool CanMove() const;

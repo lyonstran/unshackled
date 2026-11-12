@@ -37,6 +37,16 @@ public:
 	float TelegraphTopMargin = 120.0f;
 	UPROPERTY(EditAnywhere, Category = "Battle Debug")
 	bool bShowIncomingAttacks = true;
+	UPROPERTY(EditAnywhere, Category = "Battle Retribution")
+	float BattleRetributionLeft = 24.0f;
+	UPROPERTY(EditAnywhere, Category = "Battle Retribution")
+	float BattleRetributionTop = 40.0f;
+	UPROPERTY(EditAnywhere, Category = "Battle Retribution")
+	float BattleRetributionBoxWidth = 92.0f;
+	UPROPERTY(EditAnywhere, Category = "Battle Retribution")
+	float BattleRetributionBoxHeight = 24.0f;
+	UPROPERTY(EditAnywhere, Category = "Battle Retribution")
+	float BattleRetributionBoxGap = 6.0f;
 	UPROPERTY(EditAnywhere, Category = "Battle Boss")
 	float BossBarWidth = 400.0f;
 	UPROPERTY(EditAnywhere, Category = "Battle Boss")
@@ -52,5 +62,6 @@ protected:
 	void DrawPartyCard(ATurnBattleManager* Manager, int32 MemberIndex, float Left, float Top);
 	void DrawActionList(ATurnBattleManager* Manager, float CardLeft, float CardTop);
 	void DrawHintText(ATurnBattleManager* Manager);
+	void DrawRetributionOrder(ATurnBattleManager* Manager);
 	void DrawCenteredText(FString Text, FLinearColor Color, float CenterX, float Top, float Scale);
 };

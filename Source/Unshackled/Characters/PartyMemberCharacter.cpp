@@ -164,6 +164,9 @@ void APartyMemberCharacter::OnBattleBossTurn(ATurnBattleManager* Manager)
 void APartyMemberCharacter::OnBattleActionChosen(ATurnBattleManager* Manager, FName EntryName)
 {
 }
+void APartyMemberCharacter::PerformBattleRetribution(ATurnBattleManager* Manager)
+{
+}
 void APartyMemberCharacter::SetNextAttackBonus(float Bonus)
 {
         NextAttackBonus = Bonus;

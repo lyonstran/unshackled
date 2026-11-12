@@ -182,6 +182,8 @@ void ATurnBattleManager::StartPlayerPhase()
 	State = EBattleState::PlayerPhase;
 	HasActed.Init(false, Party.Num());
 	BonusActionsNow = BonusActionsNext;
+	FreeActions = 0;
+	RollRetributionOrder();
 	BonusActionsNext.Init(0, Party.Num());
 	if (Round > 1)
 	{
@@ -908,7 +910,12 @@ bool ATurnBattleManager::TryPlayerMove(int32 MemberIndex, FName EntryName, int32
 			}
 		}
 	}
+	bool bUsingFreeAction = HasActed[MemberIndex];
 	HasActed[MemberIndex] = true;
+	if (bUsingFreeAction)
+	{
+		FreeActions = FreeActions - 1;
+	}
 	IsBlocking[MemberIndex] = false;
 	EBattleAction Category = GetEntryCategory(EntryName);
 	int32 CounterIndex = FindCounterIndex(Member, Category);
@@ -930,6 +937,7 @@ bool ATurnBattleManager::TryPlayerMove(int32 MemberIndex, FName EntryName, int32
 		ShowMessage(FString::Printf(TEXT("%s uses %s"), *Member->DisplayName, *Move->DisplayName.ToString()), FColor::Cyan);
 		Member->UseBattleMove(this, EntryName, Move, TargetIndex);
 	}
+	AdvanceRetribution(MemberIndex);
 	UseBonusActionIfAny(MemberIndex);
 	CheckForEnd();
 	if (State == EBattleState::Won)
@@ -1075,7 +1083,15 @@ bool ATurnBattleManager::CanMemberAct(int32 MemberIndex) const
 	{
 		return false;
 	}
-	return !HasActed[MemberIndex];
+	if (!HasActed[MemberIndex])
+	{
+		return true;
+	}
+	if (FreeActions > 0)
+	{
+		return true;
+	}
+	return false;
 }
 bool ATurnBattleManager::AllLivingMembersActed() const
 {
@@ -1189,6 +1205,212 @@ void ATurnBattleManager::ShowBanner(FString Text, FLinearColor Color)
 	{
 		Hud->ShowBanner(Text, Color, 5.0f);
 	}
+}
+void ATurnBattleManager::GrantFreeAction()
+{
+	FreeActions = FreeActions + 1;
+	ShowMessage(TEXT("Free action: any member can act once more"), FColor::Yellow);
+}
+TArray<int32> ATurnBattleManager::ShuffleIndices(TArray<int32> Indices) const
+{
+	for (int32 i = 0; i < Indices.Num() - 1; i++)
+	{
+		int32 SwapIndex = FMath::RandRange(i, Indices.Num() - 1);
+		Indices.Swap(i, SwapIndex);
+	}
+	return Indices;
+}
+void ATurnBattleManager::RollRetributionOrder()
+{
+	RetributionOrder.Empty();
+	RetributionProgress = 0;
+	bRetributionFailed = false;
+	bRetributionDone = false;
+	bUnityActive = false;
+	TArray<int32> LivingIndices;
+	for (int32 i = 0; i < Party.Num(); i++)
+	{
+		if (!Party[i]->Health->IsDead())
+		{
+			LivingIndices.Add(i);
+		}
+	}
+	if (LivingIndices.Num() < 2)
+	{
+		return;
+	}
+	RetributionOrder = ShuffleIndices(LivingIndices);
+}
+void ATurnBattleManager::RestartRetributionOn(APartyMemberCharacter* Starter, float ShieldFraction, float DamageCut, int32 Rounds)
+{
+	int32 StarterIndex = FindPartyIndex(Starter);
+	if (StarterIndex < 0)
+	{
+		return;
+	}
+	TArray<int32> Others;
+	for (int32 i = 0; i < Party.Num(); i++)
+	{
+		if (i != StarterIndex)
+		{
+			if (!Party[i]->Health->IsDead())
+			{
+				if (!HasActed[i])
+				{
+					Others.Add(i);
+				}
+			}
+		}
+	}
+	Others = ShuffleIndices(Others);
+	RetributionOrder.Empty();
+	RetributionOrder.Add(StarterIndex);
+	for (int32 i = 0; i < Others.Num(); i++)
+	{
+		RetributionOrder.Add(Others[i]);
+	}
+	RetributionProgress = 0;
+	bRetributionFailed = false;
+	bRetributionDone = false;
+	bUnityActive = true;
+	UnityShieldFraction = ShieldFraction;
+	UnityDamageCut = DamageCut;
+	UnityRounds = Rounds;
+	ShowMessage(FString::Printf(TEXT("Unity: the Retribution order restarts on %s"), *Starter->DisplayName), FColor::Yellow);
+}
+bool ATurnBattleManager::HasOtherMemberToAct(const APartyMemberCharacter* Member) const
+{
+	for (int32 i = 0; i < Party.Num(); i++)
+	{
+		if (Party[i] != Member)
+		{
+			if (!Party[i]->Health->IsDead())
+			{
+				if (!HasActed[i])
+				{
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+void ATurnBattleManager::SkipDeadRetributionSteps()
+{
+	while (RetributionProgress < RetributionOrder.Num())
+	{
+		int32 StepIndex = RetributionOrder[RetributionProgress];
+		if (!Party[StepIndex]->Health->IsDead())
+		{
+			return;
+		}
+		RetributionProgress = RetributionProgress + 1;
+	}
+}
+void ATurnBattleManager::AdvanceRetribution(int32 MemberIndex)
+{
+	if (RetributionOrder.Num() == 0)
+	{
+		return;
+	}
+	if (bRetributionDone)
+	{
+		return;
+	}
+	if (bRetributionFailed)
+	{
+		return;
+	}
+	SkipDeadRetributionSteps();
+	if (RetributionProgress >= RetributionOrder.Num())
+	{
+		return;
+	}
+	if (RetributionOrder[RetributionProgress] != MemberIndex)
+	{
+		bRetributionFailed = true;
+		bUnityActive = false;
+		ShowMessage(TEXT("Retribution order broken"), FColor::Orange);
+		return;
+	}
+	if (bUnityActive)
+	{
+		if (RetributionProgress > 0)
+		{
+			GiveUnityShields();
+		}
+	}
+	RetributionProgress = RetributionProgress + 1;
+	SkipDeadRetributionSteps();
+	if (RetributionProgress >= RetributionOrder.Num())
+	{
+		CompleteRetribution(MemberIndex);
+	}
+}
+void ATurnBattleManager::CompleteRetribution(int32 MemberIndex)
+{
+	bRetributionDone = true;
+	APartyMemberCharacter* Finisher = Party[MemberIndex];
+	ShowMessage(FString::Printf(TEXT("Retribution! %s finishes the order"), *Finisher->DisplayName), FColor::Yellow);
+	Finisher->PerformBattleRetribution(this);
+	if (!bUnityActive)
+	{
+		return;
+	}
+	bUnityActive = false;
+	if (Boss == nullptr)
+	{
+		return;
+	}
+	FStatModifier UnityCut;
+	UnityCut.SourceId = FName("MalkholmUnity");
+	UnityCut.Stat = ECharacterStat::Damage;
+	UnityCut.Kind = EModifierKind::Percent;
+	UnityCut.Amount = 0.0f - UnityDamageCut;
+	UnityCut.Duration = 0.0f;
+	UnityCut.TurnsLeft = UnityRounds;
+	UnityCut.Rule = EStackRule::RefreshSameSource;
+	Boss->Stats->AddModifier(UnityCut);
+	ShowMessage(TEXT("Unity holds: the boss deals less damage"), FColor::Yellow);
+}
+void ATurnBattleManager::GiveUnityShields()
+{
+	for (int32 i = 0; i < Party.Num(); i++)
+	{
+		if (!Party[i]->Health->IsDead())
+		{
+			Party[i]->Health->AddShield(Party[i]->Health->MaxHealth * UnityShieldFraction);
+		}
+	}
+	ShowMessage(TEXT("Unity pass: every ally gains a shield"), FColor::Yellow);
+}
+int32 ATurnBattleManager::GetRetributionLength() const
+{
+	return RetributionOrder.Num();
+}
+APartyMemberCharacter* ATurnBattleManager::GetRetributionMember(int32 Index) const
+{
+	if (Index < 0 || Index >= RetributionOrder.Num())
+	{
+		return nullptr;
+	}
+	return GetPartyMember(RetributionOrder[Index]);
+}
+int32 ATurnBattleManager::GetRetributionProgress() const
+{
+	return RetributionProgress;
+}
+bool ATurnBattleManager::IsRetributionFailed() const
+{
+	return bRetributionFailed;
+}
+bool ATurnBattleManager::IsRetributionDone() const
+{
+	return bRetributionDone;
+}
+bool ATurnBattleManager::IsUnityActive() const
+{
+	return bUnityActive;
 }
 EBattleState ATurnBattleManager::GetState() const
 {

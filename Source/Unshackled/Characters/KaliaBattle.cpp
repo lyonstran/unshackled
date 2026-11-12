@@ -469,3 +469,24 @@ void AKaliaCharacter::ApplyProxyDecay(ATurnBattleManager* Manager)
         int32 Stacks = Boss->Stats->GetStacks(FName("KaliaProxyDecay"), ECharacterStat::Damage, EModifierKind::Percent);
         ShowBattleMessage(FString::Printf(TEXT("Proxy's curse weakens the boss (-%.1f%%)"), Stacks * ProxyDecayPerRound * 100.0f), FColor::Magenta);
 }
+void AKaliaCharacter::PerformBattleRetribution(ATurnBattleManager* Manager)
+{
+        Super::PerformBattleRetribution(Manager);
+        int32 CleansedCount = 0;
+        for (int32 i = 0; i < Manager->GetPartyCount(); i++)
+        {
+                APartyMemberCharacter* Ally = Manager->GetPartyMember(i);
+                if (Ally != nullptr)
+                {
+                        if (Ally != this)
+                        {
+                                if (!Ally->Health->IsDead())
+                                {
+                                        Ally->Stats->RemoveHarmfulModifiers();
+                                        CleansedCount = CleansedCount + 1;
+                                }
+                        }
+                }
+        }
+        ShowBattleMessage(FString::Printf(TEXT("Kalia's retribution cleanses %d allies"), CleansedCount), FColor::Magenta);
+}

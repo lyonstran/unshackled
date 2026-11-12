@@ -40,6 +40,10 @@ void AMalkholmCharacter::PerformBattleMove(ATurnBattleManager* Manager, FName Mo
         {
                 CastPower(Manager, Move);
         }
+        else if (MoveId == FName("Malkholm_Unity"))
+        {
+                CastUnity(Manager, Move);
+        }
         else
         {
                 Super::PerformBattleMove(Manager, MoveId, Move, TargetIndex);
@@ -56,7 +60,15 @@ bool AMalkholmCharacter::CanUseBattleMove(FName MoveId) const
         }
         if (MoveId == FName("Malkholm_Unity"))
         {
-                return false;
+                ATurnBattleManager* Manager = FindBattleManager();
+                if (Manager == nullptr)
+                {
+                        return false;
+                }
+                if (!Manager->HasOtherMemberToAct(this))
+                {
+                        return false;
+                }
         }
         return Super::CanUseBattleMove(MoveId);
 }
@@ -345,4 +357,13 @@ void AMalkholmCharacter::ApplyEchoToAlly(APartyMemberCharacter* Ally, float Heal
         {
                 AddBattleModifier(Ally, FName("MalkholmRevolutionEcho"), ECharacterStat::Defense, EModifierKind::Flat, DefenseBuff, RevolutionEchoBuffRounds);
         }
+}
+void AMalkholmCharacter::CastUnity(ATurnBattleManager* Manager, const FBattleMoveRow* Move)
+{
+        Manager->RestartRetributionOn(this, Move->Amount1, Move->Amount2, Move->Turns);
+}
+void AMalkholmCharacter::PerformBattleRetribution(ATurnBattleManager* Manager)
+{
+        Super::PerformBattleRetribution(Manager);
+        Manager->GrantFreeAction();
 }

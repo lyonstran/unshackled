@@ -15,6 +15,7 @@ void ASiriusCharacter::PerformBattleMove(ATurnBattleManager* Manager, FName Move
         {
                 return;
         }
+        float BossHealthBefore = GetBattleBossHealth(Manager);
         if (MoveId == FName("Sirius_Veil"))
         {
                 CastBattleVeil(Manager, Move);
@@ -51,6 +52,38 @@ void ASiriusCharacter::PerformBattleMove(ATurnBattleManager* Manager, FName Move
         {
                 TryBattleExecute(Manager);
         }
+        TryBattleRetributionHeal(Manager, BossHealthBefore);
+}
+float ASiriusCharacter::GetBattleBossHealth(ATurnBattleManager* Manager) const
+{
+        ABossCharacter* Boss = Manager->GetBoss();
+        if (Boss == nullptr)
+        {
+                return 0.0f;
+        }
+        return Boss->Health->CurrentHealth;
+}
+void ASiriusCharacter::TryBattleRetributionHeal(ATurnBattleManager* Manager, float BossHealthBefore)
+{
+        if (!bBattleRetributionHealReady)
+        {
+                return;
+        }
+        float BossHealthAfter = GetBattleBossHealth(Manager);
+        if (BossHealthAfter >= BossHealthBefore)
+        {
+                return;
+        }
+        bBattleRetributionHealReady = false;
+        float HealAmount = Health->MaxHealth * BattleRetributionHealFraction;
+        Health->Heal(HealAmount);
+        ShowBattleMessage(FString::Printf(TEXT("Sirius's retribution heals him for %d"), FMath::RoundToInt(HealAmount)), FColor::Cyan);
+}
+void ASiriusCharacter::PerformBattleRetribution(ATurnBattleManager* Manager)
+{
+        Super::PerformBattleRetribution(Manager);
+        bBattleRetributionHealReady = true;
+        ShowBattleMessage(TEXT("Sirius: his next damaging move will heal him"), FColor::Cyan);
 }
 bool ASiriusCharacter::MoveTouchesEnemy(const FBattleMoveRow* Move) const
 {

@@ -17,6 +17,7 @@ public:
         virtual void PerformRetribution() override;
         virtual void PerformBattleMove(ATurnBattleManager* Manager, FName MoveId, const FBattleMoveRow* Move, int32 TargetIndex) override;
         virtual void OnBattleRoundEnd(ATurnBattleManager* Manager) override;
+        virtual void PerformBattleRetribution(ATurnBattleManager* Manager) override;
         UPROPERTY(EditAnywhere, Category = "Sirius")
         TSubclassOf<AAbilityProjectile> CrescentClass;
         UPROPERTY(EditAnywhere, Category = "Sirius")
@@ -81,8 +82,12 @@ public:
         float MarkDamageReductionPerStack = 0.01f;
         UPROPERTY(EditAnywhere, Category = "Sirius Battle")
         float MarkExecuteThreshold = 0.05f;
+        UPROPERTY(EditAnywhere, Category = "Sirius Battle")
+        float BattleRetributionHealFraction = 0.25f;
 protected:
         virtual void PerformBasicAttack(FVector Direction) override;
+        float GetBattleBossHealth(ATurnBattleManager* Manager) const;
+        void TryBattleRetributionHeal(ATurnBattleManager* Manager, float BossHealthBefore);
         virtual void PerformSpecial(FVector AimDirection) override;
         virtual void PerformUltimate(FVector AimDirection) override;
         virtual void GroundedTick(float DeltaTime) override;
@@ -117,6 +122,7 @@ protected:
         int32 BattleTornadoRoundsLeft = 0;
         bool bWindWallUp = false;
         int32 WindWallUses = 0;
+        bool bBattleRetributionHealReady = false;
         float WindWallManaFraction = 0.0f;
         UPROPERTY()
         AVeilActor* ActiveVeil;

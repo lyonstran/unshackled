@@ -27,6 +27,7 @@ public:
         virtual void OnBattleActionChosen(ATurnBattleManager* Manager, FName EntryName) override;
         virtual bool CanUseBattleMove(FName MoveId) const override;
         virtual FString GetBattleCardNote() const override;
+        virtual void PerformBattleRetribution(ATurnBattleManager* Manager) override;
         UPROPERTY(EditAnywhere, Category = "Kalia")
         float DaggerRange = 110.0f;
         UPROPERTY(EditAnywhere, Category = "Kalia")

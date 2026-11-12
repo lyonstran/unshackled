@@ -57,6 +57,10 @@ int32 UStatsComponent::FindModifierIndex(FName SourceId, ECharacterStat Stat, EM
 }
 bool UStatsComponent::IsHarmful(FStatModifier Modifier) const
 {
+        if (Modifier.Flag != EStatusFlag::None)
+        {
+                return true;
+        }
         if (Modifier.Stat == ECharacterStat::IncomingDamage)
         {
                 if (Modifier.Amount > 0.0f)
@@ -110,6 +114,18 @@ void UStatsComponent::RemoveModifiersFromSource(FName SourceId)
         for (int32 i = 0; i < Modifiers.Num(); i++)
         {
                 if (Modifiers[i].SourceId != SourceId)
+                {
+                        StillActive.Add(Modifiers[i]);
+                }
+        }
+        Modifiers = StillActive;
+}
+void UStatsComponent::RemoveHarmfulModifiers()
+{
+        TArray<FStatModifier> StillActive;
+        for (int32 i = 0; i < Modifiers.Num(); i++)
+        {
+                if (!IsHarmful(Modifiers[i]))
                 {
                         StillActive.Add(Modifiers[i]);
                 }

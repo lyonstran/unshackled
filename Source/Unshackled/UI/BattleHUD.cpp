@@ -22,6 +22,7 @@ void ABattleHUD::DrawHUD()
 		DrawTelegraphList(Manager);
 	}
 	DrawPartyCards(Manager);
+	DrawRetributionOrder(Manager);
 	DrawHintText(Manager);
 }
 ATurnBattleManager* ABattleHUD::FindManager() const
@@ -294,4 +295,66 @@ void ABattleHUD::DrawHintText(ATurnBattleManager* Manager)
 		DrawCenteredText(Description, FLinearColor(1.0f, 0.95f, 0.7f, 1.0f), Canvas->SizeX / 2.0f, DescriptionTop, 1.0f);
 	}
 	DrawCenteredText(Hint, FLinearColor(0.8f, 0.8f, 0.8f, 1.0f), Canvas->SizeX / 2.0f, Canvas->SizeY - 22.0f, 0.85f);
+}
+void ABattleHUD::DrawRetributionOrder(ATurnBattleManager* Manager)
+{
+	EBattleState State = Manager->GetState();
+	if (State == EBattleState::Won || State == EBattleState::Lost)
+	{
+		return;
+	}
+	int32 StepCount = Manager->GetRetributionLength();
+	if (StepCount <= 0)
+	{
+		return;
+	}
+	bool bFailed = Manager->IsRetributionFailed();
+	bool bDone = Manager->IsRetributionDone();
+	int32 Progress = Manager->GetRetributionProgress();
+	FString Label = TEXT("Retribution: act in this order");
+	if (Manager->IsUnityActive())
+	{
+		Label = TEXT("Retribution (Unity): act in this order");
+	}
+	FLinearColor LabelColor = FLinearColor::White;
+	if (bFailed)
+	{
+		Label = TEXT("Retribution failed this round");
+		LabelColor = FLinearColor(1.0f, 0.6f, 0.2f, 1.0f);
+	}
+	if (bDone)
+	{
+		Label = TEXT("Retribution complete!");
+		LabelColor = FLinearColor(0.4f, 1.0f, 0.5f, 1.0f);
+	}
+	DrawText(Label, LabelColor, BattleRetributionLeft, BattleRetributionTop, nullptr, 0.9f);
+	float BoxTop = BattleRetributionTop + 20.0f;
+	for (int32 i = 0; i < StepCount; i++)
+	{
+		APartyMemberCharacter* Member = Manager->GetRetributionMember(i);
+		if (Member != nullptr)
+		{
+			float BoxLeft = BattleRetributionLeft + (i * (BattleRetributionBoxWidth + BattleRetributionBoxGap));
+			FLinearColor BoxColor = FLinearColor(0.15f, 0.15f, 0.2f, 0.85f);
+			if (i < Progress)
+			{
+				BoxColor = FLinearColor(0.1f, 0.55f, 0.2f, 0.9f);
+			}
+			if (i == Progress)
+			{
+				BoxColor = FLinearColor(0.6f, 0.5f, 0.1f, 0.95f);
+			}
+			if (bFailed)
+			{
+				BoxColor = FLinearColor(0.35f, 0.1f, 0.1f, 0.85f);
+			}
+			if (bDone)
+			{
+				BoxColor = FLinearColor(0.1f, 0.55f, 0.2f, 0.9f);
+			}
+			DrawRect(BoxColor, BoxLeft, BoxTop, BattleRetributionBoxWidth, BattleRetributionBoxHeight);
+			FString StepText = FString::Printf(TEXT("%d. %s"), i + 1, *Member->DisplayName);
+			DrawText(StepText, FLinearColor::White, BoxLeft + 5.0f, BoxTop + 4.0f, nullptr, 0.8f);
+		}
+	}
 }

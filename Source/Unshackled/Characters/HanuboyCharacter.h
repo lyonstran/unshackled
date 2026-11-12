@@ -40,6 +40,7 @@ public:
         virtual void OnBattlePlayerPhaseStart(ATurnBattleManager* Manager) override;
         virtual bool CanUseBattleMove(FName MoveId) const override;
         virtual FString GetBattleCardNote() const override;
+        virtual void PerformBattleRetribution(ATurnBattleManager* Manager) override;
         UPROPERTY(EditAnywhere, Category = "Hanuboy")
         float BallLength = 220.0f;
         UPROPERTY(EditAnywhere, Category = "Hanuboy")

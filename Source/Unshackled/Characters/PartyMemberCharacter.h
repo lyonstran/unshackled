@@ -33,6 +33,7 @@ public:
         virtual FString GetBattleCardNote() const;
         virtual void OnBattleBossTurn(ATurnBattleManager* Manager);
         virtual void OnBattleActionChosen(ATurnBattleManager* Manager, FName EntryName);
+        virtual void PerformBattleRetribution(ATurnBattleManager* Manager);
         void UseBattleMove(ATurnBattleManager* Manager, FName MoveId, const FBattleMoveRow* Move, int32 TargetIndex);
         void SetNextAttackBonus(float Bonus);
         bool MoveTargetsEnemy(const FBattleMoveRow* Move) const;
