@@ -55,8 +55,28 @@ int32 UStatsComponent::FindModifierIndex(FName SourceId, ECharacterStat Stat, EM
         }
         return -1;
 }
+bool UStatsComponent::IsHarmful(FStatModifier Modifier) const
+{
+        if (Modifier.Stat == ECharacterStat::IncomingDamage)
+        {
+                if (Modifier.Amount > 0.0f)
+                {
+                        return true;
+                }
+                return false;
+        }
+        if (Modifier.Amount < 0.0f)
+        {
+                return true;
+        }
+        return false;
+}
 void UStatsComponent::AddModifier(FStatModifier NewModifier)
 {
+        if (IsHarmful(NewModifier))
+        {
+                NewModifier.Amount = NewModifier.Amount * DebuffScale;
+        }
         int32 ExistingIndex = FindModifierIndex(NewModifier.SourceId, NewModifier.Stat, NewModifier.Kind);
         if (ExistingIndex == -1)
         {

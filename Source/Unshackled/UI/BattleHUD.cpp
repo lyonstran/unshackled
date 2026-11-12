@@ -230,6 +230,11 @@ void ABattleHUD::DrawPartyCard(ATurnBattleManager* Manager, int32 MemberIndex, f
 		FString ShieldText = FString::Printf(TEXT("Shield %d"), FMath::CeilToInt(Member->Health->Shield));
 		DrawText(ShieldText, FLinearColor(0.85f, 0.85f, 1.0f, 1.0f), Left + 62.0f, Top + 69.0f, nullptr, 0.75f);
 	}
+	FString NoteText = Member->GetBattleCardNote();
+	if (!NoteText.IsEmpty())
+	{
+		DrawText(NoteText, FLinearColor(1.0f, 0.8f, 0.4f, 1.0f), Left + 6.0f, Top + 87.0f, nullptr, 0.7f);
+	}
 	if (Member->Health->IsDead() || !Manager->CanMemberAct(MemberIndex))
 	{
 		FLinearColor DimColor = FLinearColor(0.0f, 0.0f, 0.0f, 0.45f);

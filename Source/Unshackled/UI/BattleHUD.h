@@ -12,7 +12,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Battle Cards")
 	float BattleCardWidth = 120.0f;
 	UPROPERTY(EditAnywhere, Category = "Battle Cards")
-	float BattleCardHeight = 92.0f;
+	float BattleCardHeight = 106.0f;
 	UPROPERTY(EditAnywhere, Category = "Battle Cards")
 	float BattleCardGap = 10.0f;
 	UPROPERTY(EditAnywhere, Category = "Battle Cards")

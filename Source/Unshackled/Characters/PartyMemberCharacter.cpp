@@ -145,6 +145,56 @@ bool APartyMemberCharacter::CanUseBattleMove(FName MoveId) const
 {
         return true;
 }
+FString APartyMemberCharacter::GetBattleCardNote() const
+{
+        if (ShelterGuardian != nullptr)
+        {
+                return TEXT("Sheltered");
+        }
+        return FString();
+}
+void APartyMemberCharacter::SetBattleShelter(APartyMemberCharacter* Guardian, float Share)
+{
+        ShelterGuardian = Guardian;
+        ShelterShare = Share;
+}
+void APartyMemberCharacter::ClearBattleShelter()
+{
+        ShelterGuardian = nullptr;
+        ShelterShare = 0.0f;
+}
+APartyMemberCharacter* APartyMemberCharacter::GetShelterGuardian() const
+{
+        return ShelterGuardian;
+}
+float APartyMemberCharacter::FilterIncomingDamage(float RawDamage, bool bTrueDamage, AUnshackledCharacterBase* Attacker)
+{
+        float Result = Super::FilterIncomingDamage(RawDamage, bTrueDamage, Attacker);
+        if (ShelterGuardian == nullptr)
+        {
+                return Result;
+        }
+        if (Result <= 0.0f)
+        {
+                return Result;
+        }
+        if (Attacker == nullptr)
+        {
+                return Result;
+        }
+        if (!Attacker->bIsEnemy)
+        {
+                return Result;
+        }
+        if (ShelterGuardian->Health->IsDead())
+        {
+                return Result;
+        }
+        float GuardianPart = Result * ShelterShare;
+        ShelterGuardian->ApplyHit(GuardianPart, bTrueDamage, Attacker);
+        ShowBattleMessage(FString::Printf(TEXT("%s shares the hit on %s"), *ShelterGuardian->DisplayName, *DisplayName), FColor::Green);
+        return Result - GuardianPart;
+}
 float APartyMemberCharacter::HitBattleBoss(ATurnBattleManager* Manager, float Power, bool bTrueDamage)
 {
         if (Manager == nullptr)

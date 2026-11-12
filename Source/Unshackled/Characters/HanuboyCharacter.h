@@ -6,6 +6,21 @@
 #include "Abilities/SunTreeActor.h"
 #include "Abilities/PetalActor.h"
 #include "HanuboyCharacter.generated.h"
+enum class EHanuboySpawnKind : uint8
+{
+        Flower,
+        Mushroom
+};
+struct FHanuboySpawn
+{
+        EHanuboySpawnKind Kind = EHanuboySpawnKind::Flower;
+        int32 RoundsLeft = 0;
+};
+struct FHanuboyBomb
+{
+        bool bOnBoss = false;
+        int32 AllyIndex = -1;
+};
 enum class EHanuboyGroundedState : uint8
 {
         Idle,
@@ -20,6 +35,11 @@ public:
         AHanuboyCharacter();
         virtual void Tick(float DeltaTime) override;
         virtual void PerformRetribution() override;
+        virtual void PerformBattleMove(ATurnBattleManager* Manager, FName MoveId, const FBattleMoveRow* Move, int32 TargetIndex) override;
+        virtual void OnBattleRoundEnd(ATurnBattleManager* Manager) override;
+        virtual void OnBattlePlayerPhaseStart(ATurnBattleManager* Manager) override;
+        virtual bool CanUseBattleMove(FName MoveId) const override;
+        virtual FString GetBattleCardNote() const override;
         UPROPERTY(EditAnywhere, Category = "Hanuboy")
         float BallLength = 220.0f;
         UPROPERTY(EditAnywhere, Category = "Hanuboy")
@@ -70,7 +90,47 @@ public:
         float GroundedBashScale = 0.7f;
         UPROPERTY(EditAnywhere, Category = "Hanuboy Grounded")
         float GroundedRootDuration = 2.0f;
+        UPROPERTY(EditAnywhere, Category = "Hanuboy Battle")
+        float BombBossChance = 0.5f;
+        UPROPERTY(EditAnywhere, Category = "Hanuboy Battle")
+        float BombBossDamageFraction = 0.05f;
+        UPROPERTY(EditAnywhere, Category = "Hanuboy Battle")
+        float BombAllyHealFraction = 0.1f;
+        UPROPERTY(EditAnywhere, Category = "Hanuboy Battle")
+        float SpawnManaFraction = 0.05f;
 protected:
+        virtual float FilterIncomingDamage(float RawDamage, bool bTrueDamage, AUnshackledCharacterBase* Attacker) override;
+        void CastChainBall(ATurnBattleManager* Manager, const FBattleMoveRow* Move);
+        void CastSprout(const FBattleMoveRow* Move);
+        void CastTerritory(const FBattleMoveRow* Move);
+        void CastBlossom(ATurnBattleManager* Manager, const FBattleMoveRow* Move);
+        void CastHarvest(ATurnBattleManager* Manager, const FBattleMoveRow* Move);
+        void CastSqueak(ATurnBattleManager* Manager, const FBattleMoveRow* Move, int32 TargetIndex);
+        void CastLoudSqueak(ATurnBattleManager* Manager, const FBattleMoveRow* Move);
+        void CastShelter(ATurnBattleManager* Manager, const FBattleMoveRow* Move, int32 TargetIndex);
+        void AddFragileSpawn(EHanuboySpawnKind Kind, int32 MaxOfKind, int32 Rounds);
+        int32 CountSpawnsOfKind(EHanuboySpawnKind Kind) const;
+        int32 FindOldestOfKind(EHanuboySpawnKind Kind) const;
+        int32 CountAllSpawns() const;
+        void TickFragileSpawns(ATurnBattleManager* Manager);
+        void HealAllAllies(ATurnBattleManager* Manager, float MaxHealthFraction);
+        void GiveManaToAllAllies(ATurnBattleManager* Manager, float ManaAmount);
+        void AgeFragileSpawns();
+        void TickTree(ATurnBattleManager* Manager);
+        void EndTree(ATurnBattleManager* Manager);
+        void SetAllyDebuffScale(ATurnBattleManager* Manager, float Scale);
+        void GiveSpawnMana();
+        void DetonateBombs(ATurnBattleManager* Manager);
+        void DetonateBomb(ATurnBattleManager* Manager, FHanuboyBomb Bomb);
+        void DropBomb(ATurnBattleManager* Manager);
+        int32 PickRandomLivingAlly(ATurnBattleManager* Manager) const;
+        void ClearMyShelters(ATurnBattleManager* Manager);
+        TArray<FHanuboySpawn> FragileSpawns;
+        TArray<FHanuboyBomb> Bombs;
+        int32 TreeRoundsLeft = 0;
+        float SproutHealFraction = 0.0f;
+        float TerritoryManaAmount = 0.0f;
+        float TreeTickFraction = 0.0f;
         virtual void PerformBasicAttack(FVector Direction) override;
         virtual void PerformSpecial(FVector AimDirection) override;
         virtual void PerformUltimate(FVector AimDirection) override;

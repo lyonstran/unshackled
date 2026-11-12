@@ -618,6 +618,14 @@ void ATurnBattleManager::GrantExtraActionNextRound(APartyMemberCharacter* Member
 	}
 	BonusActionsNext[MemberIndex] = BonusActionsNext[MemberIndex] + 1;
 }
+void ATurnBattleManager::SkipBossTurns(int32 Count)
+{
+	if (Count <= 0)
+	{
+		return;
+	}
+	BossTurnsToSkip = BossTurnsToSkip + Count;
+}
 void ATurnBattleManager::UseBonusActionIfAny(int32 MemberIndex)
 {
 	if (MemberIndex < 0 || MemberIndex >= BonusActionsNow.Num())
@@ -648,6 +656,16 @@ void ATurnBattleManager::StartBossPhase()
 		{
 			Turns = Turns + 1;
 		}
+	}
+	if (BossTurnsToSkip > 0)
+	{
+		ShowMessage(FString::Printf(TEXT("The boss is dazed and loses %d turn(s)"), BossTurnsToSkip), FColor::Green);
+		Turns = Turns - BossTurnsToSkip;
+		if (Turns < 0)
+		{
+			Turns = 0;
+		}
+		BossTurnsToSkip = 0;
 	}
 	BossTurnsLeft = Turns;
 	BossTurnTimer = BossTurnDelay;

@@ -30,6 +30,10 @@ public:
         virtual void OnBattlePlayerPhaseStart(ATurnBattleManager* Manager);
         virtual void OnBattlePlayerPhaseEnd(ATurnBattleManager* Manager);
         virtual bool CanUseBattleMove(FName MoveId) const;
+        virtual FString GetBattleCardNote() const;
+        void SetBattleShelter(APartyMemberCharacter* Guardian, float Share);
+        void ClearBattleShelter();
+        APartyMemberCharacter* GetShelterGuardian() const;
         UPROPERTY(VisibleAnywhere, Category = "Camera")
         USpringArmComponent* CameraArm;
         UPROPERTY(VisibleAnywhere, Category = "Camera")
@@ -52,6 +56,7 @@ protected:
         virtual void BeginPlay() override;
         virtual void Die() override;
         virtual void GroundedTick(float DeltaTime);
+        virtual float FilterIncomingDamage(float RawDamage, bool bTrueDamage, AUnshackledCharacterBase* Attacker) override;
         float HitBattleBoss(ATurnBattleManager* Manager, float Power, bool bTrueDamage);
         void AddBattleModifier(AUnshackledCharacterBase* Target, FName SourceId, ECharacterStat Stat, EModifierKind Kind, float Amount, int32 Turns);
         ATurnBattleManager* FindBattleManager() const;
@@ -62,6 +67,9 @@ protected:
         bool bIsFollowing = false;
         bool bIsGrounded = false;
         float GroundCooldownRemaining = 0.0f;
+        UPROPERTY()
+        APartyMemberCharacter* ShelterGuardian = nullptr;
+        float ShelterShare = 0.0f;
         FTimerHandle GameOverTimer;
         UFUNCTION()
         void RestartLevelAfterDeath();

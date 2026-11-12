@@ -25,6 +25,7 @@ public:
         float MaxSlowFraction = 0.8f;
         float BaseMaxHealth = 100.0f;
         float CurrentMana = 0.0f;
+        float DebuffScale = 1.0f;
         void AddModifier(FStatModifier NewModifier);
         void RemoveModifiersFromSource(FName SourceId);
         void ConsumeHit();
@@ -47,6 +48,7 @@ private:
         float ApplyFloors(ECharacterStat Stat, float Value) const;
         int32 FindModifierIndex(FName SourceId, ECharacterStat Stat, EModifierKind Kind) const;
         bool HasFlag(EStatusFlag Flag) const;
+        bool IsHarmful(FStatModifier Modifier) const;
         void CountDownModifiers(float DeltaTime);
         TArray<FStatModifier> Modifiers;
 };
