@@ -8,7 +8,7 @@ class UNSHACKLED_API ABattleHUD : public AUnshackledHUD
 {
 	GENERATED_BODY()
 public:
-	virtual void DrawHUD() override;
+	virtual void DrawExtraHUD() override;
 	UPROPERTY(EditAnywhere, Category = "Battle Cards")
 	float BattleCardWidth = 120.0f;
 	UPROPERTY(EditAnywhere, Category = "Battle Cards")

@@ -6,6 +6,7 @@
 AUnshackledPlayerController::AUnshackledPlayerController()
 {
         Retribution = CreateDefaultSubobject<URetributionComponent>(TEXT("Retribution"));
+        GameMenu = CreateDefaultSubobject<UGameMenuComponent>(TEXT("GameMenu"));
 }
 void AUnshackledPlayerController::BeginPlay()
 {
@@ -414,6 +415,76 @@ void AUnshackledPlayerController::SetupInputComponent()
                 {
                         Input->BindAction(SwitchPreviousAction, ETriggerEvent::Started, this, &AUnshackledPlayerController::SwitchPrevious);
                 }
+        }
+        BindMenuInput(Input);
+}
+void AUnshackledPlayerController::BindMenuInput(UEnhancedInputComponent* Input)
+{
+        if (Input == nullptr)
+        {
+                return;
+        }
+        if (PauseAction != nullptr)
+        {
+                Input->BindAction(PauseAction, ETriggerEvent::Started, this, &AUnshackledPlayerController::TogglePause);
+        }
+        if (MenuNavigateAction != nullptr)
+        {
+                Input->BindAction(MenuNavigateAction, ETriggerEvent::Triggered, this, &AUnshackledPlayerController::MenuNavigate);
+                Input->BindAction(MenuNavigateAction, ETriggerEvent::Completed, this, &AUnshackledPlayerController::MenuNavigateReleased);
+        }
+        if (MenuConfirmAction != nullptr)
+        {
+                Input->BindAction(MenuConfirmAction, ETriggerEvent::Started, this, &AUnshackledPlayerController::MenuConfirm);
+        }
+        if (MenuBackAction != nullptr)
+        {
+                Input->BindAction(MenuBackAction, ETriggerEvent::Started, this, &AUnshackledPlayerController::MenuBack);
+        }
+}
+bool AUnshackledPlayerController::IsGameMenuOpen() const
+{
+        if (GameMenu == nullptr)
+        {
+                return false;
+        }
+        return GameMenu->IsOpen();
+}
+void AUnshackledPlayerController::TogglePause()
+{
+        if (GameMenu == nullptr)
+        {
+                return;
+        }
+        bSwitchMenuOpen = false;
+        GameMenu->TogglePauseMenu();
+}
+void AUnshackledPlayerController::MenuNavigate(const FInputActionValue& Value)
+{
+        if (IsGameMenuOpen())
+        {
+                GameMenu->HandleNavigate(Value.Get<FVector2D>());
+        }
+}
+void AUnshackledPlayerController::MenuNavigateReleased(const FInputActionValue& Value)
+{
+        if (GameMenu != nullptr)
+        {
+                GameMenu->HandleNavigateReleased();
+        }
+}
+void AUnshackledPlayerController::MenuConfirm()
+{
+        if (IsGameMenuOpen())
+        {
+                GameMenu->Confirm();
+        }
+}
+void AUnshackledPlayerController::MenuBack()
+{
+        if (IsGameMenuOpen())
+        {
+                GameMenu->Back();
         }
 }
 void AUnshackledPlayerController::Move(const FInputActionValue& Value)

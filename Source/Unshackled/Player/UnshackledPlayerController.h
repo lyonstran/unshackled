@@ -6,6 +6,7 @@
 #include "InputActionValue.h"
 #include "Characters/PartyMemberCharacter.h"
 #include "Components/RetributionComponent.h"
+#include "Components/GameMenuComponent.h"
 #include "UnshackledPlayerController.generated.h"
 enum class EPartyMenuMode : uint8
 {
@@ -21,6 +22,8 @@ public:
         AUnshackledPlayerController();
         UPROPERTY(VisibleAnywhere, Category = "Retribution")
         URetributionComponent* Retribution;
+        UPROPERTY(VisibleAnywhere, Category = "Menu")
+        UGameMenuComponent* GameMenu;
         UPROPERTY(EditAnywhere, Category = "Input")
         UInputMappingContext *MappingContext;
         UPROPERTY(EditAnywhere, Category = "Input")
@@ -45,6 +48,14 @@ public:
         UInputAction *SwitchNextAction;
         UPROPERTY(EditAnywhere, Category = "Input")
         UInputAction *SwitchPreviousAction;
+        UPROPERTY(EditAnywhere, Category = "Input")
+        UInputAction* PauseAction;
+        UPROPERTY(EditAnywhere, Category = "Input")
+        UInputAction* MenuNavigateAction;
+        UPROPERTY(EditAnywhere, Category = "Input")
+        UInputAction* MenuConfirmAction;
+        UPROPERTY(EditAnywhere, Category = "Input")
+        UInputAction* MenuBackAction;
         UPROPERTY(EditAnywhere, Category = "Input")
         float StickAimThreshold = 0.25f;
         bool IsSwitchMenuOpen() const;
@@ -79,6 +90,13 @@ protected:
         void SwitchNext();
         void SwitchPrevious();
         void MoveSwitchSelection(int32 Step);
+        void BindMenuInput(class UEnhancedInputComponent* Input);
+        bool IsGameMenuOpen() const;
+        void TogglePause();
+        void MenuNavigate(const FInputActionValue& Value);
+        void MenuNavigateReleased(const FInputActionValue& Value);
+        void MenuConfirm();
+        void MenuBack();
         bool bAimWithStick = false;
         FVector LastStickAimDirection = FVector(0.0f, 1.0f, 0.0f);
         bool bSwitchMenuOpen = false;

@@ -7,9 +7,8 @@
 #include "Engine/Canvas.h"
 #include "EngineUtils.h"
 #include "Engine/World.h"
-void ABattleHUD::DrawHUD()
+void ABattleHUD::DrawExtraHUD()
 {
-	Super::DrawHUD();
 	ATurnBattleManager* Manager = FindManager();
 	if (Manager == nullptr)
 	{

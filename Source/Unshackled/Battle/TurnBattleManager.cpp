@@ -787,7 +787,7 @@ void ATurnBattleManager::LeaveAfterWin()
 		return;
 	}
 	GameInstanceRef->AdvanceFloor();
-	GameInstanceRef->SaveFloorStartStates();
+	GameInstanceRef->ReachCheckpoint(OverworldLevelName);
 	UGameplayStatics::OpenLevel(this, OverworldLevelName);
 }
 void ATurnBattleManager::LeaveAfterLoss()

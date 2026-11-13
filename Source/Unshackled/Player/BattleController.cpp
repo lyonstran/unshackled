@@ -6,6 +6,7 @@
 ABattleController::ABattleController()
 {
 	bShowMouseCursor = false;
+	GameMenu = CreateDefaultSubobject<UGameMenuComponent>(TEXT("GameMenu"));
 }
 void ABattleController::BeginPlay()
 {
@@ -37,6 +38,10 @@ void ABattleController::SetupInputComponent()
 	{
 		Input->BindAction(BackAction, ETriggerEvent::Started, this, &ABattleController::Back);
 	}
+	if (PauseAction != nullptr)
+	{
+		Input->BindAction(PauseAction, ETriggerEvent::Started, this, &ABattleController::TogglePause);
+	}
 }
 ATurnBattleManager* ABattleController::FindManager() const
 {
@@ -46,9 +51,38 @@ ATurnBattleManager* ABattleController::FindManager() const
 	}
 	return nullptr;
 }
+bool ABattleController::IsGameMenuOpen() const
+{
+	if (GameMenu == nullptr)
+	{
+		return false;
+	}
+	return GameMenu->IsOpen();
+}
+bool ABattleController::CanManagerGoBack(ATurnBattleManager* Manager) const
+{
+	if (Manager == nullptr)
+	{
+		return false;
+	}
+	if (Manager->GetState() != EBattleState::PlayerPhase)
+	{
+		return false;
+	}
+	if (Manager->GetMenuStage() == EBattleMenuStage::PickMember)
+	{
+		return false;
+	}
+	return true;
+}
 void ABattleController::Navigate(const FInputActionValue& Value)
 {
 	FVector2D Axis = Value.Get<FVector2D>();
+	if (IsGameMenuOpen())
+	{
+		GameMenu->HandleNavigate(Axis);
+		return;
+	}
 	float AbsX = FMath::Abs(Axis.X);
 	float AbsY = FMath::Abs(Axis.Y);
 	if (bNavigateLatched)
@@ -97,9 +131,18 @@ void ABattleController::Navigate(const FInputActionValue& Value)
 void ABattleController::NavigateReleased(const FInputActionValue& Value)
 {
 	bNavigateLatched = false;
+	if (GameMenu != nullptr)
+	{
+		GameMenu->HandleNavigateReleased();
+	}
 }
 void ABattleController::Confirm(const FInputActionValue& Value)
 {
+	if (IsGameMenuOpen())
+	{
+		GameMenu->Confirm();
+		return;
+	}
 	ATurnBattleManager* Manager = FindManager();
 	if (Manager != nullptr)
 	{
@@ -108,9 +151,26 @@ void ABattleController::Confirm(const FInputActionValue& Value)
 }
 void ABattleController::Back(const FInputActionValue& Value)
 {
+	if (IsGameMenuOpen())
+	{
+		GameMenu->Back();
+		return;
+	}
 	ATurnBattleManager* Manager = FindManager();
-	if (Manager != nullptr)
+	if (CanManagerGoBack(Manager))
 	{
 		Manager->MenuBack();
+		return;
+	}
+	if (GameMenu != nullptr)
+	{
+		GameMenu->OpenMenu();
+	}
+}
+void ABattleController::TogglePause(const FInputActionValue& Value)
+{
+	if (GameMenu != nullptr)
+	{
+		GameMenu->TogglePauseMenu();
 	}
 }

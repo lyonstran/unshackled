@@ -3,6 +3,7 @@
 #include "Engine/GameInstance.h"
 #include "UnshackledGameInstance.generated.h"
 class APartyMemberCharacter;
+class APlayerController;
 struct FCharacterState
 {
 	FName CharacterId;
@@ -19,6 +20,16 @@ public:
 	int32 CurrentFloor = 1;
 	UPROPERTY(EditAnywhere, Category = "Progress")
 	int32 MaxFloor = 5;
+	UPROPERTY(VisibleAnywhere, Category = "Progress")
+	FName CheckpointLevelName;
+	UPROPERTY(EditAnywhere, Category = "Levels")
+	FName TitleLevelName = FName("Level_Title");
+	UPROPERTY(EditAnywhere, Category = "Levels")
+	FName OverworldLevelName = FName("Level_Prototype");
+	UPROPERTY(EditAnywhere, Category = "Save")
+	FString SaveSlotName = TEXT("UnshackledSave");
+	UPROPERTY(EditAnywhere, Category = "Save")
+	int32 SaveUserIndex = 0;
 	bool IsLastFloor() const;
 	bool AdvanceFloor();
 	void ResetToFirstFloor();
@@ -27,6 +38,16 @@ public:
 	bool IsRecruited(FName CharacterId) const;
 	void Recruit(FName CharacterId);
 	int32 GetRecruitedCount() const;
+	void ReachCheckpoint(FName LevelName);
+	FString GetCheckpointDescription() const;
+	bool HasSaveGame() const;
+	bool SaveCheckpoint();
+	bool LoadCheckpoint();
+	void DeleteSaveGame();
+	void StartNewGame();
+	bool ContinueGame();
+	void QuitToTitle();
+	void ExitGame(APlayerController* PlayerController);
 private:
 	TArray<FName> RecruitedIds;
 	TArray<FCharacterState> FloorStartStates;

@@ -5,6 +5,7 @@
 #include "Components/HealthComponent.h"
 #include "Components/StatsComponent.h"
 #include "Components/RetributionComponent.h"
+#include "Components/GameMenuComponent.h"
 #include "Engine/Canvas.h"
 #include "EngineUtils.h"
 #include "Engine/World.h"
@@ -32,6 +33,8 @@ void AUnshackledHUD::DrawHUD()
         DrawMessages();
         DrawPrompt();
         DrawBanner();
+        DrawExtraHUD();
+        DrawGameMenu();
 }
 AUnshackledHUD* AUnshackledHUD::FindPlayerHUD(const UObject* WorldContextObject)
 {
@@ -386,4 +389,101 @@ void AUnshackledHUD::DrawCardStatusText(APartyMemberCharacter* Member, float Lef
                 FLinearColor CooldownColor = FLinearColor(1.0f, 0.6f, 0.2f, 1.0f);
                 DrawText(CooldownText, CooldownColor, TextLeft, TextTop);
         }
+}
+void AUnshackledHUD::DrawExtraHUD()
+{
+}
+void AUnshackledHUD::DrawMenuText(FString Text, FLinearColor Color, float CenterX, float Top, float Scale)
+{
+        if (Text.IsEmpty())
+        {
+                return;
+        }
+        float TextWidth = 0.0f;
+        float TextHeight = 0.0f;
+        GetTextSize(Text, TextWidth, TextHeight, nullptr, Scale);
+        float TextLeft = CenterX - (TextWidth / 2.0f);
+        FLinearColor ShadowColor = FLinearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        DrawText(Text, ShadowColor, TextLeft + 2.0f, Top + 2.0f, nullptr, Scale);
+        DrawText(Text, Color, TextLeft, Top, nullptr, Scale);
+}
+void AUnshackledHUD::DrawGameMenu()
+{
+        APlayerController* OwningController = GetOwningPlayerController();
+        if (OwningController == nullptr)
+        {
+                return;
+        }
+        UGameMenuComponent* GameMenu = OwningController->FindComponentByClass<UGameMenuComponent>();
+        if (GameMenu == nullptr)
+        {
+                return;
+        }
+        if (!GameMenu->IsOpen())
+        {
+                return;
+        }
+        if (GameMenu->Kind == EGameMenuKind::Pause)
+        {
+                FLinearColor BackdropColor = FLinearColor(0.0f, 0.0f, 0.0f, MenuBackdropAlpha);
+                DrawRect(BackdropColor, 0.0f, 0.0f, Canvas->SizeX, Canvas->SizeY);
+        }
+        float CenterX = Canvas->SizeX / 2.0f;
+        float Top = Canvas->SizeY * MenuTopFraction;
+        DrawMenuText(GameMenu->GetMenuTitle(), FLinearColor::White, CenterX, Top, MenuTitleScale);
+        float RowsTop = Top + (MenuRowHeight * 2.0f);
+        if (GameMenu->IsConfirming())
+        {
+                DrawConfirmRows(GameMenu, CenterX, RowsTop);
+        }
+        else
+        {
+                DrawMenuRows(GameMenu, CenterX, RowsTop);
+        }
+        float StatusTop = RowsTop + (MenuRowHeight * 5.0f);
+        FLinearColor StatusColor = FLinearColor(0.5f, 1.0f, 0.5f, 1.0f);
+        DrawMenuText(GameMenu->GetStatusText(), StatusColor, CenterX, StatusTop, MenuOptionScale);
+        float HintTop = Canvas->SizeY - 50.0f;
+        FLinearColor HintColor = FLinearColor(0.7f, 0.7f, 0.7f, 1.0f);
+        DrawMenuText(TEXT("Arrows / D-pad: move     Space / A: choose     Esc / B: back"), HintColor, CenterX, HintTop, MenuHintScale);
+}
+void AUnshackledHUD::DrawMenuRows(UGameMenuComponent* GameMenu, float CenterX, float Top)
+{
+        int32 SelectedIndex = GameMenu->GetSelectedIndex();
+        for (int32 i = 0; i < GameMenu->GetOptionCount(); i++)
+        {
+                float RowTop = Top + (MenuRowHeight * i);
+                bool bSelected = false;
+                if (i == SelectedIndex)
+                {
+                        bSelected = true;
+                }
+                DrawMenuRow(GameMenu->GetOptionLabel(i), CenterX, RowTop, bSelected, GameMenu->IsOptionEnabled(i));
+        }
+}
+void AUnshackledHUD::DrawConfirmRows(UGameMenuComponent* GameMenu, float CenterX, float Top)
+{
+        FLinearColor QuestionColor = FLinearColor(1.0f, 0.85f, 0.4f, 1.0f);
+        DrawMenuText(GameMenu->GetConfirmQuestion(), QuestionColor, CenterX, Top, MenuOptionScale);
+        bool bYesSelected = GameMenu->IsConfirmYesSelected();
+        float YesTop = Top + (MenuRowHeight * 1.5f);
+        float NoTop = Top + (MenuRowHeight * 2.5f);
+        DrawMenuRow(TEXT("Yes"), CenterX, YesTop, bYesSelected, true);
+        DrawMenuRow(TEXT("No"), CenterX, NoTop, !bYesSelected, true);
+}
+void AUnshackledHUD::DrawMenuRow(FString Label, float CenterX, float Top, bool bSelected, bool bEnabled)
+{
+        FLinearColor TextColor = FLinearColor::White;
+        if (!bEnabled)
+        {
+                TextColor = FLinearColor(0.45f, 0.45f, 0.45f, 1.0f);
+        }
+        if (bSelected)
+        {
+                FLinearColor HighlightColor = FLinearColor(1.0f, 0.85f, 0.2f, 0.25f);
+                float HighlightLeft = CenterX - (MenuPanelWidth / 2.0f);
+                DrawRect(HighlightColor, HighlightLeft, Top - 4.0f, MenuPanelWidth, MenuRowHeight - 4.0f);
+                TextColor = FLinearColor(1.0f, 0.85f, 0.2f, 1.0f);
+        }
+        DrawMenuText(Label, TextColor, CenterX, Top, MenuOptionScale);
 }

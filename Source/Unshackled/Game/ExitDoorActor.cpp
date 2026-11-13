@@ -205,15 +205,15 @@ void AExitDoorActor::TravelToNextFloor()
 			return;
 		}
 	}
-	GameInstanceRef->SaveFloorStartStates();
-	RemovePortalGlow();
-	if (!DestinationLevelName.IsNone())
+	FName NextLevelName = DestinationLevelName;
+	if (NextLevelName.IsNone())
 	{
-		UGameplayStatics::OpenLevel(this, DestinationLevelName);
-		return;
+		FString CurrentLevelName = UGameplayStatics::GetCurrentLevelName(this, true);
+		NextLevelName = FName(*CurrentLevelName);
 	}
-	FString CurrentLevelName = UGameplayStatics::GetCurrentLevelName(this, true);
-	UGameplayStatics::OpenLevel(this, FName(*CurrentLevelName));
+	GameInstanceRef->ReachCheckpoint(NextLevelName);
+	RemovePortalGlow();
+	UGameplayStatics::OpenLevel(this, NextLevelName);
 }
 void AExitDoorActor::ApplyColorToMesh(UStaticMeshComponent* Mesh, FLinearColor Color)
 {

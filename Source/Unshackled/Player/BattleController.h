@@ -4,6 +4,7 @@
 #include "InputMappingContext.h"
 #include "InputAction.h"
 #include "InputActionValue.h"
+#include "Components/GameMenuComponent.h"
 #include "BattleController.generated.h"
 class ATurnBattleManager;
 UCLASS()
@@ -12,6 +13,8 @@ class UNSHACKLED_API ABattleController : public APlayerController
 	GENERATED_BODY()
 public:
 	ABattleController();
+	UPROPERTY(VisibleAnywhere, Category = "Menu")
+	UGameMenuComponent* GameMenu;
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputMappingContext* MappingContext;
 	UPROPERTY(EditAnywhere, Category = "Input")
@@ -20,6 +23,8 @@ public:
 	UInputAction* ConfirmAction;
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* BackAction;
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* PauseAction;
 	UPROPERTY(EditAnywhere, Category = "Input")
 	float PressThreshold = 0.5f;
 	UPROPERTY(EditAnywhere, Category = "Input")
@@ -30,8 +35,11 @@ protected:
 private:
 	bool bNavigateLatched = false;
 	ATurnBattleManager* FindManager() const;
+	bool IsGameMenuOpen() const;
+	bool CanManagerGoBack(ATurnBattleManager* Manager) const;
 	void Navigate(const FInputActionValue& Value);
 	void NavigateReleased(const FInputActionValue& Value);
 	void Confirm(const FInputActionValue& Value);
 	void Back(const FInputActionValue& Value);
+	void TogglePause(const FInputActionValue& Value);
 };

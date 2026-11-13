@@ -66,7 +66,27 @@ public:
         float RetributionRightMargin = 24.0f;
         UPROPERTY(EditAnywhere, Category = "Retribution")
         float RetributionBottomMargin = 24.0f;
+        UPROPERTY(EditAnywhere, Category = "Game Menu")
+        float MenuTopFraction = 0.3f;
+        UPROPERTY(EditAnywhere, Category = "Game Menu")
+        float MenuTitleScale = 2.4f;
+        UPROPERTY(EditAnywhere, Category = "Game Menu")
+        float MenuOptionScale = 1.5f;
+        UPROPERTY(EditAnywhere, Category = "Game Menu")
+        float MenuHintScale = 1.0f;
+        UPROPERTY(EditAnywhere, Category = "Game Menu")
+        float MenuRowHeight = 36.0f;
+        UPROPERTY(EditAnywhere, Category = "Game Menu")
+        float MenuPanelWidth = 360.0f;
+        UPROPERTY(EditAnywhere, Category = "Game Menu")
+        float MenuBackdropAlpha = 0.65f;
 protected:
+        virtual void DrawExtraHUD();
+        void DrawGameMenu();
+        void DrawMenuRows(class UGameMenuComponent* GameMenu, float CenterX, float Top);
+        void DrawConfirmRows(class UGameMenuComponent* GameMenu, float CenterX, float Top);
+        void DrawMenuRow(FString Label, float CenterX, float Top, bool bSelected, bool bEnabled);
+        void DrawMenuText(FString Text, FLinearColor Color, float CenterX, float Top, float Scale);
         void DrawHealthBar(class AUnshackledCharacterBase* Character);
         void DrawManaBar(class AUnshackledCharacterBase* Character);
         void DrawGroundedTag(class APartyMemberCharacter* Member);
