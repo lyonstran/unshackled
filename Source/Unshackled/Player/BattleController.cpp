@@ -45,7 +45,8 @@ void ABattleController::SetupInputComponent()
 }
 ATurnBattleManager* ABattleController::FindManager() const
 {
-	for (TActorIterator<ATurnBattleManager> It(GetWorld()); It; ++It)
+	TActorIterator<ATurnBattleManager> It(GetWorld());
+	if (It)
 	{
 		return *It;
 	}

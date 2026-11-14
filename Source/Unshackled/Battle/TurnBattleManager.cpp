@@ -88,7 +88,8 @@ void ATurnBattleManager::SpawnBossIfMissing()
 	{
 		return;
 	}
-	for (TActorIterator<ABossCharacter> It(World); It; ++It)
+	TActorIterator<ABossCharacter> ExistingBoss(World);
+	if (ExistingBoss)
 	{
 		return;
 	}

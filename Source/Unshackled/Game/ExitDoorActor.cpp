@@ -88,10 +88,10 @@ void AExitDoorActor::Tick(float DeltaTime)
 }
 void AExitDoorActor::FindSpawner()
 {
-	for (TActorIterator<AWaveSpawner> It(GetWorld()); It; ++It)
+	TActorIterator<AWaveSpawner> It(GetWorld());
+	if (It)
 	{
 		Spawner = *It;
-		return;
 	}
 }
 void AExitDoorActor::UnlockDoor()

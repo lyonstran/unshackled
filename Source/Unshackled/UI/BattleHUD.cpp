@@ -26,7 +26,8 @@ void ABattleHUD::DrawExtraHUD()
 }
 ATurnBattleManager* ABattleHUD::FindManager() const
 {
-	for (TActorIterator<ATurnBattleManager> It(GetWorld()); It; ++It)
+	TActorIterator<ATurnBattleManager> It(GetWorld());
+	if (It)
 	{
 		return *It;
 	}

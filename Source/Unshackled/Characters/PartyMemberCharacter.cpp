@@ -110,7 +110,8 @@ bool APartyMemberCharacter::IsGrounded() const
 }
 bool APartyMemberCharacter::IsInTurnBattle() const
 {
-        for (TActorIterator<ATurnBattleManager> It(GetWorld()); It; ++It)
+        TActorIterator<ATurnBattleManager> It(GetWorld());
+        if (It)
         {
                 return true;
         }
@@ -305,7 +306,8 @@ void APartyMemberCharacter::AddBattleModifier(AUnshackledCharacterBase* Target, 
 }
 ATurnBattleManager* APartyMemberCharacter::FindBattleManager() const
 {
-        for (TActorIterator<ATurnBattleManager> It(GetWorld()); It; ++It)
+        TActorIterator<ATurnBattleManager> It(GetWorld());
+        if (It)
         {
                 return *It;
         }
@@ -438,6 +440,11 @@ void APartyMemberCharacter::Die()
 }
 void APartyMemberCharacter::RestartLevelAfterDeath()
 {
+        UUnshackledGameInstance* GameInstanceRef = Cast<UUnshackledGameInstance>(GetGameInstance());
+        if (GameInstanceRef != nullptr)
+        {
+                GameInstanceRef->RestoreFloorStartRecruits();
+        }
         FString CurrentLevelName = UGameplayStatics::GetCurrentLevelName(this, true);
         UGameplayStatics::OpenLevel(this, FName(*CurrentLevelName));
 }
