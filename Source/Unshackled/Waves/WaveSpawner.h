@@ -4,6 +4,7 @@
 #include "Engine/DataTable.h"
 #include "Characters/EnemyCharacter.h"
 #include "WaveRow.h"
+#include "Game/RecruitPointActor.h"
 #include "WaveSpawner.generated.h"
 class UBoxComponent;
 enum class EWaveState : uint8
@@ -11,6 +12,7 @@ enum class EWaveState : uint8
       WaitingForPlayer,
       SpawningWave,
       PauseBetweenWaves,
+      WaitingForRecruit,
       FloorCleared
 };
 UCLASS()
@@ -55,10 +57,15 @@ protected:
       TArray<TSubclassOf<AEnemyCharacter>> PendingEnemies;
       UPROPERTY()
       TArray<AEnemyCharacter*> AliveEnemies;
+      UPROPERTY()
+      ARecruitPointActor* WaitingRecruitPoint = nullptr;
       void CheckForPlayer();
       void StartNextWave();
       void UpdateSpawning(float DeltaTime);
       void UpdatePause(float DeltaTime);
+      void GoToNextWave();
+      ARecruitPointActor* FindRecruitPointForWave(int32 WaveNumber);
+      void UpdateWaitingForRecruit();
       void BuildWave(int32 WaveNumber);
       bool WaveExists(int32 WaveNumber);
       int32 CalculateCount(const FWaveRow& Row);

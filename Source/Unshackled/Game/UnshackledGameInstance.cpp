@@ -32,6 +32,7 @@ void UUnshackledGameInstance::ResetToFirstFloor()
 	FloorStartStates.Empty();
 	RecruitedIds.Empty();
 	RecruitedIds.Add(FName("Sirius"));
+	FloorStartRecruitedIds = RecruitedIds;
 }
 bool UUnshackledGameInstance::IsRecruited(FName CharacterId) const
 {
@@ -48,6 +49,10 @@ void UUnshackledGameInstance::Recruit(FName CharacterId)
 int32 UUnshackledGameInstance::GetRecruitedCount() const
 {
 	return RecruitedIds.Num();
+}
+void UUnshackledGameInstance::RestoreFloorStartRecruits()
+{
+	RecruitedIds = FloorStartRecruitedIds;
 }
 int32 UUnshackledGameInstance::FindStateIndex(FName CharacterId) const
 {
@@ -113,6 +118,7 @@ void UUnshackledGameInstance::ReachCheckpoint(FName LevelName)
 {
 	SaveFloorStartStates();
 	CheckpointLevelName = LevelName;
+	FloorStartRecruitedIds = RecruitedIds;
 	SaveCheckpoint();
 }
 FString UUnshackledGameInstance::GetCheckpointDescription() const
@@ -137,7 +143,7 @@ bool UUnshackledGameInstance::SaveCheckpoint()
 	}
 	SaveData->Floor = CurrentFloor;
 	SaveData->CheckpointLevelName = CheckpointLevelName;
-	SaveData->RecruitedIds = RecruitedIds;
+	SaveData->RecruitedIds = FloorStartRecruitedIds;
 	for (int32 i = 0; i < FloorStartStates.Num(); i++)
 	{
 		SaveData->CharacterIds.Add(FloorStartStates[i].CharacterId);
@@ -174,6 +180,7 @@ bool UUnshackledGameInstance::LoadCheckpoint()
 	{
 		RecruitedIds.Insert(FName("Sirius"), 0);
 	}
+	FloorStartRecruitedIds = RecruitedIds;
 	FloorStartStates.Empty();
 	for (int32 i = 0; i < SaveData->CharacterIds.Num(); i++)
 	{

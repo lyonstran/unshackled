@@ -51,6 +51,22 @@ void ARecruitPointActor::BeginPlay()
 	Light->SetAttenuationRadius(LightRadius);
 	Light->SetIntensity(LightIntensity);
 	ApplyLook();
+	bool bWaitForWaves = false;
+	if (GameInstanceRef != nullptr)
+	{
+		if (GameInstanceRef->CurrentFloor == RecruitFloor)
+		{
+			bWaitForWaves = true;
+		}
+	}
+	if (bWaitForWaves)
+	{
+		SetLookVisible(false);
+	}
+	else
+	{
+		bReady = true;
+	}
 	APlayerController* Controller = UGameplayStatics::GetPlayerController(this, 0);
 	if (Controller != nullptr)
 	{
@@ -75,10 +91,41 @@ void ARecruitPointActor::ApplyLook()
 void ARecruitPointActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	if (IsPlayerNearby())
+	if (bReady)
 	{
-		ShowPrompt();
+		if (IsPlayerNearby())
+		{
+			ShowPrompt();
+		}
 	}
+}
+bool ARecruitPointActor::IsWaitingForWave(int32 FloorNumber, int32 WaveNumber) const
+{
+	if (bReady)
+	{
+		return false;
+	}
+	if (RecruitFloor != FloorNumber)
+	{
+		return false;
+	}
+	if (JoinBeforeWave != WaveNumber)
+	{
+		return false;
+	}
+	return true;
+}
+void ARecruitPointActor::MakeReady()
+{
+	bReady = true;
+	SetLookVisible(true);
+	FString Message = FString::Printf(TEXT("%s is waiting nearby"), *GetMemberName());
+	ShowRecruitBanner(Message);
+}
+void ARecruitPointActor::SetLookVisible(bool bVisible)
+{
+	Marker->SetVisibility(bVisible);
+	Light->SetVisibility(bVisible);
 }
 FString ARecruitPointActor::GetMemberName() const
 {
@@ -111,6 +158,10 @@ void ARecruitPointActor::ShowPrompt() const
 }
 void ARecruitPointActor::TryRecruit()
 {
+	if (!bReady)
+	{
+		return;
+	}
 	if (!IsPlayerNearby())
 	{
 		return;
@@ -128,7 +179,8 @@ void ARecruitPointActor::TryRecruit()
 	}
 	GameInstanceRef->Recruit(RecruitId);
 	SpawnMember(GetActorLocation());
-	ShowJoinedBanner();
+	FString Message = FString::Printf(TEXT("%s joined the party!"), *GetMemberName());
+	ShowRecruitBanner(Message);
 	Destroy();
 }
 FVector ARecruitPointActor::GetLeaderSpawnLocation() const
@@ -169,7 +221,7 @@ void ARecruitPointActor::SpawnMember(FVector Location)
 		PlayerController->AddPartyMember(NewMember);
 	}
 }
-void ARecruitPointActor::ShowJoinedBanner()
+void ARecruitPointActor::ShowRecruitBanner(FString Message)
 {
 	APlayerController* PlayerController = UGameplayStatics::GetPlayerController(this, 0);
 	if (PlayerController == nullptr)
@@ -181,7 +233,6 @@ void ARecruitPointActor::ShowJoinedBanner()
 	{
 		return;
 	}
-	FString Message = FString::Printf(TEXT("%s joined the party!"), *GetMemberName());
 	Hud->ShowBanner(Message, FLinearColor(1.0f, 0.85f, 0.2f, 1.0f), BannerDuration);
 }
 void ARecruitPointActor::ApplyColorToMesh(UStaticMeshComponent* Mesh, FLinearColor Color)

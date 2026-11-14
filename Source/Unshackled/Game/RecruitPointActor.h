@@ -16,6 +16,8 @@ public:
 	ARecruitPointActor();
 	virtual void Tick(float DeltaTime) override;
 	void TryRecruit();
+	bool IsWaitingForWave(int32 FloorNumber, int32 WaveNumber) const;
+	void MakeReady();
 	UPROPERTY(VisibleAnywhere, Category = "Recruit")
 	USceneComponent* Root;
 	UPROPERTY(VisibleAnywhere, Category = "Recruit")
@@ -26,6 +28,8 @@ public:
 	FName RecruitId;
 	UPROPERTY(EditAnywhere, Category = "Recruit")
 	int32 RecruitFloor = 2;
+	UPROPERTY(EditAnywhere, Category = "Recruit")
+	int32 JoinBeforeWave = 3;
 	UPROPERTY(EditAnywhere, Category = "Recruit")
 	TSubclassOf<APartyMemberCharacter> MemberClass;
 	UPROPERTY(EditAnywhere, Category = "Recruit")
@@ -50,8 +54,10 @@ protected:
 	void ApplyColorToMesh(UStaticMeshComponent* Mesh, FLinearColor Color);
 	FVector GetLeaderSpawnLocation() const;
 	void SpawnMember(FVector Location);
-	void ShowJoinedBanner();
+	void SetLookVisible(bool bVisible);
+	void ShowRecruitBanner(FString Message);
 	FString GetMemberName() const;
 	UPROPERTY()
 	UStaticMesh* SphereMesh = nullptr;
+	bool bReady = false;
 };

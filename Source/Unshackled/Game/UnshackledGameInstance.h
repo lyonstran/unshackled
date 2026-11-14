@@ -38,6 +38,7 @@ public:
 	bool IsRecruited(FName CharacterId) const;
 	void Recruit(FName CharacterId);
 	int32 GetRecruitedCount() const;
+	void RestoreFloorStartRecruits();
 	void ReachCheckpoint(FName LevelName);
 	FString GetCheckpointDescription() const;
 	bool HasSaveGame() const;
@@ -50,6 +51,7 @@ public:
 	void ExitGame(APlayerController* PlayerController);
 private:
 	TArray<FName> RecruitedIds;
+	TArray<FName> FloorStartRecruitedIds;
 	TArray<FCharacterState> FloorStartStates;
 	int32 FindStateIndex(FName CharacterId) const;
 };

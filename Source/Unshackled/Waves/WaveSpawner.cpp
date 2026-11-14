@@ -7,6 +7,7 @@
 #include "Game/UnshackledGameInstance.h"
 #include "UI/UnshackledHUD.h"
 #include "GameFramework/PlayerController.h"
+#include "EngineUtils.h"
 AWaveSpawner::AWaveSpawner()
 {
       PrimaryActorTick.bCanEverTick = true;
@@ -48,6 +49,10 @@ void AWaveSpawner::Tick(float DeltaTime)
       else if (State == EWaveState::PauseBetweenWaves)
       {
               UpdatePause(DeltaTime);
+      }
+      else if (State == EWaveState::WaitingForRecruit)
+      {
+              UpdateWaitingForRecruit();
       }
 }
 void AWaveSpawner::CheckForPlayer()
@@ -100,8 +105,7 @@ void AWaveSpawner::UpdateSpawning(float DeltaTime)
       {
               if (WaveExists(CurrentWave + 1))
               {
-                      PauseTimer = WavePauseSeconds;
-                      State = EWaveState::PauseBetweenWaves;
+                      GoToNextWave();
               }
               else
               {
@@ -116,6 +120,41 @@ void AWaveSpawner::UpdatePause(float DeltaTime)
       {
               StartNextWave();
       }
+}
+void AWaveSpawner::GoToNextWave()
+{
+      ARecruitPointActor* RecruitPoint = FindRecruitPointForWave(CurrentWave + 1);
+      if (RecruitPoint != nullptr)
+      {
+              WaitingRecruitPoint = RecruitPoint;
+              RecruitPoint->MakeReady();
+              State = EWaveState::WaitingForRecruit;
+              return;
+      }
+      PauseTimer = WavePauseSeconds;
+      State = EWaveState::PauseBetweenWaves;
+}
+ARecruitPointActor* AWaveSpawner::FindRecruitPointForWave(int32 WaveNumber)
+{
+      for (TActorIterator<ARecruitPointActor> It(GetWorld()); It; ++It)
+      {
+              ARecruitPointActor* RecruitPoint = *It;
+              if (RecruitPoint->IsWaitingForWave(FloorNumber, WaveNumber))
+              {
+                      return RecruitPoint;
+              }
+      }
+      return nullptr;
+}
+void AWaveSpawner::UpdateWaitingForRecruit()
+{
+      if (IsValid(WaitingRecruitPoint))
+      {
+              return;
+      }
+      WaitingRecruitPoint = nullptr;
+      PauseTimer = WavePauseSeconds;
+      State = EWaveState::PauseBetweenWaves;
 }
 void AWaveSpawner::BuildWave(int32 WaveNumber)
 {
