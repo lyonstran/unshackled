@@ -387,6 +387,27 @@ const FBattleMoveRow* ATurnBattleManager::GetMove(FName MoveId) const
 	}
 	return MoveTable->FindRow<FBattleMoveRow>(MoveId, TEXT("TurnBattleManager"), false);
 }
+int32 ATurnBattleManager::GetBattleFloor() const
+{
+	UUnshackledGameInstance* GameInstanceRef = Cast<UUnshackledGameInstance>(GetGameInstance());
+	if (GameInstanceRef == nullptr)
+	{
+		return 1;
+	}
+	return GameInstanceRef->CurrentFloor;
+}
+bool ATurnBattleManager::IsMoveUnlocked(const FBattleMoveRow* Move) const
+{
+	if (Move == nullptr)
+	{
+		return false;
+	}
+	if (bUnlockAllMovesForTesting)
+	{
+		return true;
+	}
+	return GetBattleFloor() >= Move->UnlockFloor;
+}
 void ATurnBattleManager::BuildMenuEntries(int32 MemberIndex)
 {
 	MenuEntries.Empty();
@@ -454,6 +475,10 @@ FString ATurnBattleManager::GetEntryDescription(FName EntryName) const
 	{
 		return FString();
 	}
+	if (!IsMoveUnlocked(Move))
+	{
+		return FString::Printf(TEXT("Unlocks on Floor %d"), Move->UnlockFloor);
+	}
 	return Move->Description.ToString();
 }
 bool ATurnBattleManager::IsEntryUsable(int32 MemberIndex, FName EntryName) const
@@ -472,6 +497,10 @@ bool ATurnBattleManager::IsEntryUsable(int32 MemberIndex, FName EntryName) const
 	}
 	const FBattleMoveRow* Move = GetMove(EntryName);
 	if (Move == nullptr)
+	{
+		return false;
+	}
+	if (!IsMoveUnlocked(Move))
 	{
 		return false;
 	}

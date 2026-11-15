@@ -66,6 +66,8 @@ public:
 	FString GetEntryDescription(FName EntryName) const;
 	bool IsEntryUsable(int32 MemberIndex, FName EntryName) const;
 	const FBattleMoveRow* GetMove(FName MoveId) const;
+	int32 GetBattleFloor() const;
+	bool IsMoveUnlocked(const FBattleMoveRow* Move) const;
 	int32 FindPartyIndex(APartyMemberCharacter* Member) const;
 	void ShowMessage(FString Text, FColor Color);
 	void GrantExtraActionNextRound(APartyMemberCharacter* Member);
@@ -121,6 +123,8 @@ public:
 	bool bDebugLoseKey = false;
 	UPROPERTY(EditAnywhere, Category = "Battle Debug")
 	bool bSpawnWholePartyForTesting = false;
+	UPROPERTY(EditAnywhere, Category = "Battle Debug")
+	bool bUnlockAllMovesForTesting = false;
 protected:
 	virtual void BeginPlay() override;
 private:

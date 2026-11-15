@@ -41,4 +41,6 @@ struct FBattleMoveRow : public FTableRowBase
 	float Amount4 = 0.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 Turns = 0;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 UnlockFloor = 1;
 };

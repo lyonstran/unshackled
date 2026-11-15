@@ -354,7 +354,10 @@ FName AKaliaCharacter::PickRandomOwnMove(ATurnBattleManager* Manager) const
                 {
                         if (Move->MemberId == StatsRowName)
                         {
-                                MyMoves.Add(AllNames[i]);
+                                if (Manager->IsMoveUnlocked(Move))
+                                {
+                                        MyMoves.Add(AllNames[i]);
+                                }
                         }
                 }
         }

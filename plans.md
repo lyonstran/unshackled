@@ -81,13 +81,13 @@ Every character will have a basic attack, block (damage reduction by like 50% ma
   * basic attack: an option for the player to go for a simple attack (similar to the overworld basic attack), except it only locks onto one target. sirius targets an enemy and slices them with a blade of wind magic.
   * Specific moves:
 
-    * gale: a strong blast of wind magic. Single-target.
-    * veil: surrounds allies, providing 15% damage reduction, and reflects back 10% of damage back towards enemies. This effect lasts 3 turns.
-    * winds unbound: raise attack by 15%. This effect lasts 3 turns. This effect does not stack.
-    * gale unleased: inflicts powerful tornado(AOE) onto all enemies, where they take initial flat damage and for the next three turns, enemies take weaker flat damage again (maybe like 10% of what the initial tornado damage was)
-    * wind wall: sets up a shield that consumes the next damaging attack from enemy (directed towards sirius). 20% of that damage is restored as mana. Subsequent use reduces chance of successful abilitiy cast (-10%) for the rest of the battle, starting at 100% successs rate
-    * winds of war: raise attack stat of allies and enemies by 10%
-    * submission: Sirius lowers an enemies attack, and defense by 15%. This debuff lasts for 3 turns. 
+    * gale: a strong blast of wind magic. Single-target. (avaliable floor 1)
+    * veil: surrounds allies, providing 15% damage reduction, and reflects back 10% of damage back towards enemies. This effect lasts 3 turns. (avaliable floor 1)
+    * winds unbound: raise attack by 15%. This effect lasts 3 turns. This effect does not stack. (avaliable floor 1)
+    * gale unleased: inflicts powerful tornado(AOE) onto all enemies, where they take initial flat damage and for the next three turns, enemies take weaker flat damage again (maybe like 10% of what the initial tornado damage was) (avaliable floor 1)
+    * wind wall: sets up a shield that consumes the next damaging attack from enemy (directed towards sirius). 20% of that damage is restored as mana. Subsequent use reduces chance of successful abilitiy cast (-10%) for the rest of the battle, starting at 100% successs rate (avaliable  floor 2)
+    * winds of war: raise attack stat of allies and enemies by 10% (avaliable floor 3)
+    * submission: Sirius lowers an enemies attack, and defense by 15%. This debuff lasts for 3 turns. (avaliable floor 1)
   * retribution: sirius's next damaging ability restores 25% max health.
 * Mal'Kholm Ecks
 
@@ -95,13 +95,13 @@ Every character will have a basic attack, block (damage reduction by like 50% ma
   * basic attack: Mal'Kholm strikes twice, and is able to select up to two targets; if both attacks are directed at one target, he gains 1.5% defense -> this increase is permanent for the remainder of the battle
   * Specific moves;
 
-    * revolution: at the start of the following round, all healing, shielding, damage, and buffs in the previous round is repeated at 25% effectiveness (would have to define what that looks like for each kind of staat alteration) -> allies only. This move is disabled for one round afterwards.
-    * sacrifice: forfeit 5% current health, and the following turn, Mal'Kholm is granted an additional turn.
-    * Might: Mal'Kholm slams both chains down onto an enemy. Single-target.
-    * Freedom: grants an ally +7.5% defense for 3 turns. This effect can stack up to 3 times. Stacks refresh turn duration.
-    * Confrontation: Mal'Kohlm hooks onto an enemy and takes 15% of their defense as his own, heals himself for 50% of enemy current hp, and deals 10%  of his missing health + 5% max enemy health as damage.
-    * power: Mal'Kholm grants allies 5% of his defense + 5% of his missing health as a shield to all allies. This shielf can stack (shields are essentially health with 0 defense).
-    * unity: Mal'Kholm recycles the retribution cycle to start on him. Each successful pass between allies grant all allies 5% max health shield. If retribution is successful, reduce enemy damage by 10%. 
+    * revolution: at the start of the following round, all healing, shielding, damage, and buffs in the previous round is repeated at 25% effectiveness (would have to define what that looks like for each kind of staat alteration) -> allies only. This move is disabled for one round afterwards. (avaliable floor 1)
+    * sacrifice: forfeit 5% current health, and the following turn, Mal'Kholm is granted an additional turn. (avaliable floor 1)
+    * Might: Mal'Kholm slams both chains down onto an enemy. Single-target. (Avaliable floor 1)
+    * Freedom: grants an ally +7.5% defense for 3 turns. This effect can stack up to 3 times. Stacks refresh turn duration. (Avaliable floor 1) 
+    * Confrontation: Mal'Kohlm hooks onto an enemy and takes 15% of their defense as his own, heals himself for 50% of enemy current hp, and deals 10%  of his missing health + 5% max enemy health as damage. (Avaliable floor 1)
+    * power: Mal'Kholm grants allies 5% of his defense + 5% of his missing health as a shield to all allies. This shielf can stack (shields are essentially health with 0 defense). (Avaliable floor 2)
+    * unity: Mal'Kholm recycles the retribution cycle to start on him. Each successful pass between allies grant all allies 5% max health shield. If retribution is successful, reduce enemy damage by 10%. (Avaliable floor 3) 
   * Retribution:
 
     * Player gains an additional turn (able to reselect another character after making a move on Mal'Kholm).
@@ -111,13 +111,13 @@ Every character will have a basic attack, block (damage reduction by like 50% ma
   * basic attack: hanuboy smacks his chain ball onto an enemy. This has a 10% of skipping a turn from the boss. 
   * Specific moves: 
 
-    * sprout: hanuboy summons a flower. Every round, the flower restores 2% max health to all allies. This flower expires after 5 turns, or until destroyed (takes one hit to be destroyed). This flower is stackable up to 2 times.
-    * blossom: hanuboy summons a tree. On spawn, this tree deals 5% max health damage to all enemies. For the next 3 rounds, enemies take 2.5% max health damage. Enemies cannot destroy this tree. In addition, any debuffs to allies to halvened. 
-    * harvest: hanuuboy destroys all spawns. For each destroyed spawn, Hanuboy gains 3% damage. This effect lasts for 3 turns.
-    * territory: hanuboy summons a mushroom. Every round, the mushroom restores a flat \_\_\_ to all party members mana. The mushroom lasts for 3 rounds, and is stackable up to 2 times. Destroyed by one hit. 
-    * squeak: Hanuboy raises defense of one ally by 15% for 3 rounds. 
-    * super loud squeak: Hanuboy restores health 5-10% max health to all party members (randomized)
-    * shelter: select an ally; If that ally takes damage from an enemy in the next turn, Hanuboy splits that damage with them and himself.
+    * sprout: hanuboy summons a flower. Every round, the flower restores 2% max health to all allies. This flower expires after 5 turns, or until destroyed (takes one hit to be destroyed). This flower is stackable up to 2 times. (avaliable floor 2)
+    * blossom: hanuboy summons a tree. On spawn, this tree deals 5% max health damage to all enemies. For the next 3 rounds, enemies take 2.5% max health damage. Enemies cannot destroy this tree. In addition, any debuffs to allies to halvened. (avaliable floor 2)
+    * harvest: hanuuboy destroys all spawns. For each destroyed spawn, Hanuboy gains 3% damage. This effect lasts for 3 turns. (avaliable floor 2)
+    * territory: hanuboy summons a mushroom. Every round, the mushroom restores a flat ___ to all party members mana. The mushroom lasts for 3 rounds, and is stackable up to 2 times. Destroyed by one hit. (avaliable floor 2)
+    * squeak: Hanuboy raises defense of one ally by 15% for 3 rounds. (Avaliable floor 2)
+    * super loud squeak: Hanuboy restores health 5-10% max health to all party members (randomized) (Avaliable floor 2)
+    * shelter: select an ally; If that ally takes damage from an enemy in the next turn, Hanuboy splits that damage with them and himself. (avaliable floor 3)
   * Retribution: everyone gets dropped a flower bomb immediately. 
 * Kalia
 
@@ -133,4 +133,73 @@ Every character will have a basic attack, block (damage reduction by like 50% ma
     * Concentration: Kalia's next attack reduces targetted enemy defense by 12%. 
     * slayer: Kalia stabs an enemy. every time it's the enemies turn to attack, they take 1.2% missing health damage. This debuff cannot go away (unless enemy has a cleansing ability). 
   * Retribution: Kalia cleanses all debuffs inflicted on ally's, excluding herself.
+
+# boss battles
+I want the bosses to have 80% chance of picking the most optimal move and 20% "blundering" (picking a viable move at random). This is so that it's not
+completely frustrating playing against the boss. For the final boss fight, I want Saturn Ravana (What the S. stands for) to only have a 10% chance of a blunder. Boss summons (if applicable) pick moves at random. These summons are given one turn every round.
+
+Sort of the themes I want to go with these boss's ->
+Floor 1 boss: Goat - Inflicting bedeviling telekinesis on those who challenge the authority authority. 
+Floor 2 boss: Serpent - Torture and agonize the defiant with overbearing miasma.
+Floor 3 boss: Dragon - Scorching the weak, and withering the rebellious
+Floor 4 boss: Lion - The world is it's den, it's vehicle for dominance, and nothing will touch it. 
+
+
+Goat:
+  - Passive: At the start of every turn, apply a stack of 'doubt' to all allies. Each stack of doubt gives an ally a 2% chance of failing a move. If an ally fails a move, all stacks of doubt are reset to zero. 
+  - Specific moves: 
+    - Imprison: Goat imposes a magical cage on a target that locks a random move for 1 turn. 
+    - Tether: Goat shackles an ally with a magical chain. For three turns, half of all healing and buffs are split between Goat and the target. At the end of the three turns, the tether is broken and deals 15% current health damage. 
+    - Grasp: Goat absorbs 10% of a target's mana. Goat then gains that amount of mana + 5% of the Goat's max HP as a shield. This move can only be used once per turn by Goat
+    - Evoke: Goat summons a basic guard
+      - Basic Guard: Is only 25% of the Goats current hp. A max of 2 can be spawned at a time. 
+        - Move:
+          - Slash: deal's 5% current health damage to a target
+          - Sacrifice: Guard kills themselves, and heals Goat for 15%/ of its current HP
+    - Channel: The next damaging spell by the Goat is amplified by 15%. 
+    - Nightmarish whispers: Reduce an ally's defenses by 15% for 5 turns. Can stack 2 times.
+    - Pummel: Goat bashes it's hooves into an ally, dealing 10% max HP. 
+
+Serpent: 
+  - Passive: Every turn, allies lose 1% missing health damage. Allies lose 0.5% attack per 10% missing health. When below 50% hp, Serpent sheds its skin. Allies lose 1.5% missing health damage every turn, and Serpent gains 2% defense per 10% missing max hp. 
+  - Specific moves:
+    - Pounce: Deals 10% missing health damage to one target. 
+    - Drain: Deal 5% current hp to one target. Heal back 10% max health + 5% missing health. Subsequent uses reduce overall healing by 5% for the rest of the battle capped at 50%. 
+    - Decay: Serpent inflicts a poison lasting 3 turns onto all allies. Allies lose 2.5% max hp each turn. Poison is stackable up to two times. 
+    - Conjure: Serpent summons a smaller snake. A max of 3 can be spawned at a time. 
+      - Snake: Is only 25% hp of the Serpents current hp.
+        - Move:
+          - Bite: Deal 2.5% current health damage to one target
+    - Beckon: Serpent sends fourth all avaliable snakes conjured towards allies at random. Each serpent then explodes, dealing 10% current hp. 
+    - Rasp: Inflicts fear into one ally. Reduce target attack by 15% for two turns. Not stackable. 
+    - Miasma: Deal ___ damage to all allies over 3 turns. Damage is increased by (# of snakes fielded on initial cast + # of stacks of decay + 1)% + 2%. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
