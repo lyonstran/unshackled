@@ -17,7 +17,7 @@ void AHanuboyCharacter::PerformBattleMove(ATurnBattleManager* Manager, FName Mov
         }
         if (MoveId == FName("Hanuboy_Attack"))
         {
-                CastChainBall(Manager, Move);
+                CastChainBall(Manager, Move, TargetIndex);
         }
         else if (MoveId == FName("Hanuboy_Sprout"))
         {
@@ -82,9 +82,9 @@ FString AHanuboyCharacter::GetBattleCardNote() const
         }
         return Note;
 }
-void AHanuboyCharacter::CastChainBall(ATurnBattleManager* Manager, const FBattleMoveRow* Move)
+void AHanuboyCharacter::CastChainBall(ATurnBattleManager* Manager, const FBattleMoveRow* Move, int32 TargetIndex)
 {
-        HitBattleBoss(Manager, Move->Power, false);
+        HitBattleTarget(Manager, TargetIndex, Move->Power, false);
         ABossCharacter* Boss = Manager->GetBoss();
         if (Boss == nullptr)
         {
@@ -169,14 +169,11 @@ int32 AHanuboyCharacter::CountAllSpawns() const
 void AHanuboyCharacter::CastBlossom(ATurnBattleManager* Manager, const FBattleMoveRow* Move)
 {
         float DamageDealt = 0.0f;
-        ABossCharacter* Boss = Manager->GetBoss();
-        if (Boss != nullptr)
+        TArray<AUnshackledCharacterBase*> Targets = Manager->GetLivingEnemies();
+        for (int32 i = 0; i < Targets.Num(); i++)
         {
-                if (!Boss->Health->IsDead())
-                {
-                        float Damage = Boss->Health->MaxHealth * Move->Amount1;
-                        DamageDealt = Boss->ApplyHit(Damage, true, this);
-                }
+                float Damage = Targets[i]->Health->MaxHealth * Move->Amount1;
+                DamageDealt = DamageDealt + Targets[i]->ApplyHit(Damage, true, this);
         }
         TreeRoundsLeft = Move->Turns;
         TreeTickFraction = Move->Amount2;
@@ -189,15 +186,16 @@ void AHanuboyCharacter::TickTree(ATurnBattleManager* Manager)
         {
                 return;
         }
-        ABossCharacter* Boss = Manager->GetBoss();
-        if (Boss != nullptr)
+        TArray<AUnshackledCharacterBase*> Targets = Manager->GetLivingEnemies();
+        float DamageDealt = 0.0f;
+        for (int32 i = 0; i < Targets.Num(); i++)
         {
-                if (!Boss->Health->IsDead())
-                {
-                        float Damage = Boss->Health->MaxHealth * TreeTickFraction;
-                        float DamageDealt = Boss->ApplyHit(Damage, true, this);
-                        ShowBattleMessage(FString::Printf(TEXT("The tree strikes the boss for %d"), FMath::RoundToInt(DamageDealt)), FColor::Green);
-                }
+                float Damage = Targets[i]->Health->MaxHealth * TreeTickFraction;
+                DamageDealt = DamageDealt + Targets[i]->ApplyHit(Damage, true, this);
+        }
+        if (Targets.Num() > 0)
+        {
+                ShowBattleMessage(FString::Printf(TEXT("The tree strikes the enemies for %d"), FMath::RoundToInt(DamageDealt)), FColor::Green);
         }
         TreeRoundsLeft = TreeRoundsLeft - 1;
         if (TreeRoundsLeft <= 0)
@@ -451,20 +449,16 @@ void AHanuboyCharacter::DetonateBombs(ATurnBattleManager* Manager)
 }
 void AHanuboyCharacter::DetonateBomb(ATurnBattleManager* Manager, FHanuboyBomb Bomb)
 {
-        if (Bomb.bOnBoss)
+        if (Bomb.bOnEnemy)
         {
-                ABossCharacter* Boss = Manager->GetBoss();
-                if (Boss == nullptr)
+                if (!Manager->IsEnemyAlive(Bomb.EnemyIndex))
                 {
                         return;
                 }
-                if (Boss->Health->IsDead())
-                {
-                        return;
-                }
-                float Damage = Boss->Health->CurrentHealth * BombBossDamageFraction;
-                float DamageDealt = Boss->ApplyHit(Damage, true, this);
-                ShowBattleMessage(FString::Printf(TEXT("The flower bomb bursts on the boss for %d"), FMath::RoundToInt(DamageDealt)), FColor::Green);
+                AUnshackledCharacterBase* Enemy = Manager->GetEnemy(Bomb.EnemyIndex);
+                float Damage = Enemy->Health->CurrentHealth * BombBossDamageFraction;
+                float DamageDealt = Enemy->ApplyHit(Damage, true, this);
+                ShowBattleMessage(FString::Printf(TEXT("The flower bomb bursts on %s for %d"), *Manager->GetEnemyName(Bomb.EnemyIndex), FMath::RoundToInt(DamageDealt)), FColor::Green);
                 return;
         }
         APartyMemberCharacter* Ally = Manager->GetPartyMember(Bomb.AllyIndex);
@@ -487,17 +481,14 @@ void AHanuboyCharacter::DropBomb(ATurnBattleManager* Manager)
         float Roll = FMath::FRand();
         if (Roll < BombBossChance)
         {
-                ABossCharacter* Boss = Manager->GetBoss();
-                if (Boss == nullptr)
+                int32 EnemyIndex = Manager->PickRandomLivingEnemy();
+                if (EnemyIndex < 0)
                 {
                         return;
                 }
-                if (Boss->Health->IsDead())
-                {
-                        return;
-                }
-                NewBomb.bOnBoss = true;
-                TargetName = Boss->DisplayName;
+                NewBomb.bOnEnemy = true;
+                NewBomb.EnemyIndex = EnemyIndex;
+                TargetName = Manager->GetEnemyName(EnemyIndex);
         }
         else
         {
@@ -528,14 +519,14 @@ void AHanuboyCharacter::PerformBattleRetribution(ATurnBattleManager* Manager)
                         }
                 }
         }
-        ABossCharacter* Boss = Manager->GetBoss();
-        if (Boss != nullptr)
+        for (int32 i = 0; i < Manager->GetEnemyCount(); i++)
         {
-                if (!Boss->Health->IsDead())
+                if (Manager->IsEnemyAlive(i))
                 {
-                        FHanuboyBomb BossBomb;
-                        BossBomb.bOnBoss = true;
-                        Bombs.Add(BossBomb);
+                        FHanuboyBomb EnemyBomb;
+                        EnemyBomb.bOnEnemy = true;
+                        EnemyBomb.EnemyIndex = i;
+                        Bombs.Add(EnemyBomb);
                 }
         }
         ShowBattleMessage(TEXT("Hanuboy's retribution: flower bombs drop on everyone"), FColor::Green);

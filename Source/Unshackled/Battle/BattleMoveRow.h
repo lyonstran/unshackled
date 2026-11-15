@@ -11,7 +11,8 @@ enum class EBattleTargetKind : uint8
 	Caster,
 	AllAllies,
 	AllEnemies,
-	Everyone
+	Everyone,
+	TwoEnemies
 };
 USTRUCT(BlueprintType)
 struct FBattleMoveRow : public FTableRowBase

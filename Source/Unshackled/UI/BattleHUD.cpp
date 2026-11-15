@@ -15,6 +15,7 @@ void ABattleHUD::DrawExtraHUD()
 		return;
 	}
 	DrawBossPanel(Manager);
+	DrawSummonCards(Manager);
 	DrawPhaseLabel(Manager);
 	if (bShowIncomingAttacks)
 	{
@@ -57,7 +58,7 @@ void ABattleHUD::DrawBossPanel(ATurnBattleManager* Manager)
 	{
 		HealthFraction = Boss->Health->CurrentHealth / MaxHealth;
 	}
-	FLinearColor BorderColor = FLinearColor(0.0f, 0.0f, 0.0f, 0.9f);
+	FLinearColor BorderColor = GetEnemyBorderColor(Manager, 0, FLinearColor(0.0f, 0.0f, 0.0f, 0.9f));
 	DrawRect(BorderColor, BarLeft - 3.0f, BarTop - 3.0f, BossBarWidth + 6.0f, BossBarHeight + 6.0f);
 	FLinearColor BackColor = FLinearColor(0.15f, 0.05f, 0.05f, 1.0f);
 	DrawRect(BackColor, BarLeft, BarTop, BossBarWidth, BossBarHeight);
@@ -74,6 +75,83 @@ void ABattleHUD::DrawBossPanel(ATurnBattleManager* Manager)
 		StatText = StatText + FString::Printf(TEXT("   Marks %d"), Marks);
 	}
 	DrawCenteredText(StatText, FLinearColor(0.75f, 0.75f, 0.75f, 1.0f), CenterX, BarTop + BossBarHeight + 22.0f, 0.8f);
+}
+FLinearColor ABattleHUD::GetEnemyBorderColor(ATurnBattleManager* Manager, int32 EnemyIndex, FLinearColor NormalColor)
+{
+	if (Manager->GetState() != EBattleState::PlayerPhase)
+	{
+		return NormalColor;
+	}
+	if (Manager->GetMenuStage() != EBattleMenuStage::PickEnemy)
+	{
+		return NormalColor;
+	}
+	if (EnemyIndex == Manager->GetMenuEnemyIndex())
+	{
+		return FLinearColor(0.3f, 0.9f, 1.0f, 1.0f);
+	}
+	if (EnemyIndex == Manager->GetFirstEnemyPick())
+	{
+		return FLinearColor(1.0f, 0.85f, 0.2f, 1.0f);
+	}
+	return NormalColor;
+}
+void ABattleHUD::DrawSummonCards(ATurnBattleManager* Manager)
+{
+	int32 LivingCount = Manager->CountLivingSummons();
+	if (LivingCount == 0)
+	{
+		return;
+	}
+	float TotalWidth = (LivingCount * SummonCardWidth) + ((LivingCount - 1) * SummonCardGap);
+	float Left = (Canvas->SizeX - TotalWidth) / 2.0f;
+	float Top = BossTopMargin + 22.0f + BossBarHeight + SummonRowOffset;
+	for (int32 i = 0; i < Manager->GetEnemyCount(); i++)
+	{
+		AUnshackledCharacterBase* Enemy = Manager->GetEnemy(i);
+		if (Enemy != nullptr)
+		{
+			if (Enemy != Manager->GetBoss())
+			{
+				if (Manager->IsEnemyAlive(i))
+				{
+					DrawSummonCard(Manager, i, Left, Top);
+					Left = Left + SummonCardWidth + SummonCardGap;
+				}
+			}
+		}
+	}
+}
+void ABattleHUD::DrawSummonCard(ATurnBattleManager* Manager, int32 EnemyIndex, float Left, float Top)
+{
+	AUnshackledCharacterBase* Enemy = Manager->GetEnemy(EnemyIndex);
+	if (Enemy == nullptr)
+	{
+		return;
+	}
+	FLinearColor BorderColor = GetEnemyBorderColor(Manager, EnemyIndex, FLinearColor(0.2f, 0.2f, 0.2f, 0.9f));
+	DrawRect(BorderColor, Left - 3.0f, Top - 3.0f, SummonCardWidth + 6.0f, SummonCardHeight + 6.0f);
+	FLinearColor BackColor = FLinearColor(0.12f, 0.05f, 0.05f, 0.95f);
+	DrawRect(BackColor, Left, Top, SummonCardWidth, SummonCardHeight);
+	DrawText(Manager->GetEnemyName(EnemyIndex), FLinearColor::White, Left + 6.0f, Top + 3.0f, nullptr, 0.85f);
+	float MaxHealth = Enemy->Health->MaxHealth;
+	float HealthFraction = 0.0f;
+	if (MaxHealth > 0.0f)
+	{
+		HealthFraction = Enemy->Health->CurrentHealth / MaxHealth;
+	}
+	float BarWidthInCard = SummonCardWidth - 12.0f;
+	FLinearColor BarBack = FLinearColor(0.05f, 0.05f, 0.05f, 0.9f);
+	FLinearColor BarFront = FLinearColor(0.9f, 0.15f, 0.15f, 1.0f);
+	DrawRect(BarBack, Left + 6.0f, Top + 20.0f, BarWidthInCard, 6.0f);
+	DrawRect(BarFront, Left + 6.0f, Top + 20.0f, BarWidthInCard * HealthFraction, 6.0f);
+	FString HealthText = FString::Printf(TEXT("%d / %d"), FMath::CeilToInt(Enemy->Health->CurrentHealth), FMath::CeilToInt(MaxHealth));
+	int32 Marks = Enemy->Stats->GetStacks(FName("SiriusMarks"), ECharacterStat::Damage, EModifierKind::Percent);
+	if (Marks > 0)
+	{
+		HealthText = HealthText + FString::Printf(TEXT("   Marks %d"), Marks);
+	}
+	DrawText(HealthText, FLinearColor(0.85f, 0.85f, 0.85f, 1.0f), Left + 6.0f, Top + 27.0f, nullptr, 0.65f);
 }
 void ABattleHUD::DrawPhaseLabel(ATurnBattleManager* Manager)
 {
@@ -286,6 +364,14 @@ void ABattleHUD::DrawHintText(ATurnBattleManager* Manager)
 	if (Manager->GetMenuStage() == EBattleMenuStage::PickTarget)
 	{
 		Hint = TEXT("Left / Right: choose ally     Space: confirm     Esc: back");
+	}
+	if (Manager->GetMenuStage() == EBattleMenuStage::PickEnemy)
+	{
+		Hint = TEXT("Left / Right: choose enemy     Space: confirm     Esc: back");
+		if (Manager->GetFirstEnemyPick() >= 0)
+		{
+			Hint = TEXT("Left / Right: choose the second target     Space: confirm     Esc: back");
+		}
 	}
 	if (Manager->GetMenuStage() != EBattleMenuStage::PickMember)
 	{

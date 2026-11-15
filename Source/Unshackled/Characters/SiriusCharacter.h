@@ -86,21 +86,19 @@ public:
         float BattleRetributionHealFraction = 0.25f;
 protected:
         virtual void PerformBasicAttack(FVector Direction) override;
-        float GetBattleBossHealth(ATurnBattleManager* Manager) const;
-        void TryBattleRetributionHeal(ATurnBattleManager* Manager, float BossHealthBefore);
+        void TryBattleRetributionHeal(ATurnBattleManager* Manager, float EnemyHealthBefore);
         virtual void PerformSpecial(FVector AimDirection) override;
         virtual void PerformUltimate(FVector AimDirection) override;
         virtual void GroundedTick(float DeltaTime) override;
         virtual float FilterIncomingDamage(float RawDamage, bool bTrueDamage, AUnshackledCharacterBase* Attacker) override;
-        bool MoveTouchesEnemy(const FBattleMoveRow* Move) const;
-        void AddMarkToBoss(ATurnBattleManager* Manager);
-        void TryBattleExecute(ATurnBattleManager* Manager);
+        void AddMarkTo(ATurnBattleManager* Manager, AUnshackledCharacterBase* Enemy);
+        void TryBattleExecute(ATurnBattleManager* Manager, AUnshackledCharacterBase* Enemy);
         void CastBattleVeil(ATurnBattleManager* Manager, const FBattleMoveRow* Move);
         void CastWindsUnbound(const FBattleMoveRow* Move);
         void CastGaleUnleashed(ATurnBattleManager* Manager, const FBattleMoveRow* Move);
         void CastWindWall(const FBattleMoveRow* Move);
         void CastWindsOfWar(ATurnBattleManager* Manager, const FBattleMoveRow* Move);
-        void CastSubmission(ATurnBattleManager* Manager, const FBattleMoveRow* Move);
+        void CastSubmission(ATurnBattleManager* Manager, const FBattleMoveRow* Move, int32 TargetIndex);
         void TickBattleTornado(ATurnBattleManager* Manager);
         void FireCrescent(FVector Direction, float DamageScale, float SizeScale);
         void SpawnTornado(FVector Direction);

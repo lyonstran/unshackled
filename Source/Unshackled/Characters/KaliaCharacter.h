@@ -23,7 +23,7 @@ public:
         virtual void OnBattleRoundEnd(ATurnBattleManager* Manager) override;
         virtual void OnBattlePlayerPhaseStart(ATurnBattleManager* Manager) override;
         virtual void OnBattlePlayerPhaseEnd(ATurnBattleManager* Manager) override;
-        virtual void OnBattleBossTurn(ATurnBattleManager* Manager) override;
+        virtual void OnBattleEnemyTurn(ATurnBattleManager* Manager, int32 EnemyIndex) override;
         virtual void OnBattleActionChosen(ATurnBattleManager* Manager, FName EntryName) override;
         virtual bool CanUseBattleMove(FName MoveId) const override;
         virtual FString GetBattleCardNote() const override;
@@ -113,14 +113,14 @@ public:
 protected:
         virtual float FilterIncomingDamage(float RawDamage, bool bTrueDamage, AUnshackledCharacterBase* Attacker) override;
         void CastChaos(ATurnBattleManager* Manager, const FBattleMoveRow* Move);
-        void CastSever(const FBattleMoveRow* Move);
+        void CastSever(const FBattleMoveRow* Move, int32 TargetIndex);
         void LandSever(ATurnBattleManager* Manager);
         void CastBattlesong(ATurnBattleManager* Manager, const FBattleMoveRow* Move, int32 TargetIndex);
         void CastRiposte(const FBattleMoveRow* Move);
-        void CastBarrage(ATurnBattleManager* Manager, const FBattleMoveRow* Move);
+        void CastBarrage(ATurnBattleManager* Manager, const FBattleMoveRow* Move, int32 TargetIndex);
         void CastConcentration(const FBattleMoveRow* Move);
-        void ApplyConcentration(ATurnBattleManager* Manager);
-        void CastSlayer(const FBattleMoveRow* Move);
+        void ApplyConcentration(ATurnBattleManager* Manager, const FBattleMoveRow* Move, int32 TargetIndex);
+        void CastSlayer(const FBattleMoveRow* Move, int32 TargetIndex);
         void PickProxySuggestion(ATurnBattleManager* Manager);
         FName PickRandomOwnMove(ATurnBattleManager* Manager) const;
         void GainProxyStack(ATurnBattleManager* Manager);
@@ -136,6 +136,7 @@ protected:
         float SeverMissingHealthFraction = 0.0f;
         float SeverDebuff = 0.0f;
         int32 SeverRounds = 0;
+        int32 SeverTargetIndex = -1;
         bool bRiposteReady = false;
         float RiposteReduction = 0.0f;
         float RiposteReturn = 0.0f;
@@ -144,6 +145,7 @@ protected:
         int32 ConcentrationRounds = 0;
         bool bSlayerApplied = false;
         float SlayerFraction = 0.0f;
+        int32 SlayerTargetIndex = -1;
         virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
         virtual void PerformBasicAttack(FVector Direction) override;
         virtual void PerformUltimate(FVector AimDirection) override;

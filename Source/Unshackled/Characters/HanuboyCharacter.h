@@ -18,7 +18,8 @@ struct FHanuboySpawn
 };
 struct FHanuboyBomb
 {
-        bool bOnBoss = false;
+        bool bOnEnemy = false;
+        int32 EnemyIndex = -1;
         int32 AllyIndex = -1;
 };
 enum class EHanuboyGroundedState : uint8
@@ -101,7 +102,7 @@ public:
         float SpawnManaFraction = 0.05f;
 protected:
         virtual float FilterIncomingDamage(float RawDamage, bool bTrueDamage, AUnshackledCharacterBase* Attacker) override;
-        void CastChainBall(ATurnBattleManager* Manager, const FBattleMoveRow* Move);
+        void CastChainBall(ATurnBattleManager* Manager, const FBattleMoveRow* Move, int32 TargetIndex);
         void CastSprout(const FBattleMoveRow* Move);
         void CastTerritory(const FBattleMoveRow* Move);
         void CastBlossom(ATurnBattleManager* Manager, const FBattleMoveRow* Move);

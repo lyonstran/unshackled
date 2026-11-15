@@ -7,7 +7,7 @@ Sirius_GaleUnleashed,Sirius,Gale Unleashed,A tornado hits every enemy then linge
 Sirius_WindWall,Sirius,Wind Wall,Stop the next hit on Sirius and turn part of it into mana,Special,Caster,25,0,0.20,0.10,0,0,0,2
 Sirius_WindsOfWar,Sirius,Winds of War,Raise the attack of everyone including enemies,Special,Everyone,15,0,0.10,0,0,0,3,3
 Sirius_Submission,Sirius,Submission,Lower one enemy's attack and defense,Special,Enemy,20,0,0.15,0,0,0,3,1
-Malkholm_Attack,Malkholm,Double Strike,Strike twice; both on one target hardens Mal'Kholm,Attack,Enemy,0,0.6,0.015,0,0,0,0,1
+Malkholm_Attack,Malkholm,Double Strike,Strike twice; both on one target hardens Mal'Kholm,Attack,TwoEnemies,0,0.6,0.015,0,0,0,0,1
 Malkholm_Might,Malkholm,Might,Slam both chains down onto one enemy,Special,Enemy,25,2.2,0,0,0,0,0,1
 Malkholm_Revolution,Malkholm,Revolution,Next round repeats this round's help for allies at reduced strength,Ultimate,AllAllies,40,0,0.25,0,0,0,1,1
 Malkholm_Sacrifice,Malkholm,Sacrifice,Give up some health to act again next round,Special,Caster,0,0,0.05,0,0,0,0,1

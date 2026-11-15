@@ -140,11 +140,11 @@ protected:
         void StartSlamBoost();
         void EndSlamBoost();
         void UpdateBattleRage();
-        void CastDoubleStrike(ATurnBattleManager* Manager, const FBattleMoveRow* Move);
+        void CastDoubleStrike(ATurnBattleManager* Manager, const FBattleMoveRow* Move, int32 TargetIndex);
         void CastRevolution(const FBattleMoveRow* Move);
         void CastSacrifice(ATurnBattleManager* Manager, const FBattleMoveRow* Move);
         void CastFreedom(ATurnBattleManager* Manager, const FBattleMoveRow* Move, int32 TargetIndex);
-        void CastConfrontation(ATurnBattleManager* Manager, const FBattleMoveRow* Move);
+        void CastConfrontation(ATurnBattleManager* Manager, const FBattleMoveRow* Move, int32 TargetIndex);
         void CastPower(ATurnBattleManager* Manager, const FBattleMoveRow* Move);
         void CastUnity(ATurnBattleManager* Manager, const FBattleMoveRow* Move);
         bool TryBattleLastStand();
@@ -173,12 +173,12 @@ protected:
         bool bRevolutionThisRound = false;
         bool bRevolutionEchoReady = false;
         float RevolutionFraction = 0.0f;
-        float SnapshotBossHealth = 0.0f;
+        TArray<float> SnapshotEnemyHealth;
         TArray<float> SnapshotHealth;
         TArray<float> SnapshotShield;
         TArray<float> SnapshotDamage;
         TArray<float> SnapshotDefense;
-        float EchoBossDamage = 0.0f;
+        TArray<float> EchoEnemyDamage;
         TArray<float> EchoHealing;
         TArray<float> EchoShield;
         TArray<float> EchoDamageBuff;

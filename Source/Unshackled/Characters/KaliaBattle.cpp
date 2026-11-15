@@ -23,7 +23,7 @@ void AKaliaCharacter::PerformBattleMove(ATurnBattleManager* Manager, FName MoveI
         }
         else if (MoveId == FName("Kalia_Sever"))
         {
-                CastSever(Move);
+                CastSever(Move, TargetIndex);
         }
         else if (MoveId == FName("Kalia_Battlesong"))
         {
@@ -35,7 +35,7 @@ void AKaliaCharacter::PerformBattleMove(ATurnBattleManager* Manager, FName MoveI
         }
         else if (MoveId == FName("Kalia_Barrage"))
         {
-                CastBarrage(Manager, Move);
+                CastBarrage(Manager, Move, TargetIndex);
         }
         else if (MoveId == FName("Kalia_Concentration"))
         {
@@ -43,7 +43,7 @@ void AKaliaCharacter::PerformBattleMove(ATurnBattleManager* Manager, FName MoveI
         }
         else if (MoveId == FName("Kalia_Slayer"))
         {
-                CastSlayer(Move);
+                CastSlayer(Move, TargetIndex);
         }
         else
         {
@@ -53,7 +53,7 @@ void AKaliaCharacter::PerformBattleMove(ATurnBattleManager* Manager, FName MoveI
         {
                 if (MoveTargetsEnemy(Move))
                 {
-                        ApplyConcentration(Manager);
+                        ApplyConcentration(Manager, Move, TargetIndex);
                 }
         }
 }
@@ -63,7 +63,14 @@ bool AKaliaCharacter::CanUseBattleMove(FName MoveId) const
         {
                 if (bSlayerApplied)
                 {
-                        return false;
+                        ATurnBattleManager* Manager = FindBattleManager();
+                        if (Manager != nullptr)
+                        {
+                                if (Manager->IsEnemyAlive(SlayerTargetIndex))
+                                {
+                                        return false;
+                                }
+                        }
                 }
         }
         if (MoveId == FName("Kalia_Sever"))
@@ -113,8 +120,9 @@ void AKaliaCharacter::CastChaos(ATurnBattleManager* Manager, const FBattleMoveRo
         AddBattleModifier(Ally, FName("KaliaChaos"), ChosenStat, EModifierKind::Percent, Amount, Rounds);
         ShowBattleMessage(FString::Printf(TEXT("Chaos: %s gets +%.1f%% %s for %d rounds"), *Ally->DisplayName, Amount * 100.0f, *StatName, Rounds), FColor::Magenta);
 }
-void AKaliaCharacter::CastSever(const FBattleMoveRow* Move)
+void AKaliaCharacter::CastSever(const FBattleMoveRow* Move, int32 TargetIndex)
 {
+        SeverTargetIndex = TargetIndex;
         SeverCasts = SeverCasts + 1;
         SeverFailChance = Move->Amount4 * SeverCasts;
         if (SeverFailChance > SeverMaxFailChance)
@@ -140,12 +148,8 @@ void AKaliaCharacter::LandSever(ATurnBattleManager* Manager)
                 ShowBattleMessage(TEXT("The sickle falls with no one to catch it"), FColor::Orange);
                 return;
         }
-        ABossCharacter* Boss = Manager->GetBoss();
-        if (Boss == nullptr)
-        {
-                return;
-        }
-        if (Boss->Health->IsDead())
+        AUnshackledCharacterBase* Target = Manager->GetTargetEnemy(SeverTargetIndex);
+        if (Target == nullptr)
         {
                 return;
         }
@@ -156,11 +160,11 @@ void AKaliaCharacter::LandSever(ATurnBattleManager* Manager)
                 return;
         }
         FName SourceId = FName("KaliaSever");
-        AddBattleModifier(Boss, SourceId, ECharacterStat::Damage, EModifierKind::Percent, 0.0f - SeverDebuff, SeverRounds);
-        AddBattleModifier(Boss, SourceId, ECharacterStat::Defense, EModifierKind::Percent, 0.0f - SeverDebuff, SeverRounds);
-        float MissingHealth = Boss->Health->MaxHealth - Boss->Health->CurrentHealth;
-        float Damage = (Boss->Health->MaxHealth * SeverMaxHealthFraction) + (MissingHealth * SeverMissingHealthFraction);
-        float DamageDealt = Boss->ApplyHit(Damage, true, this);
+        AddBattleModifier(Target, SourceId, ECharacterStat::Damage, EModifierKind::Percent, 0.0f - SeverDebuff, SeverRounds);
+        AddBattleModifier(Target, SourceId, ECharacterStat::Defense, EModifierKind::Percent, 0.0f - SeverDebuff, SeverRounds);
+        float MissingHealth = Target->Health->MaxHealth - Target->Health->CurrentHealth;
+        float Damage = (Target->Health->MaxHealth * SeverMaxHealthFraction) + (MissingHealth * SeverMissingHealthFraction);
+        float DamageDealt = Target->ApplyHit(Damage, true, this);
         ShowBattleMessage(FString::Printf(TEXT("Kalia dashes to her sickle and severs for %d"), FMath::RoundToInt(DamageDealt)), FColor::Magenta);
 }
 void AKaliaCharacter::CastBattlesong(ATurnBattleManager* Manager, const FBattleMoveRow* Move, int32 TargetIndex)
@@ -211,13 +215,13 @@ float AKaliaCharacter::FilterIncomingDamage(float RawDamage, bool bTrueDamage, A
         ShowBattleMessage(FString::Printf(TEXT("Riposte! Kalia sends back %d"), FMath::RoundToInt(DamageReturned)), FColor::Magenta);
         return Result * (1.0f - RiposteReduction);
 }
-void AKaliaCharacter::CastBarrage(ATurnBattleManager* Manager, const FBattleMoveRow* Move)
+void AKaliaCharacter::CastBarrage(ATurnBattleManager* Manager, const FBattleMoveRow* Move, int32 TargetIndex)
 {
         int32 HitCount = FMath::RoundToInt(Move->Amount1);
         float TotalDamage = 0.0f;
         for (int32 i = 0; i < HitCount; i++)
         {
-                TotalDamage = TotalDamage + HitBattleBoss(Manager, Move->Power, false);
+                TotalDamage = TotalDamage + HitBattleTarget(Manager, TargetIndex, Move->Power, false);
         }
         ShowBattleMessage(FString::Printf(TEXT("Barrage: %d strikes for %d"), HitCount, FMath::RoundToInt(TotalDamage)), FColor::Magenta);
 }
@@ -228,50 +232,57 @@ void AKaliaCharacter::CastConcentration(const FBattleMoveRow* Move)
         ConcentrationRounds = Move->Turns;
         ShowBattleMessage(TEXT("Kalia concentrates on her next strike"), FColor::Magenta);
 }
-void AKaliaCharacter::ApplyConcentration(ATurnBattleManager* Manager)
+void AKaliaCharacter::ApplyConcentration(ATurnBattleManager* Manager, const FBattleMoveRow* Move, int32 TargetIndex)
 {
         bConcentrationReady = false;
-        ABossCharacter* Boss = Manager->GetBoss();
-        if (Boss == nullptr)
+        TArray<AUnshackledCharacterBase*> Targets = Manager->GetMoveEnemyTargets(Move, TargetIndex);
+        for (int32 i = 0; i < Targets.Num(); i++)
         {
-                return;
+                AddBattleModifier(Targets[i], FName("KaliaConcentration"), ECharacterStat::Defense, EModifierKind::Percent, 0.0f - ConcentrationAmount, ConcentrationRounds);
         }
-        if (Boss->Health->IsDead())
+        if (Targets.Num() > 0)
         {
-                return;
+                ShowBattleMessage(TEXT("Concentration: the target's defense drops"), FColor::Magenta);
         }
-        AddBattleModifier(Boss, FName("KaliaConcentration"), ECharacterStat::Defense, EModifierKind::Percent, 0.0f - ConcentrationAmount, ConcentrationRounds);
-        ShowBattleMessage(TEXT("Concentration: the boss's defense drops"), FColor::Magenta);
 }
-void AKaliaCharacter::CastSlayer(const FBattleMoveRow* Move)
+void AKaliaCharacter::CastSlayer(const FBattleMoveRow* Move, int32 TargetIndex)
 {
         bSlayerApplied = true;
         SlayerFraction = Move->Amount1;
-        ShowBattleMessage(TEXT("Slayer: the boss carries a wound that will not close"), FColor::Magenta);
+        SlayerTargetIndex = TargetIndex;
+        ATurnBattleManager* Manager = FindBattleManager();
+        if (Manager != nullptr)
+        {
+                if (!Manager->IsEnemyAlive(SlayerTargetIndex))
+                {
+                        SlayerTargetIndex = 0;
+                }
+        }
+        ShowBattleMessage(TEXT("Slayer: the target carries a wound that will not close"), FColor::Magenta);
 }
-void AKaliaCharacter::OnBattleBossTurn(ATurnBattleManager* Manager)
+void AKaliaCharacter::OnBattleEnemyTurn(ATurnBattleManager* Manager, int32 EnemyIndex)
 {
-        Super::OnBattleBossTurn(Manager);
+        Super::OnBattleEnemyTurn(Manager, EnemyIndex);
         if (!bSlayerApplied)
         {
                 return;
         }
-        ABossCharacter* Boss = Manager->GetBoss();
-        if (Boss == nullptr)
+        if (EnemyIndex != SlayerTargetIndex)
         {
                 return;
         }
-        if (Boss->Health->IsDead())
+        if (!Manager->IsEnemyAlive(EnemyIndex))
         {
                 return;
         }
-        float MissingHealth = Boss->Health->MaxHealth - Boss->Health->CurrentHealth;
+        AUnshackledCharacterBase* Target = Manager->GetEnemy(EnemyIndex);
+        float MissingHealth = Target->Health->MaxHealth - Target->Health->CurrentHealth;
         float Damage = MissingHealth * SlayerFraction;
         if (Damage <= 0.0f)
         {
                 return;
         }
-        float DamageDealt = Boss->ApplyHit(Damage, true, this);
+        float DamageDealt = Target->ApplyHit(Damage, true, this);
         ShowBattleMessage(FString::Printf(TEXT("The Slayer wound bleeds for %d"), FMath::RoundToInt(DamageDealt)), FColor::Magenta);
 }
 void AKaliaCharacter::OnBattlePlayerPhaseStart(ATurnBattleManager* Manager)

@@ -1,6 +1,7 @@
 #include "Battle/TurnBattleManager.h"
 #include "Characters/PartyMemberCharacter.h"
 #include "Characters/BossCharacter.h"
+#include "Characters/BattleSummonCharacter.h"
 #include "UI/UnshackledHUD.h"
 #include "Game/UnshackledGameInstance.h"
 #include "InputCoreTypes.h"
@@ -19,6 +20,7 @@ void ATurnBattleManager::BeginPlay()
 	SpawnBossIfMissing();
 	FindParty();
 	FindBoss();
+	SpawnDebugSummons();
 	BuildBossRows();
 	StartPlayerPhase();
 }
@@ -133,6 +135,23 @@ void ATurnBattleManager::FindBoss()
 			Boss = *It;
 		}
 	}
+	Enemies.Empty();
+	if (Boss != nullptr)
+	{
+		Enemies.Add(Boss);
+	}
+}
+void ATurnBattleManager::SpawnDebugSummons()
+{
+	if (Boss == nullptr)
+	{
+		return;
+	}
+	for (int32 i = 0; i < DebugStartingSummons.Num(); i++)
+	{
+		float SummonHealth = Boss->Health->CurrentHealth * DebugSummonHealthFraction;
+		SpawnSummon(DebugStartingSummons[i], SummonHealth);
+	}
 }
 void ATurnBattleManager::BuildBossRows()
 {
@@ -198,6 +217,7 @@ void ATurnBattleManager::ResetMenuToNextMember()
 {
 	MenuStage = EBattleMenuStage::PickMember;
 	MenuActionIndex = 0;
+	FirstEnemyPick = -1;
 	int32 NextIndex = FindNextActingMember();
 	if (NextIndex >= 0)
 	{
@@ -252,6 +272,14 @@ void ATurnBattleManager::MenuStep(int32 Horizontal, int32 Vertical)
 		}
 		return;
 	}
+	if (MenuStage == EBattleMenuStage::PickEnemy)
+	{
+		if (Horizontal != 0)
+		{
+			MoveEnemySelection(Horizontal);
+		}
+		return;
+	}
 	if (Vertical != 0)
 	{
 		int32 Count = GetMenuActionCount();
@@ -297,6 +325,7 @@ void ATurnBattleManager::MenuConfirm()
 	}
 	FName EntryName = GetMenuEntry(MenuActionIndex);
 	int32 TargetIndex = MenuMemberIndex;
+	SecondTargetIndex = -1;
 	if (MenuStage == EBattleMenuStage::PickAction)
 	{
 		if (!IsEntryUsable(MenuMemberIndex, EntryName))
@@ -308,6 +337,35 @@ void ATurnBattleManager::MenuConfirm()
 		{
 			StartTargetPick();
 			return;
+		}
+		if (NeedsEnemyTarget(EntryName))
+		{
+			if (CountLivingEnemies() > 1)
+			{
+				StartEnemyPick();
+				return;
+			}
+			TargetIndex = FindFirstLivingEnemy();
+			SecondTargetIndex = TargetIndex;
+		}
+	}
+	if (MenuStage == EBattleMenuStage::PickEnemy)
+	{
+		if (NeedsTwoEnemyTargets(EntryName))
+		{
+			if (FirstEnemyPick < 0)
+			{
+				FirstEnemyPick = MenuEnemyIndex;
+				ShowMessage(TEXT("Choose the second target"), FColor::Cyan);
+				return;
+			}
+			TargetIndex = FirstEnemyPick;
+			SecondTargetIndex = MenuEnemyIndex;
+		}
+		else
+		{
+			TargetIndex = MenuEnemyIndex;
+			SecondTargetIndex = MenuEnemyIndex;
 		}
 	}
 	if (MenuStage == EBattleMenuStage::PickTarget)
@@ -324,6 +382,17 @@ void ATurnBattleManager::MenuBack()
 {
 	if (State != EBattleState::PlayerPhase)
 	{
+		return;
+	}
+	if (MenuStage == EBattleMenuStage::PickEnemy)
+	{
+		if (FirstEnemyPick >= 0)
+		{
+			MenuEnemyIndex = FirstEnemyPick;
+			FirstEnemyPick = -1;
+			return;
+		}
+		MenuStage = EBattleMenuStage::PickAction;
 		return;
 	}
 	if (MenuStage == EBattleMenuStage::PickTarget)
@@ -537,6 +606,64 @@ EBattleAction ATurnBattleManager::GetEntryCategory(FName EntryName) const
 	}
 	return Move->Category;
 }
+bool ATurnBattleManager::NeedsEnemyTarget(FName EntryName) const
+{
+	const FBattleMoveRow* Move = GetMove(EntryName);
+	if (Move == nullptr)
+	{
+		return false;
+	}
+	if (Move->TargetKind == EBattleTargetKind::Enemy)
+	{
+		return true;
+	}
+	if (Move->TargetKind == EBattleTargetKind::TwoEnemies)
+	{
+		return true;
+	}
+	return false;
+}
+bool ATurnBattleManager::NeedsTwoEnemyTargets(FName EntryName) const
+{
+	const FBattleMoveRow* Move = GetMove(EntryName);
+	if (Move == nullptr)
+	{
+		return false;
+	}
+	return Move->TargetKind == EBattleTargetKind::TwoEnemies;
+}
+void ATurnBattleManager::StartEnemyPick()
+{
+	MenuStage = EBattleMenuStage::PickEnemy;
+	FirstEnemyPick = -1;
+	MenuEnemyIndex = FindFirstLivingEnemy();
+}
+void ATurnBattleManager::MoveEnemySelection(int32 Step)
+{
+	int32 Count = Enemies.Num();
+	if (Count == 0)
+	{
+		return;
+	}
+	int32 Candidate = MenuEnemyIndex;
+	for (int32 i = 0; i < Count; i++)
+	{
+		Candidate = Candidate + Step;
+		if (Candidate < 0)
+		{
+			Candidate = Count - 1;
+		}
+		if (Candidate >= Count)
+		{
+			Candidate = 0;
+		}
+		if (IsEnemyAlive(Candidate))
+		{
+			MenuEnemyIndex = Candidate;
+			return;
+		}
+	}
+}
 void ATurnBattleManager::StartTargetPick()
 {
 	MenuStage = EBattleMenuStage::PickTarget;
@@ -670,13 +797,13 @@ int32 ATurnBattleManager::GetNegatedBossTurnsLeft() const
 {
 	return NegatedBossTurnsLeft;
 }
-void ATurnBattleManager::NotifyBossTurn()
+void ATurnBattleManager::NotifyEnemyTurn(int32 EnemyIndex)
 {
 	for (int32 i = 0; i < Party.Num(); i++)
 	{
 		if (Party[i] != nullptr)
 		{
-			Party[i]->OnBattleBossTurn(this);
+			Party[i]->OnBattleEnemyTurn(this, EnemyIndex);
 		}
 	}
 }
@@ -723,7 +850,62 @@ void ATurnBattleManager::StartBossPhase()
 	}
 	BossTurnsLeft = Turns;
 	BossTurnTimer = BossTurnDelay;
-	ShowMessage(FString::Printf(TEXT("Boss phase: %d turns"), Turns), FColor::Orange);
+	BuildSummonTurnQueue();
+	if (SummonTurnQueue.Num() > 0)
+	{
+		ShowMessage(FString::Printf(TEXT("Boss phase: %d boss turns, %d summon turns"), Turns, SummonTurnQueue.Num()), FColor::Orange);
+	}
+	else
+	{
+		ShowMessage(FString::Printf(TEXT("Boss phase: %d turns"), Turns), FColor::Orange);
+	}
+}
+void ATurnBattleManager::BuildSummonTurnQueue()
+{
+	SummonTurnQueue.Empty();
+	for (int32 i = 0; i < Enemies.Num(); i++)
+	{
+		if (Enemies[i] != Boss)
+		{
+			if (IsEnemyAlive(i))
+			{
+				SummonTurnQueue.Add(i);
+			}
+		}
+	}
+}
+int32 ATurnBattleManager::TakeNextSummonTurn()
+{
+	while (SummonTurnQueue.Num() > 0)
+	{
+		int32 EnemyIndex = SummonTurnQueue[0];
+		SummonTurnQueue.RemoveAt(0);
+		if (IsEnemyAlive(EnemyIndex))
+		{
+			return EnemyIndex;
+		}
+	}
+	return -1;
+}
+void ATurnBattleManager::DoSummonTurn(int32 EnemyIndex)
+{
+	ABattleSummonCharacter* Summon = Cast<ABattleSummonCharacter>(GetEnemy(EnemyIndex));
+	if (Summon == nullptr)
+	{
+		return;
+	}
+	NotifyEnemyTurn(EnemyIndex);
+	CheckForEnd();
+	if (State != EBattleState::BossPhase)
+	{
+		return;
+	}
+	if (Summon->Health->IsDead())
+	{
+		return;
+	}
+	Summon->TakeBattleTurn(this);
+	CheckForEnd();
 }
 void ATurnBattleManager::Tick(float DeltaTime)
 {
@@ -832,21 +1014,28 @@ void ATurnBattleManager::TickBossPhase(float DeltaTime)
 	{
 		return;
 	}
-	if (BossTurnsLeft <= 0)
+	if (BossTurnsLeft > 0)
 	{
-		EndRound();
-		CheckForEnd();
-		if (State != EBattleState::BossPhase)
-		{
-			return;
-		}
-		Round = Round + 1;
-		StartPlayerPhase();
+		DoBossTurn();
+		BossTurnsLeft = BossTurnsLeft - 1;
+		BossTurnTimer = BossTurnDelay;
 		return;
 	}
-	DoBossTurn();
-	BossTurnsLeft = BossTurnsLeft - 1;
-	BossTurnTimer = BossTurnDelay;
+	int32 SummonIndex = TakeNextSummonTurn();
+	if (SummonIndex >= 0)
+	{
+		DoSummonTurn(SummonIndex);
+		BossTurnTimer = BossTurnDelay;
+		return;
+	}
+	EndRound();
+	CheckForEnd();
+	if (State != EBattleState::BossPhase)
+	{
+		return;
+	}
+	Round = Round + 1;
+	StartPlayerPhase();
 }
 void ATurnBattleManager::EndRound()
 {
@@ -864,9 +1053,12 @@ void ATurnBattleManager::EndRound()
 			Party[i]->Stats->CountDownTurns();
 		}
 	}
-	if (Boss != nullptr)
+	for (int32 i = 0; i < Enemies.Num(); i++)
 	{
-		Boss->Stats->CountDownTurns();
+		if (Enemies[i] != nullptr)
+		{
+			Enemies[i]->Stats->CountDownTurns();
+		}
 	}
 }
 void ATurnBattleManager::DoBossTurn()
@@ -877,7 +1069,7 @@ void ATurnBattleManager::DoBossTurn()
 		ShowMessage(FString::Printf(TEXT("The boss is frozen in time (%d left)"), NegatedBossTurnsLeft), FColor::Cyan);
 		return;
 	}
-	NotifyBossTurn();
+	NotifyEnemyTurn(0);
 	CheckForEnd();
 	if (State != EBattleState::BossPhase)
 	{
@@ -1089,6 +1281,7 @@ void ATurnBattleManager::CheckForEnd()
 		if (Boss->Health->IsDead())
 		{
 			State = EBattleState::Won;
+			HideSummons();
 			ShowBanner(TEXT("Victory!"), FLinearColor::Green);
 			return;
 		}
@@ -1388,7 +1581,8 @@ void ATurnBattleManager::CompleteRetribution(int32 MemberIndex)
 		return;
 	}
 	bUnityActive = false;
-	if (Boss == nullptr)
+	TArray<AUnshackledCharacterBase*> LivingEnemies = GetLivingEnemies();
+	if (LivingEnemies.Num() == 0)
 	{
 		return;
 	}
@@ -1400,7 +1594,10 @@ void ATurnBattleManager::CompleteRetribution(int32 MemberIndex)
 	UnityCut.Duration = 0.0f;
 	UnityCut.TurnsLeft = UnityRounds;
 	UnityCut.Rule = EStackRule::RefreshSameSource;
-	Boss->Stats->AddModifier(UnityCut);
+	for (int32 i = 0; i < LivingEnemies.Num(); i++)
+	{
+		LivingEnemies[i]->Stats->AddModifier(UnityCut);
+	}
 	ShowMessage(TEXT("Unity holds: the boss deals less damage"), FColor::Yellow);
 }
 void ATurnBattleManager::GiveUnityShields()
@@ -1498,4 +1695,272 @@ int32 ATurnBattleManager::GetPendingActionsLeft(int32 Index) const
 		return 0;
 	}
 	return Pending[Index].ActionsLeft;
+}
+int32 ATurnBattleManager::GetEnemyCount() const
+{
+	return Enemies.Num();
+}
+AUnshackledCharacterBase* ATurnBattleManager::GetEnemy(int32 Index) const
+{
+	if (Index < 0 || Index >= Enemies.Num())
+	{
+		return nullptr;
+	}
+	return Enemies[Index];
+}
+bool ATurnBattleManager::IsEnemyAlive(int32 Index) const
+{
+	AUnshackledCharacterBase* Enemy = GetEnemy(Index);
+	if (Enemy == nullptr)
+	{
+		return false;
+	}
+	if (Enemy->Health->IsDead())
+	{
+		return false;
+	}
+	return true;
+}
+FString ATurnBattleManager::GetEnemyName(int32 Index) const
+{
+	AUnshackledCharacterBase* Enemy = GetEnemy(Index);
+	if (Enemy == nullptr)
+	{
+		return FString();
+	}
+	ABossCharacter* BossEnemy = Cast<ABossCharacter>(Enemy);
+	if (BossEnemy != nullptr)
+	{
+		return BossEnemy->DisplayName;
+	}
+	ABattleSummonCharacter* SummonEnemy = Cast<ABattleSummonCharacter>(Enemy);
+	if (SummonEnemy != nullptr)
+	{
+		return SummonEnemy->DisplayName;
+	}
+	return Enemy->GetName();
+}
+int32 ATurnBattleManager::FindFirstLivingEnemy() const
+{
+	for (int32 i = 0; i < Enemies.Num(); i++)
+	{
+		if (IsEnemyAlive(i))
+		{
+			return i;
+		}
+	}
+	return -1;
+}
+AUnshackledCharacterBase* ATurnBattleManager::GetTargetEnemy(int32 Index) const
+{
+	if (IsEnemyAlive(Index))
+	{
+		return Enemies[Index];
+	}
+	if (Boss != nullptr)
+	{
+		if (!Boss->Health->IsDead())
+		{
+			return Boss;
+		}
+	}
+	int32 FirstLiving = FindFirstLivingEnemy();
+	return GetEnemy(FirstLiving);
+}
+TArray<AUnshackledCharacterBase*> ATurnBattleManager::GetLivingEnemies() const
+{
+	TArray<AUnshackledCharacterBase*> LivingEnemies;
+	for (int32 i = 0; i < Enemies.Num(); i++)
+	{
+		if (IsEnemyAlive(i))
+		{
+			LivingEnemies.Add(Enemies[i]);
+		}
+	}
+	return LivingEnemies;
+}
+TArray<AUnshackledCharacterBase*> ATurnBattleManager::GetMoveEnemyTargets(const FBattleMoveRow* Move, int32 TargetIndex) const
+{
+	TArray<AUnshackledCharacterBase*> Targets;
+	if (Move == nullptr)
+	{
+		return Targets;
+	}
+	if (Move->TargetKind == EBattleTargetKind::AllEnemies)
+	{
+		return GetLivingEnemies();
+	}
+	if (Move->TargetKind == EBattleTargetKind::Everyone)
+	{
+		return GetLivingEnemies();
+	}
+	if (Move->TargetKind == EBattleTargetKind::Enemy)
+	{
+		AUnshackledCharacterBase* Target = GetTargetEnemy(TargetIndex);
+		if (Target != nullptr)
+		{
+			Targets.Add(Target);
+		}
+		return Targets;
+	}
+	if (Move->TargetKind == EBattleTargetKind::TwoEnemies)
+	{
+		AUnshackledCharacterBase* FirstTarget = GetTargetEnemy(TargetIndex);
+		if (FirstTarget != nullptr)
+		{
+			Targets.Add(FirstTarget);
+		}
+		AUnshackledCharacterBase* SecondTarget = GetTargetEnemy(SecondTargetIndex);
+		if (SecondTarget != nullptr)
+		{
+			if (SecondTarget != FirstTarget)
+			{
+				Targets.Add(SecondTarget);
+			}
+		}
+	}
+	return Targets;
+}
+float ATurnBattleManager::GetTotalEnemyHealth() const
+{
+	float Total = 0.0f;
+	for (int32 i = 0; i < Enemies.Num(); i++)
+	{
+		if (IsEnemyAlive(i))
+		{
+			Total = Total + Enemies[i]->Health->CurrentHealth;
+		}
+	}
+	return Total;
+}
+int32 ATurnBattleManager::PickRandomLivingEnemy() const
+{
+	TArray<int32> LivingIndices;
+	for (int32 i = 0; i < Enemies.Num(); i++)
+	{
+		if (IsEnemyAlive(i))
+		{
+			LivingIndices.Add(i);
+		}
+	}
+	if (LivingIndices.Num() == 0)
+	{
+		return -1;
+	}
+	int32 Pick = FMath::RandRange(0, LivingIndices.Num() - 1);
+	return LivingIndices[Pick];
+}
+int32 ATurnBattleManager::CountLivingEnemies() const
+{
+	int32 Count = 0;
+	for (int32 i = 0; i < Enemies.Num(); i++)
+	{
+		if (IsEnemyAlive(i))
+		{
+			Count = Count + 1;
+		}
+	}
+	return Count;
+}
+int32 ATurnBattleManager::CountLivingSummons() const
+{
+	int32 Count = 0;
+	for (int32 i = 0; i < Enemies.Num(); i++)
+	{
+		if (Enemies[i] != Boss)
+		{
+			if (IsEnemyAlive(i))
+			{
+				Count = Count + 1;
+			}
+		}
+	}
+	return Count;
+}
+bool ATurnBattleManager::IsSummonSlotFree(FVector Location) const
+{
+	for (int32 i = 0; i < Enemies.Num(); i++)
+	{
+		if (Enemies[i] != Boss)
+		{
+			if (IsEnemyAlive(i))
+			{
+				float Distance = FVector::Dist2D(Enemies[i]->GetActorLocation(), Location);
+				if (Distance < 50.0f)
+				{
+					return false;
+				}
+			}
+		}
+	}
+	return true;
+}
+FVector ATurnBattleManager::GetSummonLocation() const
+{
+	FVector Anchor = GetBattleOrigin() + BossOffset;
+	if (Boss != nullptr)
+	{
+		Anchor = Boss->GetActorLocation();
+	}
+	FVector FirstSlot = Anchor + SummonFirstOffset;
+	for (int32 Slot = 0; Slot < MaxSummonSlots; Slot++)
+	{
+		FVector SlotLocation = FirstSlot + (SummonStepOffset * (float)Slot);
+		if (IsSummonSlotFree(SlotLocation))
+		{
+			return SlotLocation;
+		}
+	}
+	return FirstSlot;
+}
+ABattleSummonCharacter* ATurnBattleManager::SpawnSummon(TSubclassOf<ABattleSummonCharacter> SummonClass, float MaxHealth)
+{
+	if (SummonClass == nullptr)
+	{
+		return nullptr;
+	}
+	UWorld* World = GetWorld();
+	if (World == nullptr)
+	{
+		return nullptr;
+	}
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	ABattleSummonCharacter* NewSummon = World->SpawnActor<ABattleSummonCharacter>(SummonClass, GetSummonLocation(), FRotator::ZeroRotator, SpawnParams);
+	if (NewSummon == nullptr)
+	{
+		return nullptr;
+	}
+	if (MaxHealth > 0.0f)
+	{
+		NewSummon->SetBattleMaxHealth(MaxHealth);
+	}
+	Enemies.Add(NewSummon);
+	ShowMessage(FString::Printf(TEXT("%s appears"), *NewSummon->DisplayName), FColor::Orange);
+	return NewSummon;
+}
+void ATurnBattleManager::HideSummons()
+{
+	for (int32 i = 0; i < Enemies.Num(); i++)
+	{
+		if (Enemies[i] != nullptr)
+		{
+			if (Enemies[i] != Boss)
+			{
+				Enemies[i]->SetActorHiddenInGame(true);
+			}
+		}
+	}
+}
+int32 ATurnBattleManager::GetSecondTargetIndex() const
+{
+	return SecondTargetIndex;
+}
+int32 ATurnBattleManager::GetMenuEnemyIndex() const
+{
+	return MenuEnemyIndex;
+}
+int32 ATurnBattleManager::GetFirstEnemyPick() const
+{
+	return FirstEnemyPick;
 }

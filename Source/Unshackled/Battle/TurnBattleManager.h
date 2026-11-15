@@ -7,6 +7,8 @@
 #include "TurnBattleManager.generated.h"
 class APartyMemberCharacter;
 class ABossCharacter;
+class ABattleSummonCharacter;
+class AUnshackledCharacterBase;
 USTRUCT()
 struct FBattlePartySlot
 {
@@ -36,7 +38,8 @@ enum class EBattleMenuStage
 {
 	PickMember,
 	PickAction,
-	PickTarget
+	PickTarget,
+	PickEnemy
 };
 struct FPendingTelegraph
 {
@@ -93,6 +96,21 @@ public:
 	int32 GetPendingCount() const;
 	FString GetPendingName(int32 Index) const;
 	int32 GetPendingActionsLeft(int32 Index) const;
+	int32 GetEnemyCount() const;
+	AUnshackledCharacterBase* GetEnemy(int32 Index) const;
+	bool IsEnemyAlive(int32 Index) const;
+	FString GetEnemyName(int32 Index) const;
+	AUnshackledCharacterBase* GetTargetEnemy(int32 Index) const;
+	TArray<AUnshackledCharacterBase*> GetLivingEnemies() const;
+	TArray<AUnshackledCharacterBase*> GetMoveEnemyTargets(const FBattleMoveRow* Move, int32 TargetIndex) const;
+	float GetTotalEnemyHealth() const;
+	int32 PickRandomLivingEnemy() const;
+	int32 CountLivingEnemies() const;
+	int32 CountLivingSummons() const;
+	ABattleSummonCharacter* SpawnSummon(TSubclassOf<ABattleSummonCharacter> SummonClass, float MaxHealth);
+	int32 GetSecondTargetIndex() const;
+	int32 GetMenuEnemyIndex() const;
+	int32 GetFirstEnemyPick() const;
 	UPROPERTY(EditAnywhere, Category = "Battle")
 	UDataTable* TelegraphTable = nullptr;
 	UPROPERTY(EditAnywhere, Category = "Battle")
@@ -112,6 +130,12 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Battle Setup")
 	FVector BossOffset = FVector(700.0f, 0.0f, 0.0f);
 	UPROPERTY(EditAnywhere, Category = "Battle Setup")
+	FVector SummonFirstOffset = FVector(-150.0f, -250.0f, 0.0f);
+	UPROPERTY(EditAnywhere, Category = "Battle Setup")
+	FVector SummonStepOffset = FVector(0.0f, 170.0f, 0.0f);
+	UPROPERTY(EditAnywhere, Category = "Battle Setup")
+	int32 MaxSummonSlots = 6;
+	UPROPERTY(EditAnywhere, Category = "Battle Setup")
 	FName OverworldLevelName = FName("Level_Prototype");
 	UPROPERTY(EditAnywhere, Category = "Battle Setup")
 	float EndDelay = 4.0f;
@@ -125,6 +149,10 @@ public:
 	bool bSpawnWholePartyForTesting = false;
 	UPROPERTY(EditAnywhere, Category = "Battle Debug")
 	bool bUnlockAllMovesForTesting = false;
+	UPROPERTY(EditAnywhere, Category = "Battle Debug")
+	TArray<TSubclassOf<ABattleSummonCharacter>> DebugStartingSummons;
+	UPROPERTY(EditAnywhere, Category = "Battle Debug")
+	float DebugSummonHealthFraction = 0.25f;
 protected:
 	virtual void BeginPlay() override;
 private:
@@ -132,6 +160,12 @@ private:
 	TArray<APartyMemberCharacter*> Party;
 	UPROPERTY()
 	ABossCharacter* Boss = nullptr;
+	UPROPERTY()
+	TArray<AUnshackledCharacterBase*> Enemies;
+	TArray<int32> SummonTurnQueue;
+	int32 MenuEnemyIndex = 0;
+	int32 FirstEnemyPick = -1;
+	int32 SecondTargetIndex = -1;
 	TArray<bool> HasActed;
 	TArray<bool> IsBlocking;
 	bool bPhaseStartPending = false;
@@ -178,7 +212,19 @@ private:
 	void StartBossPhase();
 	void TickBossPhase(float DeltaTime);
 	void DoBossTurn();
-	void NotifyBossTurn();
+	void NotifyEnemyTurn(int32 EnemyIndex);
+	void SpawnDebugSummons();
+	void BuildSummonTurnQueue();
+	int32 TakeNextSummonTurn();
+	void DoSummonTurn(int32 EnemyIndex);
+	void HideSummons();
+	FVector GetSummonLocation() const;
+	bool IsSummonSlotFree(FVector Location) const;
+	int32 FindFirstLivingEnemy() const;
+	bool NeedsEnemyTarget(FName EntryName) const;
+	bool NeedsTwoEnemyTargets(FName EntryName) const;
+	void StartEnemyPick();
+	void MoveEnemySelection(int32 Step);
 	void RollRetributionOrder();
 	TArray<int32> ShuffleIndices(TArray<int32> Indices) const;
 	void AdvanceRetribution(int32 MemberIndex);

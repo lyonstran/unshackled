@@ -131,7 +131,17 @@ void APartyMemberCharacter::PerformBattleMove(ATurnBattleManager* Manager, FName
         {
                 return;
         }
-        HitBattleBoss(Manager, Move->Power, false);
+        if (Move->TargetKind == EBattleTargetKind::AllEnemies)
+        {
+                HitAllBattleEnemies(Manager, Move->Power, false);
+                return;
+        }
+        if (Move->TargetKind == EBattleTargetKind::Everyone)
+        {
+                HitAllBattleEnemies(Manager, Move->Power, false);
+                return;
+        }
+        HitBattleTarget(Manager, TargetIndex, Move->Power, false);
 }
 void APartyMemberCharacter::OnBattleRoundEnd(ATurnBattleManager* Manager)
 {
@@ -159,7 +169,7 @@ FString APartyMemberCharacter::GetBattleCardNote() const
         }
         return Note;
 }
-void APartyMemberCharacter::OnBattleBossTurn(ATurnBattleManager* Manager)
+void APartyMemberCharacter::OnBattleEnemyTurn(ATurnBattleManager* Manager, int32 EnemyIndex)
 {
 }
 void APartyMemberCharacter::OnBattleActionChosen(ATurnBattleManager* Manager, FName EntryName)
@@ -190,6 +200,10 @@ bool APartyMemberCharacter::MoveTargetsEnemy(const FBattleMoveRow* Move) const
         {
                 return true;
         }
+        if (Move->TargetKind == EBattleTargetKind::TwoEnemies)
+        {
+                return true;
+        }
         return false;
 }
 void APartyMemberCharacter::UseBattleMove(ATurnBattleManager* Manager, FName MoveId, const FBattleMoveRow* Move, int32 TargetIndex)
@@ -202,15 +216,19 @@ void APartyMemberCharacter::UseBattleMove(ATurnBattleManager* Manager, FName Mov
         {
                 return;
         }
-        ABossCharacter* Boss = Manager->GetBoss();
+        TArray<AUnshackledCharacterBase*> BoostedEnemies;
         bool bBoosted = false;
         if (NextAttackBonus > 0.0f)
         {
                 if (MoveTargetsEnemy(Move))
                 {
-                        if (Boss != nullptr)
+                        BoostedEnemies = Manager->GetMoveEnemyTargets(Move, TargetIndex);
+                        for (int32 i = 0; i < BoostedEnemies.Num(); i++)
                         {
-                                AddBattleModifier(Boss, FName("BattlesongBoost"), ECharacterStat::IncomingDamage, EModifierKind::Percent, NextAttackBonus, 0);
+                                AddBattleModifier(BoostedEnemies[i], FName("BattlesongBoost"), ECharacterStat::IncomingDamage, EModifierKind::Percent, NextAttackBonus, 0);
+                        }
+                        if (BoostedEnemies.Num() > 0)
+                        {
                                 bBoosted = true;
                         }
                 }
@@ -218,7 +236,10 @@ void APartyMemberCharacter::UseBattleMove(ATurnBattleManager* Manager, FName Mov
         PerformBattleMove(Manager, MoveId, Move, TargetIndex);
         if (bBoosted)
         {
-                Boss->Stats->RemoveModifiersFromSource(FName("BattlesongBoost"));
+                for (int32 i = 0; i < BoostedEnemies.Num(); i++)
+                {
+                        BoostedEnemies[i]->Stats->RemoveModifiersFromSource(FName("BattlesongBoost"));
+                }
                 NextAttackBonus = 0.0f;
                 ShowBattleMessage(FString::Printf(TEXT("Battlesong empowers %s's move"), *DisplayName), FColor::Magenta);
         }
@@ -265,9 +286,13 @@ float APartyMemberCharacter::FilterIncomingDamage(float RawDamage, bool bTrueDam
         ShowBattleMessage(FString::Printf(TEXT("%s shares the hit on %s"), *ShelterGuardian->DisplayName, *DisplayName), FColor::Green);
         return Result - GuardianPart;
 }
-float APartyMemberCharacter::HitBattleBoss(ATurnBattleManager* Manager, float Power, bool bTrueDamage)
+float APartyMemberCharacter::HitBattleEnemy(AUnshackledCharacterBase* Target, float Power, bool bTrueDamage)
 {
-        if (Manager == nullptr)
+        if (Target == nullptr)
+        {
+                return 0.0f;
+        }
+        if (Target->Health->IsDead())
         {
                 return 0.0f;
         }
@@ -275,14 +300,32 @@ float APartyMemberCharacter::HitBattleBoss(ATurnBattleManager* Manager, float Po
         {
                 return 0.0f;
         }
-        ABossCharacter* Boss = Manager->GetBoss();
-        if (Boss == nullptr)
+        float DamageStat = Stats->GetFinal(ECharacterStat::Damage);
+        float RawDamage = DamageStat * Power;
+        return Target->ApplyHit(RawDamage, bTrueDamage, this);
+}
+float APartyMemberCharacter::HitBattleTarget(ATurnBattleManager* Manager, int32 TargetIndex, float Power, bool bTrueDamage)
+{
+        if (Manager == nullptr)
         {
                 return 0.0f;
         }
-        float DamageStat = Stats->GetFinal(ECharacterStat::Damage);
-        float RawDamage = DamageStat * Power;
-        return Boss->ApplyHit(RawDamage, bTrueDamage, this);
+        AUnshackledCharacterBase* Target = Manager->GetTargetEnemy(TargetIndex);
+        return HitBattleEnemy(Target, Power, bTrueDamage);
+}
+float APartyMemberCharacter::HitAllBattleEnemies(ATurnBattleManager* Manager, float Power, bool bTrueDamage)
+{
+        if (Manager == nullptr)
+        {
+                return 0.0f;
+        }
+        TArray<AUnshackledCharacterBase*> Targets = Manager->GetLivingEnemies();
+        float TotalDealt = 0.0f;
+        for (int32 i = 0; i < Targets.Num(); i++)
+        {
+                TotalDealt = TotalDealt + HitBattleEnemy(Targets[i], Power, bTrueDamage);
+        }
+        return TotalDealt;
 }
 void APartyMemberCharacter::AddBattleModifier(AUnshackledCharacterBase* Target, FName SourceId, ECharacterStat Stat, EModifierKind Kind, float Amount, int32 Turns)
 {

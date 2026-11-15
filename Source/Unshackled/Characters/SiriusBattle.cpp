@@ -15,7 +15,7 @@ void ASiriusCharacter::PerformBattleMove(ATurnBattleManager* Manager, FName Move
         {
                 return;
         }
-        float BossHealthBefore = GetBattleBossHealth(Manager);
+        float EnemyHealthBefore = Manager->GetTotalEnemyHealth();
         if (MoveId == FName("Sirius_Veil"))
         {
                 CastBattleVeil(Manager, Move);
@@ -38,39 +38,31 @@ void ASiriusCharacter::PerformBattleMove(ATurnBattleManager* Manager, FName Move
         }
         else if (MoveId == FName("Sirius_Submission"))
         {
-                CastSubmission(Manager, Move);
+                CastSubmission(Manager, Move, TargetIndex);
         }
         else
         {
                 Super::PerformBattleMove(Manager, MoveId, Move, TargetIndex);
         }
-        if (MoveTouchesEnemy(Move))
+        TArray<AUnshackledCharacterBase*> TouchedEnemies = Manager->GetMoveEnemyTargets(Move, TargetIndex);
+        for (int32 i = 0; i < TouchedEnemies.Num(); i++)
         {
-                AddMarkToBoss(Manager);
+                AddMarkTo(Manager, TouchedEnemies[i]);
+                if (Move->Power > 0.0f)
+                {
+                        TryBattleExecute(Manager, TouchedEnemies[i]);
+                }
         }
-        if (Move->Power > 0.0f)
-        {
-                TryBattleExecute(Manager);
-        }
-        TryBattleRetributionHeal(Manager, BossHealthBefore);
+        TryBattleRetributionHeal(Manager, EnemyHealthBefore);
 }
-float ASiriusCharacter::GetBattleBossHealth(ATurnBattleManager* Manager) const
-{
-        ABossCharacter* Boss = Manager->GetBoss();
-        if (Boss == nullptr)
-        {
-                return 0.0f;
-        }
-        return Boss->Health->CurrentHealth;
-}
-void ASiriusCharacter::TryBattleRetributionHeal(ATurnBattleManager* Manager, float BossHealthBefore)
+void ASiriusCharacter::TryBattleRetributionHeal(ATurnBattleManager* Manager, float EnemyHealthBefore)
 {
         if (!bBattleRetributionHealReady)
         {
                 return;
         }
-        float BossHealthAfter = GetBattleBossHealth(Manager);
-        if (BossHealthAfter >= BossHealthBefore)
+        float EnemyHealthAfter = Manager->GetTotalEnemyHealth();
+        if (EnemyHealthAfter >= EnemyHealthBefore)
         {
                 return;
         }
@@ -85,35 +77,18 @@ void ASiriusCharacter::PerformBattleRetribution(ATurnBattleManager* Manager)
         bBattleRetributionHealReady = true;
         ShowBattleMessage(TEXT("Sirius: his next damaging move will heal him"), FColor::Cyan);
 }
-bool ASiriusCharacter::MoveTouchesEnemy(const FBattleMoveRow* Move) const
+void ASiriusCharacter::AddMarkTo(ATurnBattleManager* Manager, AUnshackledCharacterBase* Enemy)
 {
-        if (Move->TargetKind == EBattleTargetKind::Enemy)
-        {
-                return true;
-        }
-        if (Move->TargetKind == EBattleTargetKind::AllEnemies)
-        {
-                return true;
-        }
-        if (Move->TargetKind == EBattleTargetKind::Everyone)
-        {
-                return true;
-        }
-        return false;
-}
-void ASiriusCharacter::AddMarkToBoss(ATurnBattleManager* Manager)
-{
-        ABossCharacter* Boss = Manager->GetBoss();
-        if (Boss == nullptr)
+        if (Enemy == nullptr)
         {
                 return;
         }
-        if (Boss->Health->IsDead())
+        if (Enemy->Health->IsDead())
         {
                 return;
         }
         FName MarkId = FName("SiriusMarks");
-        int32 StacksBefore = Boss->Stats->GetStacks(MarkId, ECharacterStat::Damage, EModifierKind::Percent);
+        int32 StacksBefore = Enemy->Stats->GetStacks(MarkId, ECharacterStat::Damage, EModifierKind::Percent);
         FStatModifier Mark;
         Mark.SourceId = MarkId;
         Mark.Stat = ECharacterStat::Damage;
@@ -123,8 +98,8 @@ void ASiriusCharacter::AddMarkToBoss(ATurnBattleManager* Manager)
         Mark.TurnsLeft = 0;
         Mark.Rule = EStackRule::StackToMax;
         Mark.MaxStacks = MarkMaxStacks;
-        Boss->Stats->AddModifier(Mark);
-        int32 StacksAfter = Boss->Stats->GetStacks(MarkId, ECharacterStat::Damage, EModifierKind::Percent);
+        Enemy->Stats->AddModifier(Mark);
+        int32 StacksAfter = Enemy->Stats->GetStacks(MarkId, ECharacterStat::Damage, EModifierKind::Percent);
         if (StacksAfter >= MarkMaxStacks)
         {
                 if (StacksBefore < MarkMaxStacks)
@@ -133,32 +108,31 @@ void ASiriusCharacter::AddMarkToBoss(ATurnBattleManager* Manager)
                 }
         }
 }
-void ASiriusCharacter::TryBattleExecute(ATurnBattleManager* Manager)
+void ASiriusCharacter::TryBattleExecute(ATurnBattleManager* Manager, AUnshackledCharacterBase* Enemy)
 {
-        ABossCharacter* Boss = Manager->GetBoss();
-        if (Boss == nullptr)
+        if (Enemy == nullptr)
         {
                 return;
         }
-        if (Boss->Health->IsDead())
+        if (Enemy->Health->IsDead())
         {
                 return;
         }
-        int32 Stacks = Boss->Stats->GetStacks(FName("SiriusMarks"), ECharacterStat::Damage, EModifierKind::Percent);
+        int32 Stacks = Enemy->Stats->GetStacks(FName("SiriusMarks"), ECharacterStat::Damage, EModifierKind::Percent);
         if (Stacks < MarkMaxStacks)
         {
                 return;
         }
-        float MaxHealthValue = Boss->Health->MaxHealth;
+        float MaxHealthValue = Enemy->Health->MaxHealth;
         if (MaxHealthValue <= 0.0f)
         {
                 return;
         }
-        float HealthFraction = Boss->Health->CurrentHealth / MaxHealthValue;
+        float HealthFraction = Enemy->Health->CurrentHealth / MaxHealthValue;
         if (HealthFraction < MarkExecuteThreshold)
         {
-                Boss->ApplyHit(ExecuteDamage, true, this);
-                Manager->ShowMessage(TEXT("Sirius executes the boss!"), FColor::Cyan);
+                Enemy->ApplyHit(ExecuteDamage, true, this);
+                Manager->ShowMessage(TEXT("Sirius executes his target!"), FColor::Cyan);
         }
 }
 void ASiriusCharacter::CastBattleVeil(ATurnBattleManager* Manager, const FBattleMoveRow* Move)
@@ -179,8 +153,13 @@ void ASiriusCharacter::CastWindsUnbound(const FBattleMoveRow* Move)
 }
 void ASiriusCharacter::CastGaleUnleashed(ATurnBattleManager* Manager, const FBattleMoveRow* Move)
 {
-        float DamageDealt = HitBattleBoss(Manager, Move->Power, false);
-        BattleTornadoDamage = DamageDealt * Move->Amount1;
+        int32 HitCount = Manager->CountLivingEnemies();
+        float DamageDealt = HitAllBattleEnemies(Manager, Move->Power, false);
+        BattleTornadoDamage = 0.0f;
+        if (HitCount > 0)
+        {
+                BattleTornadoDamage = (DamageDealt / (float)HitCount) * Move->Amount1;
+        }
         BattleTornadoRoundsLeft = Move->Turns;
 }
 void ASiriusCharacter::OnBattleRoundEnd(ATurnBattleManager* Manager)
@@ -195,16 +174,12 @@ void ASiriusCharacter::TickBattleTornado(ATurnBattleManager* Manager)
                 return;
         }
         BattleTornadoRoundsLeft = BattleTornadoRoundsLeft - 1;
-        ABossCharacter* Boss = Manager->GetBoss();
-        if (Boss == nullptr)
+        TArray<AUnshackledCharacterBase*> Targets = Manager->GetLivingEnemies();
+        float DamageDealt = 0.0f;
+        for (int32 i = 0; i < Targets.Num(); i++)
         {
-                return;
+                DamageDealt = DamageDealt + Targets[i]->ApplyHit(BattleTornadoDamage, true, this);
         }
-        if (Boss->Health->IsDead())
-        {
-                return;
-        }
-        float DamageDealt = Boss->ApplyHit(BattleTornadoDamage, true, this);
         Manager->ShowMessage(FString::Printf(TEXT("The tornado lingers for %d"), FMath::RoundToInt(DamageDealt)), FColor::Cyan);
 }
 void ASiriusCharacter::CastWindWall(const FBattleMoveRow* Move)
@@ -250,20 +225,20 @@ void ASiriusCharacter::CastWindsOfWar(ATurnBattleManager* Manager, const FBattle
                         AddBattleModifier(Ally, SourceId, ECharacterStat::Damage, EModifierKind::Percent, Move->Amount1, Move->Turns);
                 }
         }
-        ABossCharacter* Boss = Manager->GetBoss();
-        if (Boss != nullptr)
+        TArray<AUnshackledCharacterBase*> Targets = Manager->GetLivingEnemies();
+        for (int32 i = 0; i < Targets.Num(); i++)
         {
-                AddBattleModifier(Boss, SourceId, ECharacterStat::Damage, EModifierKind::Percent, Move->Amount1, Move->Turns);
+                AddBattleModifier(Targets[i], SourceId, ECharacterStat::Damage, EModifierKind::Percent, Move->Amount1, Move->Turns);
         }
 }
-void ASiriusCharacter::CastSubmission(ATurnBattleManager* Manager, const FBattleMoveRow* Move)
+void ASiriusCharacter::CastSubmission(ATurnBattleManager* Manager, const FBattleMoveRow* Move, int32 TargetIndex)
 {
-        ABossCharacter* Boss = Manager->GetBoss();
-        if (Boss == nullptr)
+        AUnshackledCharacterBase* Target = Manager->GetTargetEnemy(TargetIndex);
+        if (Target == nullptr)
         {
                 return;
         }
         FName SourceId = FName("SiriusSubmission");
-        AddBattleModifier(Boss, SourceId, ECharacterStat::Damage, EModifierKind::Percent, 0.0f - Move->Amount1, Move->Turns);
-        AddBattleModifier(Boss, SourceId, ECharacterStat::Defense, EModifierKind::Percent, 0.0f - Move->Amount1, Move->Turns);
+        AddBattleModifier(Target, SourceId, ECharacterStat::Damage, EModifierKind::Percent, 0.0f - Move->Amount1, Move->Turns);
+        AddBattleModifier(Target, SourceId, ECharacterStat::Defense, EModifierKind::Percent, 0.0f - Move->Amount1, Move->Turns);
 }

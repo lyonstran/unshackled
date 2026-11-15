@@ -18,7 +18,7 @@ void AMalkholmCharacter::PerformBattleMove(ATurnBattleManager* Manager, FName Mo
         UpdateBattleRage();
         if (MoveId == FName("Malkholm_Attack"))
         {
-                CastDoubleStrike(Manager, Move);
+                CastDoubleStrike(Manager, Move, TargetIndex);
         }
         else if (MoveId == FName("Malkholm_Revolution"))
         {
@@ -34,7 +34,7 @@ void AMalkholmCharacter::PerformBattleMove(ATurnBattleManager* Manager, FName Mo
         }
         else if (MoveId == FName("Malkholm_Confrontation"))
         {
-                CastConfrontation(Manager, Move);
+                CastConfrontation(Manager, Move, TargetIndex);
         }
         else if (MoveId == FName("Malkholm_Power"))
         {
@@ -94,10 +94,19 @@ void AMalkholmCharacter::UpdateBattleRage()
         Rage.Rule = EStackRule::RefreshSameSource;
         Stats->AddModifier(Rage);
 }
-void AMalkholmCharacter::CastDoubleStrike(ATurnBattleManager* Manager, const FBattleMoveRow* Move)
+void AMalkholmCharacter::CastDoubleStrike(ATurnBattleManager* Manager, const FBattleMoveRow* Move, int32 TargetIndex)
 {
-        HitBattleBoss(Manager, Move->Power, false);
-        HitBattleBoss(Manager, Move->Power, false);
+        int32 SecondIndex = Manager->GetSecondTargetIndex();
+        if (SecondIndex < 0)
+        {
+                SecondIndex = TargetIndex;
+        }
+        HitBattleTarget(Manager, TargetIndex, Move->Power, false);
+        HitBattleTarget(Manager, SecondIndex, Move->Power, false);
+        if (SecondIndex != TargetIndex)
+        {
+                return;
+        }
         FStatModifier Hardened;
         Hardened.SourceId = FName("MalkholmDoubleStrike");
         Hardened.Stat = ECharacterStat::Defense;
@@ -147,25 +156,25 @@ void AMalkholmCharacter::CastFreedom(ATurnBattleManager* Manager, const FBattleM
         int32 Stacks = Ally->Stats->GetStacks(Freedom.SourceId, ECharacterStat::Defense, EModifierKind::Percent);
         ShowBattleMessage(FString::Printf(TEXT("Freedom on %s (%d stacks)"), *Ally->DisplayName, Stacks), FColor::Yellow);
 }
-void AMalkholmCharacter::CastConfrontation(ATurnBattleManager* Manager, const FBattleMoveRow* Move)
+void AMalkholmCharacter::CastConfrontation(ATurnBattleManager* Manager, const FBattleMoveRow* Move, int32 TargetIndex)
 {
-        ABossCharacter* Boss = Manager->GetBoss();
-        if (Boss == nullptr)
+        AUnshackledCharacterBase* Target = Manager->GetTargetEnemy(TargetIndex);
+        if (Target == nullptr)
         {
                 return;
         }
-        if (Boss->Health->IsDead())
+        if (Target->Health->IsDead())
         {
                 return;
         }
-        float BossDefense = Boss->Stats->GetFinal(ECharacterStat::Defense);
-        float StolenDefense = BossDefense * Move->Amount1;
-        AddBattleModifier(Boss, FName("MalkholmConfrontation"), ECharacterStat::Defense, EModifierKind::Flat, 0.0f - StolenDefense, Move->Turns);
+        float TargetDefense = Target->Stats->GetFinal(ECharacterStat::Defense);
+        float StolenDefense = TargetDefense * Move->Amount1;
+        AddBattleModifier(Target, FName("MalkholmConfrontation"), ECharacterStat::Defense, EModifierKind::Flat, 0.0f - StolenDefense, Move->Turns);
         AddBattleModifier(this, FName("MalkholmConfrontation"), ECharacterStat::Defense, EModifierKind::Flat, StolenDefense, Move->Turns);
         float MissingHealth = Health->MaxHealth - Health->CurrentHealth;
-        float Damage = (MissingHealth * Move->Amount3) + (Boss->Health->MaxHealth * Move->Amount4);
-        float DamageDealt = Boss->ApplyHit(Damage, true, this);
-        float HealAmount = Boss->Health->CurrentHealth * Move->Amount2;
+        float Damage = (MissingHealth * Move->Amount3) + (Target->Health->MaxHealth * Move->Amount4);
+        float DamageDealt = Target->ApplyHit(Damage, true, this);
+        float HealAmount = Target->Health->CurrentHealth * Move->Amount2;
         Health->Heal(HealAmount);
         ShowBattleMessage(FString::Printf(TEXT("Confrontation: steals %d defense, deals %d, heals %d"), FMath::RoundToInt(StolenDefense), FMath::RoundToInt(DamageDealt), FMath::RoundToInt(HealAmount)), FColor::Yellow);
 }
@@ -239,11 +248,18 @@ void AMalkholmCharacter::OnBattlePlayerPhaseEnd(ATurnBattleManager* Manager)
 }
 void AMalkholmCharacter::TakeRoundSnapshot(ATurnBattleManager* Manager)
 {
-        SnapshotBossHealth = 0.0f;
-        ABossCharacter* Boss = Manager->GetBoss();
-        if (Boss != nullptr)
+        SnapshotEnemyHealth.Empty();
+        for (int32 i = 0; i < Manager->GetEnemyCount(); i++)
         {
-                SnapshotBossHealth = Boss->Health->CurrentHealth;
+                AUnshackledCharacterBase* Enemy = Manager->GetEnemy(i);
+                if (Enemy != nullptr)
+                {
+                        SnapshotEnemyHealth.Add(Enemy->Health->CurrentHealth);
+                }
+                else
+                {
+                        SnapshotEnemyHealth.Add(0.0f);
+                }
         }
         SnapshotHealth.Empty();
         SnapshotShield.Empty();
@@ -279,11 +295,19 @@ float AMalkholmCharacter::GainOnly(float Before, float After) const
 }
 void AMalkholmCharacter::RecordRevolutionRound(ATurnBattleManager* Manager)
 {
-        EchoBossDamage = 0.0f;
-        ABossCharacter* Boss = Manager->GetBoss();
-        if (Boss != nullptr)
+        EchoEnemyDamage.Empty();
+        for (int32 i = 0; i < Manager->GetEnemyCount(); i++)
         {
-                EchoBossDamage = GainOnly(Boss->Health->CurrentHealth, SnapshotBossHealth) * RevolutionFraction;
+                float DamageTaken = 0.0f;
+                AUnshackledCharacterBase* Enemy = Manager->GetEnemy(i);
+                if (Enemy != nullptr)
+                {
+                        if (i < SnapshotEnemyHealth.Num())
+                        {
+                                DamageTaken = GainOnly(Enemy->Health->CurrentHealth, SnapshotEnemyHealth[i]);
+                        }
+                }
+                EchoEnemyDamage.Add(DamageTaken * RevolutionFraction);
         }
         EchoHealing.Empty();
         EchoShield.Empty();
@@ -314,12 +338,16 @@ void AMalkholmCharacter::RecordRevolutionRound(ATurnBattleManager* Manager)
 }
 void AMalkholmCharacter::ApplyRevolutionEcho(ATurnBattleManager* Manager)
 {
-        ABossCharacter* Boss = Manager->GetBoss();
-        if (Boss != nullptr)
+        float TotalEchoDamage = 0.0f;
+        for (int32 i = 0; i < EchoEnemyDamage.Num(); i++)
         {
-                if (EchoBossDamage > 0.0f)
+                if (EchoEnemyDamage[i] > 0.0f)
                 {
-                        Boss->ApplyHit(EchoBossDamage, true, this);
+                        if (Manager->IsEnemyAlive(i))
+                        {
+                                AUnshackledCharacterBase* Enemy = Manager->GetEnemy(i);
+                                TotalEchoDamage = TotalEchoDamage + Enemy->ApplyHit(EchoEnemyDamage[i], true, this);
+                        }
                 }
         }
         for (int32 i = 0; i < Manager->GetPartyCount(); i++)
@@ -333,7 +361,7 @@ void AMalkholmCharacter::ApplyRevolutionEcho(ATurnBattleManager* Manager)
                         }
                 }
         }
-        ShowBattleMessage(FString::Printf(TEXT("Revolution echoes last round (%d damage)"), FMath::RoundToInt(EchoBossDamage)), FColor::Yellow);
+        ShowBattleMessage(FString::Printf(TEXT("Revolution echoes last round (%d damage)"), FMath::RoundToInt(TotalEchoDamage)), FColor::Yellow);
 }
 void AMalkholmCharacter::ApplyEchoToAlly(APartyMemberCharacter* Ally, float Healing, float ShieldAmount, float DamageBuff, float DefenseBuff)
 {

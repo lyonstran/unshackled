@@ -53,10 +53,21 @@ public:
 	float BossBarHeight = 14.0f;
 	UPROPERTY(EditAnywhere, Category = "Battle Boss")
 	float BossTopMargin = 14.0f;
+	UPROPERTY(EditAnywhere, Category = "Battle Summons")
+	float SummonCardWidth = 150.0f;
+	UPROPERTY(EditAnywhere, Category = "Battle Summons")
+	float SummonCardHeight = 40.0f;
+	UPROPERTY(EditAnywhere, Category = "Battle Summons")
+	float SummonCardGap = 10.0f;
+	UPROPERTY(EditAnywhere, Category = "Battle Summons")
+	float SummonRowOffset = 96.0f;
 protected:
 	ATurnBattleManager* FindManager() const;
 	void DrawBossPanel(ATurnBattleManager* Manager);
 	void DrawPhaseLabel(ATurnBattleManager* Manager);
+	void DrawSummonCards(ATurnBattleManager* Manager);
+	void DrawSummonCard(ATurnBattleManager* Manager, int32 EnemyIndex, float Left, float Top);
+	FLinearColor GetEnemyBorderColor(ATurnBattleManager* Manager, int32 EnemyIndex, FLinearColor NormalColor);
 	void DrawTelegraphList(ATurnBattleManager* Manager);
 	void DrawPartyCards(ATurnBattleManager* Manager);
 	void DrawPartyCard(ATurnBattleManager* Manager, int32 MemberIndex, float Left, float Top);

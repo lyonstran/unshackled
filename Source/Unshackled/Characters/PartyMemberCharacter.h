@@ -31,7 +31,7 @@ public:
         virtual void OnBattlePlayerPhaseEnd(ATurnBattleManager* Manager);
         virtual bool CanUseBattleMove(FName MoveId) const;
         virtual FString GetBattleCardNote() const;
-        virtual void OnBattleBossTurn(ATurnBattleManager* Manager);
+        virtual void OnBattleEnemyTurn(ATurnBattleManager* Manager, int32 EnemyIndex);
         virtual void OnBattleActionChosen(ATurnBattleManager* Manager, FName EntryName);
         virtual void PerformBattleRetribution(ATurnBattleManager* Manager);
         void UseBattleMove(ATurnBattleManager* Manager, FName MoveId, const FBattleMoveRow* Move, int32 TargetIndex);
@@ -63,7 +63,9 @@ protected:
         virtual void Die() override;
         virtual void GroundedTick(float DeltaTime);
         virtual float FilterIncomingDamage(float RawDamage, bool bTrueDamage, AUnshackledCharacterBase* Attacker) override;
-        float HitBattleBoss(ATurnBattleManager* Manager, float Power, bool bTrueDamage);
+        float HitBattleEnemy(AUnshackledCharacterBase* Target, float Power, bool bTrueDamage);
+        float HitBattleTarget(ATurnBattleManager* Manager, int32 TargetIndex, float Power, bool bTrueDamage);
+        float HitAllBattleEnemies(ATurnBattleManager* Manager, float Power, bool bTrueDamage);
         void AddBattleModifier(AUnshackledCharacterBase* Target, FName SourceId, ECharacterStat Stat, EModifierKind Kind, float Amount, int32 Turns);
         ATurnBattleManager* FindBattleManager() const;
         void ShowBattleMessage(FString Text, FColor Color);
