@@ -69,6 +69,14 @@ bool UStatsComponent::IsHarmful(FStatModifier Modifier) const
                 }
                 return false;
         }
+        if (Modifier.Stat == ECharacterStat::Poison)
+        {
+                if (Modifier.Amount > 0.0f)
+                {
+                        return true;
+                }
+                return false;
+        }
         if (Modifier.Amount < 0.0f)
         {
                 return true;

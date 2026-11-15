@@ -278,10 +278,14 @@ void ABattleEnemyCharacter::ApplyMoveModifier(AUnshackledCharacterBase* Target, 
 	FStatModifier NewModifier;
 	NewModifier.SourceId = MoveId;
 	NewModifier.Stat = ToCharacterStat(Move->ModStat);
-	NewModifier.Kind = EModifierKind::Percent;
+	NewModifier.Kind = GetModKind(Move);
 	NewModifier.Amount = Move->ModAmount;
 	NewModifier.Duration = 0.0f;
-	NewModifier.TurnsLeft = Move->Turns;
+	NewModifier.TurnsLeft = 0;
+	if (Move->Turns > 0)
+	{
+		NewModifier.TurnsLeft = Move->Turns + 1;
+	}
 	NewModifier.Rule = EStackRule::RefreshSameSource;
 	NewModifier.MaxStacks = 1;
 	if (Move->MaxStacks > 1)
@@ -365,7 +369,7 @@ bool ABattleEnemyCharacter::IsAtMaxStacks(AUnshackledCharacterBase* Target, FNam
 	{
 		MaxStacks = 1;
 	}
-	int32 Stacks = Target->Stats->GetStacks(MoveId, ToCharacterStat(Move->ModStat), EModifierKind::Percent);
+	int32 Stacks = Target->Stats->GetStacks(MoveId, ToCharacterStat(Move->ModStat), GetModKind(Move));
 	return Stacks >= MaxStacks;
 }
 int32 ABattleEnemyCharacter::PickRandomMemberBelowMaxStacks(ATurnBattleManager* Manager, FName MoveId, const FBossMoveRow* Move) const
@@ -402,5 +406,17 @@ ECharacterStat ABattleEnemyCharacter::ToCharacterStat(EBossModStat ModStat) cons
 	{
 		return ECharacterStat::IncomingDamage;
 	}
+	if (ModStat == EBossModStat::Poison)
+	{
+		return ECharacterStat::Poison;
+	}
 	return ECharacterStat::Damage;
+}
+EModifierKind ABattleEnemyCharacter::GetModKind(const FBossMoveRow* Move) const
+{
+	if (Move->ModStat == EBossModStat::Poison)
+	{
+		return EModifierKind::Flat;
+	}
+	return EModifierKind::Percent;
 }

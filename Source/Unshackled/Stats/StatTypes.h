@@ -9,7 +9,8 @@ enum class ECharacterStat : uint8
 	Speed,
 	IncomingDamage,
 	Lifesteal,
-	Reflect
+	Reflect,
+	Poison
 };
 enum class EModifierKind : uint8
 {

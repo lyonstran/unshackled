@@ -207,6 +207,10 @@ float ASiriusCharacter::FilterIncomingDamage(float RawDamage, bool bTrueDamage, 
         {
                 return Result;
         }
+        if (Attacker == nullptr)
+        {
+                return Result;
+        }
         float DamageItWouldDo = CalculateFinalDamage(Result, bTrueDamage);
         float ManaGained = DamageItWouldDo * WindWallManaFraction;
         Stats->RestoreMana(ManaGained);

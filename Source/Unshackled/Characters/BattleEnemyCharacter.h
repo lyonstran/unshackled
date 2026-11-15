@@ -43,6 +43,7 @@ protected:
 	bool IsAtMaxStacks(AUnshackledCharacterBase* Target, FName MoveId, const FBossMoveRow* Move) const;
 	int32 PickRandomMemberBelowMaxStacks(ATurnBattleManager* Manager, FName MoveId, const FBossMoveRow* Move) const;
 	ECharacterStat ToCharacterStat(EBossModStat ModStat) const;
+	EModifierKind GetModKind(const FBossMoveRow* Move) const;
 	TArray<FName> GatherMoveIds(ATurnBattleManager* Manager) const;
 	FName ChooseMove(ATurnBattleManager* Manager, TArray<FName> MoveIds);
 	void ShowMoveMessage(ATurnBattleManager* Manager, const FBossMoveRow* Move, int32 TargetIndex);

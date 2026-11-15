@@ -157,6 +157,8 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Battle Debug")
 	bool bUnlockAllMovesForTesting = false;
 	UPROPERTY(EditAnywhere, Category = "Battle Debug")
+	TSubclassOf<ABossCharacter> DebugBossOverride;
+	UPROPERTY(EditAnywhere, Category = "Battle Debug")
 	TArray<TSubclassOf<ABattleSummonCharacter>> DebugStartingSummons;
 	UPROPERTY(EditAnywhere, Category = "Battle Debug")
 	float DebugSummonHealthFraction = 0.25f;
@@ -220,6 +222,8 @@ private:
 	void TickBossPhase(float DeltaTime);
 	void DoBossTurn();
 	void NotifyEnemyTurn(int32 EnemyIndex);
+	void TickPoison();
+	void TickPoisonOn(AUnshackledCharacterBase* Target, FString TargetName);
 	bool DoesMoveFail(int32 MemberIndex, EBattleAction Category);
 	void SpawnDebugSummons();
 	void BuildSummonTurnQueue();

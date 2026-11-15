@@ -95,6 +95,13 @@ void ATurnBattleManager::SpawnBossIfMissing()
 	{
 		return;
 	}
+	if (DebugBossOverride != nullptr)
+	{
+		FActorSpawnParameters DebugSpawnParams;
+		DebugSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		World->SpawnActor<ABossCharacter>(DebugBossOverride, GetBattleOrigin() + BossOffset, FRotator::ZeroRotator, DebugSpawnParams);
+		return;
+	}
 	int32 Floor = 1;
 	UUnshackledGameInstance* GameInstanceRef = Cast<UUnshackledGameInstance>(GetGameInstance());
 	if (GameInstanceRef != nullptr)
@@ -754,8 +761,42 @@ void ATurnBattleManager::RestoreManaForNewRound()
 		}
 	}
 }
+void ATurnBattleManager::TickPoisonOn(AUnshackledCharacterBase* Target, FString TargetName)
+{
+	if (Target == nullptr)
+	{
+		return;
+	}
+	if (Target->Health->IsDead())
+	{
+		return;
+	}
+	float PoisonFraction = Target->Stats->GetFinal(ECharacterStat::Poison);
+	if (PoisonFraction <= 0.0f)
+	{
+		return;
+	}
+	float PoisonDamage = Target->Health->MaxHealth * PoisonFraction;
+	float DamageDealt = Target->ApplyHit(PoisonDamage, true, nullptr);
+	ShowMessage(FString::Printf(TEXT("%s takes %d poison damage"), *TargetName, FMath::RoundToInt(DamageDealt)), FColor::Purple);
+}
+void ATurnBattleManager::TickPoison()
+{
+	for (int32 i = 0; i < Party.Num(); i++)
+	{
+		if (Party[i] != nullptr)
+		{
+			TickPoisonOn(Party[i], Party[i]->DisplayName);
+		}
+	}
+	for (int32 i = 0; i < Enemies.Num(); i++)
+	{
+		TickPoisonOn(Enemies[i], GetEnemyName(i));
+	}
+}
 void ATurnBattleManager::NotifyPlayerPhaseStart()
 {
+	TickPoison();
 	for (int32 i = 0; i < Party.Num(); i++)
 	{
 		if (Party[i] != nullptr)

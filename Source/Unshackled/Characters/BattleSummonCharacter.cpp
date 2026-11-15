@@ -39,6 +39,15 @@ void ABattleSummonCharacter::TakeBattleTurn(ATurnBattleManager* Manager)
 	DealDamage(Target, Scale, false);
 	Manager->ShowMessage(FString::Printf(TEXT("%s strikes %s"), *DisplayName, *Target->DisplayName), FColor::Orange);
 }
+void ABattleSummonCharacter::DieInBattle()
+{
+	if (Health->IsDead())
+	{
+		return;
+	}
+	Health->CurrentHealth = 0.0f;
+	Die();
+}
 void ABattleSummonCharacter::Die()
 {
 	Super::Die();

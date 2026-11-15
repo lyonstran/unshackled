@@ -11,6 +11,7 @@ public:
 	ABattleSummonCharacter();
 	virtual void TakeBattleTurn(ATurnBattleManager* Manager);
 	void SetBattleMaxHealth(float NewMaxHealth);
+	void DieInBattle();
 	UPROPERTY(EditAnywhere, Category = "Summon")
 	float StrikePower = 1.0f;
 protected:

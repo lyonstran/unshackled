@@ -23,7 +23,8 @@ enum class EBossModStat : uint8
 	None,
 	Damage,
 	Defense,
-	IncomingDamage
+	IncomingDamage,
+	Poison
 };
 USTRUCT(BlueprintType)
 struct FBossMoveRow : public FTableRowBase
