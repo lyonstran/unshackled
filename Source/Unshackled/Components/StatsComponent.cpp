@@ -85,6 +85,19 @@ void UStatsComponent::AddModifier(FStatModifier NewModifier)
                 }
                 NewModifier.Amount = NewModifier.Amount * DebuffScale;
         }
+        else
+        {
+                if (DivertFraction > 0.0f)
+                {
+                        if (NewModifier.Amount != 0.0f)
+                        {
+                                FStatModifier DivertedCopy = NewModifier;
+                                DivertedCopy.Amount = NewModifier.Amount * DivertFraction;
+                                DivertedBuffs.Add(DivertedCopy);
+                                NewModifier.Amount = NewModifier.Amount - DivertedCopy.Amount;
+                        }
+                }
+        }
         int32 ExistingIndex = FindModifierIndex(NewModifier.SourceId, NewModifier.Stat, NewModifier.Kind);
         if (ExistingIndex == -1)
         {
@@ -119,6 +132,21 @@ void UStatsComponent::RemoveModifiersFromSource(FName SourceId)
                 }
         }
         Modifiers = StillActive;
+}
+int32 UStatsComponent::CountBeneficialModifiers() const
+{
+        int32 Count = 0;
+        for (int32 i = 0; i < Modifiers.Num(); i++)
+        {
+                if (!IsHarmful(Modifiers[i]))
+                {
+                        if (Modifiers[i].Amount != 0.0f)
+                        {
+                                Count = Count + 1;
+                        }
+                }
+        }
+        return Count;
 }
 void UStatsComponent::RemoveHarmfulModifiers()
 {

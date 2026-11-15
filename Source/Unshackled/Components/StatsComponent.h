@@ -27,6 +27,8 @@ public:
         float CurrentMana = 0.0f;
         float DebuffScale = 1.0f;
         bool bRepelDebuffs = false;
+        float DivertFraction = 0.0f;
+        TArray<FStatModifier> DivertedBuffs;
         void AddModifier(FStatModifier NewModifier);
         void RemoveModifiersFromSource(FName SourceId);
         void RemoveHarmfulModifiers();
@@ -38,6 +40,7 @@ public:
         void RestoreMana(float Amount);
         void CountDownTurns();
         int32 GetStacks(FName SourceId, ECharacterStat Stat, EModifierKind Kind) const;
+        int32 CountBeneficialModifiers() const;
         virtual void TickComponent(float DeltaTime, ELevelTick TickType,
                 FActorComponentTickFunction* ThisTickFunction) override;
 protected:

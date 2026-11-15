@@ -113,6 +113,9 @@ public:
 	int32 GetSecondTargetIndex() const;
 	int32 GetMenuEnemyIndex() const;
 	int32 GetFirstEnemyPick() const;
+	int32 GetBossTurnsLeft() const;
+	bool IsEntryLockedByEnemy(int32 MemberIndex, FName EntryName) const;
+	FString GetEnemyNotesForMember(int32 MemberIndex) const;
 	UPROPERTY(EditAnywhere, Category = "Battle")
 	UDataTable* TelegraphTable = nullptr;
 	UPROPERTY(EditAnywhere, Category = "Battle")
@@ -217,6 +220,7 @@ private:
 	void TickBossPhase(float DeltaTime);
 	void DoBossTurn();
 	void NotifyEnemyTurn(int32 EnemyIndex);
+	bool DoesMoveFail(int32 MemberIndex, EBattleAction Category);
 	void SpawnDebugSummons();
 	void BuildSummonTurnQueue();
 	int32 TakeNextSummonTurn();

@@ -1,4 +1,10 @@
 Name,MoveSetId,DisplayName,Description,TargetKind,Power,PercentOf,Percent,ModStat,ModAmount,Turns,MaxStacks,UsesPerRound,ScoreBase,ScoreBonus1,ScoreBonus2,Amount1,Amount2,Amount3
-Goat_Pummel,Goat,Pummel,Bashes one member with its hooves,OneMember,0.8,MaxHealth,0.10,None,0,0,1,0,45,25,15,0,0,0
+Goat_Pummel,Goat,Pummel,Bashes one member with its hooves,OneMember,0.8,MaxHealth,0.10,None,0,0,1,0,45,25,15,0.30,0,0
 Goat_Whispers,Goat,Nightmarish Whispers,Lowers one member's defense,OneMember,0,None,0,Defense,-0.15,5,2,0,50,30,0,0,0,0
+Goat_Channel,Goat,Channel,Its next damaging move hits harder,Self,0,None,0,None,0,0,1,0,40,15,0,1.15,0,0
+Goat_Evoke,Goat,Evoke,Summons a guard,Self,0,None,0,None,0,0,1,0,50,35,10,0.25,2,0
+Goat_Grasp,Goat,Grasp,Absorbs mana from one member and turns it into a shield,OneMember,0,None,0,None,0,0,1,1,20,0.5,10,0.10,0.05,0
+Goat_Imprison,Goat,Imprison,Cages one of a member's moves for a round,OneMember,0,None,0,None,0,1,1,0,35,15,0,0,0,0
+Goat_Tether,Goat,Tether,Shackles one member and steals half their healing and buffs,OneMember,0.5,CurrentHealth,0.15,None,0,3,1,0,30,10,70,0.5,0,0
 GoatGuard_Slash,GoatGuard,Slash,Slashes one member,OneMember,0.5,CurrentHealth,0.05,None,0,0,1,0,10,0,0,0,0,0
+GoatGuard_Sacrifice,GoatGuard,Sacrifice,Dies to heal the Goat,Self,0,None,0,None,0,0,1,0,10,0,0,0.15,0.75,0

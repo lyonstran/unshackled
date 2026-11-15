@@ -560,6 +560,10 @@ FString ATurnBattleManager::GetEntryDescription(FName EntryName) const
 	{
 		return FString::Printf(TEXT("Unlocks on Floor %d"), Move->UnlockFloor);
 	}
+	if (IsEntryLockedByEnemy(MenuMemberIndex, EntryName))
+	{
+		return TEXT("Caged: this move is locked this round");
+	}
 	return Move->Description.ToString();
 }
 bool ATurnBattleManager::IsEntryUsable(int32 MemberIndex, FName EntryName) const
@@ -582,6 +586,10 @@ bool ATurnBattleManager::IsEntryUsable(int32 MemberIndex, FName EntryName) const
 		return false;
 	}
 	if (!IsMoveUnlocked(Move))
+	{
+		return false;
+	}
+	if (IsEntryLockedByEnemy(MemberIndex, EntryName))
 	{
 		return false;
 	}
@@ -1147,6 +1155,7 @@ bool ATurnBattleManager::TryPlayerMove(int32 MemberIndex, FName EntryName, int32
 	}
 	APartyMemberCharacter* Member = Party[MemberIndex];
 	const FBattleMoveRow* Move = nullptr;
+	bool bMoveFails = false;
 	if (!IsBlockEntry(EntryName))
 	{
 		Move = GetMove(EntryName);
@@ -1154,12 +1163,16 @@ bool ATurnBattleManager::TryPlayerMove(int32 MemberIndex, FName EntryName, int32
 		{
 			return false;
 		}
-		if (Move->ManaCost > 0.0f)
+		bMoveFails = DoesMoveFail(MemberIndex, Move->Category);
+		if (!bMoveFails)
 		{
-			if (!Member->Stats->SpendMana(Move->ManaCost))
+			if (Move->ManaCost > 0.0f)
 			{
-				ShowMessage(TEXT("Not enough mana"), FColor::Orange);
-				return false;
+				if (!Member->Stats->SpendMana(Move->ManaCost))
+				{
+					ShowMessage(TEXT("Not enough mana"), FColor::Orange);
+					return false;
+				}
 			}
 		}
 	}
@@ -1171,7 +1184,11 @@ bool ATurnBattleManager::TryPlayerMove(int32 MemberIndex, FName EntryName, int32
 	}
 	IsBlocking[MemberIndex] = false;
 	EBattleAction Category = GetEntryCategory(EntryName);
-	int32 CounterIndex = FindCounterIndex(Member, Category);
+	int32 CounterIndex = -1;
+	if (!bMoveFails)
+	{
+		CounterIndex = FindCounterIndex(Member, Category);
+	}
 	if (CounterIndex >= 0)
 	{
 		FPendingTelegraph Countered = Pending[CounterIndex];
@@ -1184,6 +1201,10 @@ bool ATurnBattleManager::TryPlayerMove(int32 MemberIndex, FName EntryName, int32
 	{
 		IsBlocking[MemberIndex] = true;
 		ShowMessage(FString::Printf(TEXT("%s blocks"), *Member->DisplayName), FColor::Cyan);
+	}
+	else if (bMoveFails)
+	{
+		ShowMessage(FString::Printf(TEXT("%s's %s fails"), *Member->DisplayName, *Move->DisplayName.ToString()), FColor::Orange);
 	}
 	else
 	{
@@ -1989,4 +2010,64 @@ int32 ATurnBattleManager::GetMenuEnemyIndex() const
 int32 ATurnBattleManager::GetFirstEnemyPick() const
 {
 	return FirstEnemyPick;
+}
+int32 ATurnBattleManager::GetBossTurnsLeft() const
+{
+	return BossTurnsLeft;
+}
+bool ATurnBattleManager::DoesMoveFail(int32 MemberIndex, EBattleAction Category)
+{
+	for (int32 i = 0; i < Enemies.Num(); i++)
+	{
+		ABattleEnemyCharacter* Enemy = Cast<ABattleEnemyCharacter>(Enemies[i]);
+		if (Enemy != nullptr)
+		{
+			if (!Enemy->Health->IsDead())
+			{
+				if (Enemy->DoesMemberMoveFail(this, MemberIndex, Category))
+				{
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+bool ATurnBattleManager::IsEntryLockedByEnemy(int32 MemberIndex, FName EntryName) const
+{
+	for (int32 i = 0; i < Enemies.Num(); i++)
+	{
+		ABattleEnemyCharacter* Enemy = Cast<ABattleEnemyCharacter>(Enemies[i]);
+		if (Enemy != nullptr)
+		{
+			if (!Enemy->Health->IsDead())
+			{
+				if (Enemy->IsMemberMoveLocked(this, MemberIndex, EntryName))
+				{
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+FString ATurnBattleManager::GetEnemyNotesForMember(int32 MemberIndex) const
+{
+	FString Notes;
+	for (int32 i = 0; i < Enemies.Num(); i++)
+	{
+		ABattleEnemyCharacter* Enemy = Cast<ABattleEnemyCharacter>(Enemies[i]);
+		if (Enemy != nullptr)
+		{
+			if (!Enemy->Health->IsDead())
+			{
+				FString Note = Enemy->GetMemberNote(this, MemberIndex);
+				if (!Note.IsEmpty())
+				{
+					Notes = Notes + Note + TEXT(" ");
+				}
+			}
+		}
+	}
+	return Notes;
 }

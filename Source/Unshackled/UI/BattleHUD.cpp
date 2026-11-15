@@ -74,6 +74,10 @@ void ABattleHUD::DrawBossPanel(ATurnBattleManager* Manager)
 	{
 		StatText = StatText + FString::Printf(TEXT("   Marks %d"), Marks);
 	}
+	if (Boss->Health->Shield > 0.0f)
+	{
+		StatText = StatText + FString::Printf(TEXT("   Shield %d"), FMath::CeilToInt(Boss->Health->Shield));
+	}
 	DrawCenteredText(StatText, FLinearColor(0.75f, 0.75f, 0.75f, 1.0f), CenterX, BarTop + BossBarHeight + 22.0f, 0.8f);
 }
 FLinearColor ABattleHUD::GetEnemyBorderColor(ATurnBattleManager* Manager, int32 EnemyIndex, FLinearColor NormalColor)
@@ -313,6 +317,11 @@ void ABattleHUD::DrawPartyCard(ATurnBattleManager* Manager, int32 MemberIndex, f
 	if (!NoteText.IsEmpty())
 	{
 		DrawText(NoteText, FLinearColor(1.0f, 0.8f, 0.4f, 1.0f), Left + 6.0f, Top + 87.0f, nullptr, 0.7f);
+	}
+	FString EnemyNoteText = Manager->GetEnemyNotesForMember(MemberIndex);
+	if (!EnemyNoteText.IsEmpty())
+	{
+		DrawText(EnemyNoteText, FLinearColor(0.85f, 0.5f, 1.0f, 1.0f), Left + 6.0f, Top + 101.0f, nullptr, 0.7f);
 	}
 	if (Member->Health->IsDead() || !Manager->CanMemberAct(MemberIndex))
 	{

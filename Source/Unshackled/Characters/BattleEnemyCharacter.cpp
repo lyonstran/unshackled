@@ -20,6 +20,18 @@ void ABattleEnemyCharacter::OnBattleRoundStart(ATurnBattleManager* Manager)
 {
 	MovesUsedThisRound.Empty();
 }
+bool ABattleEnemyCharacter::DoesMemberMoveFail(ATurnBattleManager* Manager, int32 MemberIndex, EBattleAction Category)
+{
+	return false;
+}
+bool ABattleEnemyCharacter::IsMemberMoveLocked(const ATurnBattleManager* Manager, int32 MemberIndex, FName MoveId) const
+{
+	return false;
+}
+FString ABattleEnemyCharacter::GetMemberNote(const ATurnBattleManager* Manager, int32 MemberIndex) const
+{
+	return FString();
+}
 TArray<FName> ABattleEnemyCharacter::GatherMoveIds(ATurnBattleManager* Manager) const
 {
 	TArray<FName> MoveIds;

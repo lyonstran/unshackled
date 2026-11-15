@@ -20,6 +20,8 @@ public:
         float HealMultiplier = 1.0f;
         UPROPERTY(BlueprintReadWrite, Category = "Health")
         float ShieldMultiplier = 1.0f;
+        float DivertFraction = 0.0f;
+        float DivertedHealing = 0.0f;
         void TakeHit(float Amount);
         void Heal(float Amount);
         void Revive();

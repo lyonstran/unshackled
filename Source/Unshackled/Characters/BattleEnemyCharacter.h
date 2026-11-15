@@ -2,6 +2,7 @@
 #include "CoreMinimal.h"
 #include "UnshackledCharacterBase.h"
 #include "Battle/BossMoveRow.h"
+#include "Battle/TelegraphRow.h"
 #include "Stats/StatTypes.h"
 #include "BattleEnemyCharacter.generated.h"
 class ATurnBattleManager;
@@ -12,6 +13,9 @@ class UNSHACKLED_API ABattleEnemyCharacter : public AUnshackledCharacterBase
 public:
 	ABattleEnemyCharacter();
 	virtual void OnBattleRoundStart(ATurnBattleManager* Manager);
+	virtual bool DoesMemberMoveFail(ATurnBattleManager* Manager, int32 MemberIndex, EBattleAction Category);
+	virtual bool IsMemberMoveLocked(const ATurnBattleManager* Manager, int32 MemberIndex, FName MoveId) const;
+	virtual FString GetMemberNote(const ATurnBattleManager* Manager, int32 MemberIndex) const;
 	bool TakeTurnFromMoveTable(ATurnBattleManager* Manager);
 	FName GetMoveSetKey() const;
 	UPROPERTY(EditAnywhere, Category = "Battle Enemy")

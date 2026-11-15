@@ -26,7 +26,14 @@ void UHealthComponent::Heal(float Amount)
 	{
 		return;
 	}
-	CurrentHealth = CurrentHealth + (Amount * HealMultiplier);
+	float HealAmount = Amount * HealMultiplier;
+	if (DivertFraction > 0.0f)
+	{
+		float DivertedPart = HealAmount * DivertFraction;
+		DivertedHealing = DivertedHealing + DivertedPart;
+		HealAmount = HealAmount - DivertedPart;
+	}
+	CurrentHealth = CurrentHealth + HealAmount;
 	if (CurrentHealth > MaxHealth)
 	{
 		CurrentHealth = MaxHealth;
