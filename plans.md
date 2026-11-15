@@ -140,9 +140,10 @@ completely frustrating playing against the boss. For the final boss fight, I wan
 
 Sort of the themes I want to go with these boss's ->
 Floor 1 boss: Goat - Inflicting bedeviling telekinesis on those who challenge the authority authority. 
-Floor 2 boss: Serpent - Torture and agonize the defiant with overbearing miasma.
+Floor 2 boss: Serpent - Torture and agonizethe defiant with overbearing miasma.
 Floor 3 boss: Dragon - Scorching the weak, and withering the rebellious
 Floor 4 boss: Lion - The world is it's den, it's vehicle for dominance, and nothing will touch it. 
+Floor 5 boss: S. Ravana + Chimera - This world is imperfect. Chaos is abundunt. A few lives now will gurantee the perfect future. 
 
 
 Goat:
