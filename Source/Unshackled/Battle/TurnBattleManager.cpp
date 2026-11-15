@@ -456,6 +456,18 @@ const FBattleMoveRow* ATurnBattleManager::GetMove(FName MoveId) const
 	}
 	return MoveTable->FindRow<FBattleMoveRow>(MoveId, TEXT("TurnBattleManager"), false);
 }
+const FBossMoveRow* ATurnBattleManager::GetBossMove(FName MoveId) const
+{
+	if (BossMoveTable == nullptr)
+	{
+		return nullptr;
+	}
+	if (MoveId.IsNone())
+	{
+		return nullptr;
+	}
+	return BossMoveTable->FindRow<FBossMoveRow>(MoveId, TEXT("TurnBattleManager"), false);
+}
 int32 ATurnBattleManager::GetBattleFloor() const
 {
 	UUnshackledGameInstance* GameInstanceRef = Cast<UUnshackledGameInstance>(GetGameInstance());
@@ -741,6 +753,17 @@ void ATurnBattleManager::NotifyPlayerPhaseStart()
 		if (Party[i] != nullptr)
 		{
 			Party[i]->OnBattlePlayerPhaseStart(this);
+		}
+	}
+	for (int32 i = 0; i < Enemies.Num(); i++)
+	{
+		ABattleEnemyCharacter* Enemy = Cast<ABattleEnemyCharacter>(Enemies[i]);
+		if (Enemy != nullptr)
+		{
+			if (!Enemy->Health->IsDead())
+			{
+				Enemy->OnBattleRoundStart(this);
+			}
 		}
 	}
 }
@@ -1074,6 +1097,14 @@ void ATurnBattleManager::DoBossTurn()
 	if (State != EBattleState::BossPhase)
 	{
 		return;
+	}
+	if (Boss != nullptr)
+	{
+		if (Boss->TakeTurnFromMoveTable(this))
+		{
+			CheckForEnd();
+			return;
+		}
 	}
 	if (BossRowNames.Num() == 0)
 	{
@@ -1728,15 +1759,10 @@ FString ATurnBattleManager::GetEnemyName(int32 Index) const
 	{
 		return FString();
 	}
-	ABossCharacter* BossEnemy = Cast<ABossCharacter>(Enemy);
-	if (BossEnemy != nullptr)
+	ABattleEnemyCharacter* BattleEnemy = Cast<ABattleEnemyCharacter>(Enemy);
+	if (BattleEnemy != nullptr)
 	{
-		return BossEnemy->DisplayName;
-	}
-	ABattleSummonCharacter* SummonEnemy = Cast<ABattleSummonCharacter>(Enemy);
-	if (SummonEnemy != nullptr)
-	{
-		return SummonEnemy->DisplayName;
+		return BattleEnemy->DisplayName;
 	}
 	return Enemy->GetName();
 }

@@ -4,6 +4,7 @@
 #include "Engine/DataTable.h"
 #include "Battle/TelegraphRow.h"
 #include "Battle/BattleMoveRow.h"
+#include "Battle/BossMoveRow.h"
 #include "TurnBattleManager.generated.h"
 class APartyMemberCharacter;
 class ABossCharacter;
@@ -69,6 +70,7 @@ public:
 	FString GetEntryDescription(FName EntryName) const;
 	bool IsEntryUsable(int32 MemberIndex, FName EntryName) const;
 	const FBattleMoveRow* GetMove(FName MoveId) const;
+	const FBossMoveRow* GetBossMove(FName MoveId) const;
 	int32 GetBattleFloor() const;
 	bool IsMoveUnlocked(const FBattleMoveRow* Move) const;
 	int32 FindPartyIndex(APartyMemberCharacter* Member) const;
@@ -119,6 +121,8 @@ public:
 	float ExtraTurnHealthFraction = 0.5f;
 	UPROPERTY(EditAnywhere, Category = "Battle")
 	UDataTable* MoveTable = nullptr;
+	UPROPERTY(EditAnywhere, Category = "Battle")
+	UDataTable* BossMoveTable = nullptr;
 	UPROPERTY(EditAnywhere, Category = "Battle")
 	float ManaRestoreFraction = 0.25f;
 	UPROPERTY(EditAnywhere, Category = "Battle Setup")

@@ -6,6 +6,8 @@
 ABattleSummonCharacter::ABattleSummonCharacter()
 {
 	bIsEnemy = true;
+	DisplayName = TEXT("Summon");
+	bPicksMovesRandomly = true;
 }
 void ABattleSummonCharacter::SetBattleMaxHealth(float NewMaxHealth)
 {
@@ -16,6 +18,10 @@ void ABattleSummonCharacter::SetBattleMaxHealth(float NewMaxHealth)
 void ABattleSummonCharacter::TakeBattleTurn(ATurnBattleManager* Manager)
 {
 	if (Manager == nullptr)
+	{
+		return;
+	}
+	if (TakeTurnFromMoveTable(Manager))
 	{
 		return;
 	}

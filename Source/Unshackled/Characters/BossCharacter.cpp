@@ -2,4 +2,5 @@
 ABossCharacter::ABossCharacter()
 {
 	bIsEnemy = true;
+	DisplayName = TEXT("Boss");
 }

@@ -1,0 +1,4 @@
+Name,MoveSetId,DisplayName,Description,TargetKind,Power,PercentOf,Percent,ModStat,ModAmount,Turns,MaxStacks,UsesPerRound,ScoreBase,ScoreBonus1,ScoreBonus2,Amount1,Amount2,Amount3
+Goat_Pummel,Goat,Pummel,Bashes one member with its hooves,OneMember,0.8,MaxHealth,0.10,None,0,0,1,0,45,25,15,0,0,0
+Goat_Whispers,Goat,Nightmarish Whispers,Lowers one member's defense,OneMember,0,None,0,Defense,-0.15,5,2,0,50,30,0,0,0,0
+GoatGuard_Slash,GoatGuard,Slash,Slashes one member,OneMember,0.5,CurrentHealth,0.05,None,0,0,1,0,10,0,0,0,0,0
