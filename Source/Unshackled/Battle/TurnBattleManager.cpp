@@ -484,6 +484,19 @@ const FBattleMoveRow* ATurnBattleManager::GetMove(FName MoveId) const
 	}
 	return MoveTable->FindRow<FBattleMoveRow>(MoveId, TEXT("TurnBattleManager"), false);
 }
+float ATurnBattleManager::GetMoveManaCost(const FBattleMoveRow* Move) const
+{
+	if (Move == nullptr)
+	{
+		return 0.0f;
+	}
+	UUnshackledGameInstance* GameInstanceRef = Cast<UUnshackledGameInstance>(GetGameInstance());
+	if (GameInstanceRef == nullptr)
+	{
+		return Move->ManaCost;
+	}
+	return Move->ManaCost * GameInstanceRef->GetPartyManaCostScale();
+}
 const FBossMoveRow* ATurnBattleManager::GetBossMove(FName MoveId) const
 {
 	if (BossMoveTable == nullptr)
@@ -563,9 +576,10 @@ FString ATurnBattleManager::GetEntryLabel(FName EntryName) const
 		return EntryName.ToString();
 	}
 	FString Label = Move->DisplayName.ToString();
-	if (Move->ManaCost > 0.0f)
+	float ManaCost = GetMoveManaCost(Move);
+	if (ManaCost > 0.0f)
 	{
-		Label = Label + FString::Printf(TEXT(" (%d MP)"), FMath::RoundToInt(Move->ManaCost));
+		Label = Label + FString::Printf(TEXT(" (%d MP)"), FMath::RoundToInt(ManaCost));
 	}
 	return Label;
 }
@@ -626,7 +640,7 @@ bool ATurnBattleManager::IsEntryUsable(int32 MemberIndex, FName EntryName) const
 	{
 		return false;
 	}
-	return Member->Stats->CurrentMana >= Move->ManaCost;
+	return Member->Stats->CurrentMana >= GetMoveManaCost(Move);
 }
 bool ATurnBattleManager::NeedsAllyTarget(FName EntryName) const
 {
@@ -1243,9 +1257,10 @@ bool ATurnBattleManager::TryPlayerMove(int32 MemberIndex, FName EntryName, int32
 		bMoveFails = DoesMoveFail(MemberIndex, EntryName, Move->Category);
 		if (!bMoveFails)
 		{
-			if (Move->ManaCost > 0.0f)
+			float ManaCost = GetMoveManaCost(Move);
+			if (ManaCost > 0.0f)
 			{
-				if (!Member->Stats->SpendMana(Move->ManaCost))
+				if (!Member->Stats->SpendMana(ManaCost))
 				{
 					ShowMessage(TEXT("Not enough mana"), FColor::Orange);
 					return false;

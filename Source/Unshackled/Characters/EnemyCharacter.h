@@ -13,5 +13,6 @@ public:
 	float AttackTriggerDistance = 90.0f;
 protected:
 	virtual void Die() override;
+	virtual float GetFloorStatScale() const override;
 	AUnshackledCharacterBase* FindClosestTarget();
-};
+};

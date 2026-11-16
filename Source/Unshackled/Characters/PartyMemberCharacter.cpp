@@ -491,3 +491,21 @@ void APartyMemberCharacter::RestartLevelAfterDeath()
         FString CurrentLevelName = UGameplayStatics::GetCurrentLevelName(this, true);
         UGameplayStatics::OpenLevel(this, FName(*CurrentLevelName));
 }
+float APartyMemberCharacter::GetFloorStatScale() const
+{
+        UUnshackledGameInstance* GameInstanceRef = Cast<UUnshackledGameInstance>(GetGameInstance());
+        if (GameInstanceRef == nullptr)
+        {
+                return 1.0f;
+        }
+        return GameInstanceRef->GetPartyStatScale();
+}
+float APartyMemberCharacter::GetFloorManaCostScale() const
+{
+        UUnshackledGameInstance* GameInstanceRef = Cast<UUnshackledGameInstance>(GetGameInstance());
+        if (GameInstanceRef == nullptr)
+        {
+                return 1.0f;
+        }
+        return GameInstanceRef->GetPartyManaCostScale();
+}

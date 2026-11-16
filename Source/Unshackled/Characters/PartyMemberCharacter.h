@@ -60,6 +60,8 @@ public:
         float GroundManaDrainPerSecond = 8.0f;
 protected:
         virtual void BeginPlay() override;
+        virtual float GetFloorStatScale() const override;
+        virtual float GetFloorManaCostScale() const override;
         virtual void Die() override;
         virtual void GroundedTick(float DeltaTime);
         virtual float FilterIncomingDamage(float RawDamage, bool bTrueDamage, AUnshackledCharacterBase* Attacker) override;

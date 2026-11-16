@@ -57,25 +57,35 @@ void AUnshackledCharacterBase::ApplyStatsRow()
                 UE_LOG(LogTemp, Warning, TEXT("No stats row named %s in the character stats table"), *StatsRowName.ToString());
                 return;
         }
-        Health->MaxHealth = Row->MaxHealth;
-        Health->CurrentHealth = Row->MaxHealth;
-        AttackDamage = Row->Damage;
-        Stats->BaseDefense = Row->Defense;
+        float StatScale = GetFloorStatScale();
+        float CostScale = GetFloorManaCostScale();
+        Health->MaxHealth = Row->MaxHealth * StatScale;
+        Health->CurrentHealth = Health->MaxHealth;
+        AttackDamage = Row->Damage * StatScale;
+        Stats->BaseDefense = Row->Defense * StatScale;
         Stats->BaseSpeed = Row->Speed;
-        Stats->BaseMaxMana = Row->MaxMana;
-        ManaRegenPerSecond = Row->ManaRegenPerSecond;
+        Stats->BaseMaxMana = Row->MaxMana * StatScale;
+        ManaRegenPerSecond = Row->ManaRegenPerSecond * StatScale;
         AttackCooldown = Row->AttackCooldown;
         DashCooldown = Row->DashCooldown;
-        SpecialManaCost = Row->SpecialManaCost;
+        SpecialManaCost = Row->SpecialManaCost * CostScale;
         SpecialCooldown = Row->SpecialCooldown;
         SpecialWindup = Row->SpecialWindup;
-        UltimateManaCost = Row->UltimateManaCost;
+        UltimateManaCost = Row->UltimateManaCost * CostScale;
         UltimateCooldown = Row->UltimateCooldown;
         UltimateWindup = Row->UltimateWindup;
         if (Stats->bHasMana)
         {
                 Stats->CurrentMana = Stats->GetFinal(ECharacterStat::MaxMana);
         }
+}
+float AUnshackledCharacterBase::GetFloorStatScale() const
+{
+        return 1.0f;
+}
+float AUnshackledCharacterBase::GetFloorManaCostScale() const
+{
+        return 1.0f;
 }
 void AUnshackledCharacterBase::Tick(float DeltaTime)
 {

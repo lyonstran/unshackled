@@ -7,8 +7,8 @@ class APlayerController;
 struct FCharacterState
 {
 	FName CharacterId;
-	float CurrentHealth = 0.0f;
-	float CurrentMana = 0.0f;
+	float HealthFraction = 0.0f;
+	float ManaFraction = 0.0f;
 };
 UCLASS()
 class UNSHACKLED_API UUnshackledGameInstance : public UGameInstance
@@ -30,8 +30,18 @@ public:
 	FString SaveSlotName = TEXT("UnshackledSave");
 	UPROPERTY(EditAnywhere, Category = "Save")
 	int32 SaveUserIndex = 0;
+	UPROPERTY(EditAnywhere, Category = "Floor Growth")
+	float PartyStatGrowthPerFloor = 0.12f;
+	UPROPERTY(EditAnywhere, Category = "Floor Growth")
+	float PartyManaCostGrowthPerFloor = 0.04f;
+	UPROPERTY(EditAnywhere, Category = "Floor Growth")
+	float EnemyStatGrowthPerFloor = 0.06f;
 	bool IsLastFloor() const;
 	bool AdvanceFloor();
+	int32 GetFloorsCleared() const;
+	float GetPartyStatScale() const;
+	float GetPartyManaCostScale() const;
+	float GetEnemyStatScale() const;
 	void ResetToFirstFloor();
 	void SaveFloorStartStates();
 	bool RestoreCharacterState(APartyMemberCharacter* Member);
@@ -54,4 +64,6 @@ private:
 	TArray<FName> FloorStartRecruitedIds;
 	TArray<FCharacterState> FloorStartStates;
 	int32 FindStateIndex(FName CharacterId) const;
+	float GetHealthFraction(APartyMemberCharacter* Member) const;
+	float GetManaFraction(APartyMemberCharacter* Member) const;
 };

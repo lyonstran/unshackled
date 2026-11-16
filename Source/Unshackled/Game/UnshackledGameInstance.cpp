@@ -86,8 +86,8 @@ void UUnshackledGameInstance::SaveFloorStartStates()
 			NewState.CharacterId = Member->StatsRowName;
 			Index = FloorStartStates.Add(NewState);
 		}
-		FloorStartStates[Index].CurrentHealth = Member->Health->CurrentHealth;
-		FloorStartStates[Index].CurrentMana = Member->Stats->CurrentMana;
+		FloorStartStates[Index].HealthFraction = GetHealthFraction(Member);
+		FloorStartStates[Index].ManaFraction = GetManaFraction(Member);
 	}
 }
 bool UUnshackledGameInstance::RestoreCharacterState(APartyMemberCharacter* Member)
@@ -101,18 +101,65 @@ bool UUnshackledGameInstance::RestoreCharacterState(APartyMemberCharacter* Membe
 	{
 		return false;
 	}
-	float SavedHealth = FloorStartStates[Index].CurrentHealth;
-	if (SavedHealth <= 0.0f)
+	float SavedHealthFraction = FloorStartStates[Index].HealthFraction;
+	if (SavedHealthFraction <= 0.0f)
 	{
 		return false;
 	}
-	if (SavedHealth > Member->Health->MaxHealth)
+	if (SavedHealthFraction > 1.0f)
 	{
-		SavedHealth = Member->Health->MaxHealth;
+		SavedHealthFraction = 1.0f;
 	}
-	Member->Health->CurrentHealth = SavedHealth;
-	Member->Stats->CurrentMana = FloorStartStates[Index].CurrentMana;
+	float SavedManaFraction = FloorStartStates[Index].ManaFraction;
+	if (SavedManaFraction < 0.0f)
+	{
+		SavedManaFraction = 0.0f;
+	}
+	if (SavedManaFraction > 1.0f)
+	{
+		SavedManaFraction = 1.0f;
+	}
+	Member->Health->CurrentHealth = Member->Health->MaxHealth * SavedHealthFraction;
+	Member->Stats->CurrentMana = Member->Stats->GetFinal(ECharacterStat::MaxMana) * SavedManaFraction;
 	return true;
+}
+float UUnshackledGameInstance::GetHealthFraction(APartyMemberCharacter* Member) const
+{
+	if (Member->Health->MaxHealth <= 0.0f)
+	{
+		return 0.0f;
+	}
+	return Member->Health->CurrentHealth / Member->Health->MaxHealth;
+}
+float UUnshackledGameInstance::GetManaFraction(APartyMemberCharacter* Member) const
+{
+	float MaxMana = Member->Stats->GetFinal(ECharacterStat::MaxMana);
+	if (MaxMana <= 0.0f)
+	{
+		return 0.0f;
+	}
+	return Member->Stats->CurrentMana / MaxMana;
+}
+int32 UUnshackledGameInstance::GetFloorsCleared() const
+{
+	int32 Cleared = CurrentFloor - 1;
+	if (Cleared < 0)
+	{
+		Cleared = 0;
+	}
+	return Cleared;
+}
+float UUnshackledGameInstance::GetPartyStatScale() const
+{
+	return 1.0f + (PartyStatGrowthPerFloor * GetFloorsCleared());
+}
+float UUnshackledGameInstance::GetPartyManaCostScale() const
+{
+	return 1.0f + (PartyManaCostGrowthPerFloor * GetFloorsCleared());
+}
+float UUnshackledGameInstance::GetEnemyStatScale() const
+{
+	return 1.0f + (EnemyStatGrowthPerFloor * GetFloorsCleared());
 }
 void UUnshackledGameInstance::ReachCheckpoint(FName LevelName)
 {
@@ -147,8 +194,8 @@ bool UUnshackledGameInstance::SaveCheckpoint()
 	for (int32 i = 0; i < FloorStartStates.Num(); i++)
 	{
 		SaveData->CharacterIds.Add(FloorStartStates[i].CharacterId);
-		SaveData->CharacterHealth.Add(FloorStartStates[i].CurrentHealth);
-		SaveData->CharacterMana.Add(FloorStartStates[i].CurrentMana);
+		SaveData->CharacterHealth.Add(FloorStartStates[i].HealthFraction);
+		SaveData->CharacterMana.Add(FloorStartStates[i].ManaFraction);
 	}
 	bool bSaved = UGameplayStatics::SaveGameToSlot(SaveData, SaveSlotName, SaveUserIndex);
 	if (!bSaved)
@@ -190,8 +237,8 @@ bool UUnshackledGameInstance::LoadCheckpoint()
 			{
 				FCharacterState LoadedState;
 				LoadedState.CharacterId = SaveData->CharacterIds[i];
-				LoadedState.CurrentHealth = SaveData->CharacterHealth[i];
-				LoadedState.CurrentMana = SaveData->CharacterMana[i];
+				LoadedState.HealthFraction = SaveData->CharacterHealth[i];
+				LoadedState.ManaFraction = SaveData->CharacterMana[i];
 				FloorStartStates.Add(LoadedState);
 			}
 		}

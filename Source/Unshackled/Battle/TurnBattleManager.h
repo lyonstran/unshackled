@@ -70,6 +70,7 @@ public:
 	FString GetEntryDescription(FName EntryName) const;
 	bool IsEntryUsable(int32 MemberIndex, FName EntryName) const;
 	const FBattleMoveRow* GetMove(FName MoveId) const;
+	float GetMoveManaCost(const FBattleMoveRow* Move) const;
 	const FBossMoveRow* GetBossMove(FName MoveId) const;
 	int32 GetBattleFloor() const;
 	bool IsMoveUnlocked(const FBattleMoveRow* Move) const;

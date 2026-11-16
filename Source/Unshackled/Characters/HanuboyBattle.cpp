@@ -284,7 +284,7 @@ void AHanuboyCharacter::CastShelter(ATurnBattleManager* Manager, const FBattleMo
         }
         if (Ally == this)
         {
-                Stats->RestoreMana(Move->ManaCost);
+                Stats->RestoreMana(Manager->GetMoveManaCost(Move));
                 ShowBattleMessage(TEXT("Hanuboy cannot shelter himself (mana refunded)"), FColor::Orange);
                 return;
         }

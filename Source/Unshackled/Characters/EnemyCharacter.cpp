@@ -2,6 +2,7 @@
 #include "Characters/PartyMemberCharacter.h"
 #include "Characters/FlowerCharacter.h"
 #include "EngineUtils.h"
+#include "Game/UnshackledGameInstance.h"
 #include "GameFramework/CharacterMovementComponent.h"
 AEnemyCharacter::AEnemyCharacter()
 {
@@ -112,4 +113,13 @@ void AEnemyCharacter::Die()
 {
         Super::Die();
         SetLifeSpan(1.0f);
+}
+float AEnemyCharacter::GetFloorStatScale() const
+{
+        UUnshackledGameInstance* GameInstanceRef = Cast<UUnshackledGameInstance>(GetGameInstance());
+        if (GameInstanceRef == nullptr)
+        {
+                return 1.0f;
+        }
+        return GameInstanceRef->GetEnemyStatScale();
 }

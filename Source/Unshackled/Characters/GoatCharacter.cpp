@@ -522,7 +522,7 @@ bool AGoatCharacter::CanAffordUltimate(ATurnBattleManager* Manager, APartyMember
 		{
 			if (Row->Category == EBattleAction::Ultimate)
 			{
-				if (Member->Stats->CurrentMana >= Row->ManaCost)
+				if (Member->Stats->CurrentMana >= Manager->GetMoveManaCost(Row))
 				{
 					return true;
 				}

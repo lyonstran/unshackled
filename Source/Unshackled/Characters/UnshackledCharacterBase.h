@@ -68,6 +68,8 @@ protected:
         virtual void BeginPlay() override;
         virtual void Die();
         virtual bool WouldDie();
+        virtual float GetFloorStatScale() const;
+        virtual float GetFloorManaCostScale() const;
         virtual void PerformBasicAttack(FVector Direction);
         virtual void PerformSpecial(FVector AimDirection);
         virtual void PerformUltimate(FVector AimDirection);
