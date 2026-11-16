@@ -21,6 +21,7 @@ protected:
 	virtual float ScoreMove(ATurnBattleManager* Manager, FName MoveId, const FBossMoveRow* Move) override;
 	virtual int32 PickMoveTarget(ATurnBattleManager* Manager, FName MoveId, const FBossMoveRow* Move) override;
 	virtual void PerformMove(ATurnBattleManager* Manager, FName MoveId, const FBossMoveRow* Move, int32 TargetIndex) override;
+	virtual float GetHitMultiplierFor(ATurnBattleManager* Manager, int32 MemberIndex) const override;
 	void EnsureMemberArrays(const ATurnBattleManager* Manager);
 	int32 GetSubjugation(int32 MemberIndex) const;
 	int32 GetTotalSubjugation() const;
@@ -41,7 +42,6 @@ protected:
 	bool IsChallengeActive(const ATurnBattleManager* Manager) const;
 	bool IsChallenged(const ATurnBattleManager* Manager, int32 MemberIndex) const;
 	bool IsSleeping() const;
-	bool IsMaliceArmed(const ATurnBattleManager* Manager) const;
 	bool IsRoarOnEveryone(ATurnBattleManager* Manager) const;
 	float GetCryHeal(const FBossMoveRow* Move) const;
 	float ScoreSupremity(ATurnBattleManager* Manager, const FBossMoveRow* Move) const;
@@ -52,7 +52,6 @@ protected:
 	float ScoreChallenge(ATurnBattleManager* Manager, const FBossMoveRow* Move) const;
 	float ScoreRoar(ATurnBattleManager* Manager, const FBossMoveRow* Move) const;
 	float ScoreRest(const FBossMoveRow* Move) const;
-	float ScoreMalice(ATurnBattleManager* Manager, FName MoveId, const FBossMoveRow* Move) const;
 	int32 FindExecuteTarget(ATurnBattleManager* Manager) const;
 	int32 FindSupremityTarget(ATurnBattleManager* Manager) const;
 	int32 FindSovereigntyTarget(ATurnBattleManager* Manager) const;
@@ -68,16 +67,12 @@ protected:
 	void AddChallengeModifier(APartyMemberCharacter* Member, FName MoveId, ECharacterStat Stat, float Amount, int32 Turns);
 	void CastRoar(ATurnBattleManager* Manager, FName MoveId, const FBossMoveRow* Move);
 	void CastRest(ATurnBattleManager* Manager, FName MoveId, const FBossMoveRow* Move);
-	void CastMalice(ATurnBattleManager* Manager);
 	void Slumber(ATurnBattleManager* Manager);
 	void TickRest(ATurnBattleManager* Manager);
 	void WakeFromRest(ATurnBattleManager* Manager);
 	void AddAwakenedModifier(ECharacterStat Stat, float Amount);
 	void TickChallengeMana(ATurnBattleManager* Manager);
 	void TriggerSovereignty(ATurnBattleManager* Manager, int32 MemberIndex);
-	void StartMaliceWatch(ATurnBattleManager* Manager);
-	bool FinishMaliceWatch(ATurnBattleManager* Manager);
-	void TriggerMalice(ATurnBattleManager* Manager, int32 MemberIndex);
 	void RecordActionStart();
 	void RecordActionDamage(ATurnBattleManager* Manager, int32 MemberIndex);
 	UPROPERTY()
@@ -103,12 +98,4 @@ protected:
 	bool bRestUsed = false;
 	bool bAwake = true;
 	int32 RestLastRound = -1;
-	int32 MaliceRound = -1;
-	bool bMaliceWatching = false;
-	TArray<int32> SavedBuffCounts;
-	TArray<float> SavedDivertedHealing;
-	TArray<float> SavedShieldMultipliers;
-	TArray<float> SavedShields;
-	TArray<float> SavedStatsDivert;
-	TArray<float> SavedHealthDivert;
 };

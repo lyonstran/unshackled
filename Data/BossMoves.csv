@@ -40,3 +40,20 @@ Lion_Roar,Lion,Roar,Lowers every member's defense by their subjugation for three
 Lion_Rest,Lion,Rest,Sleeps for three rounds taking far less damage and healing; then wakes stronger,Self,0,None,0,None,-0.90,3,1,0,70,0,0,0.35,0.10,0.10,0
 Lion_Slumber,Lion,Slumber,Passive: the Lion sleeps through its turn,Self,0,None,0,None,0,0,1,0,0,0,0,0,0,0,0
 Lion_Malice,Lion,Malice,Lies in wait: the first buff or heal next round is halved and its caster mauled,WholeParty,0.6,MissingHealth,0.015,None,0,0,1,0,35,0,0,0.5,0,0,0
+Ravana_Saturn,Ravana,Saturn,Passive: Ravana's hits and curses weaken members and mark them for execution,Self,0,None,0,None,-0.01,0,30,0,0,0,0,25,0.05,0,0
+Ravana_Funnel,Ravana,Wind Funnel,Passive: winds tear at every member at the start of each round,WholeParty,0,CurrentHealth,0.0175,None,0,0,1,0,0,0,0,0,0,0,0
+Ravana_Absolution,Ravana,Absolution,Passive: mirrors the party's retribution at the start of the next boss phase,Self,0,None,0,None,0,0,1,0,0,0,0,0.05,0.10,0,0
+Ravana_Kneel,Ravana,Kneel,Forces one member down with heavy wind,OneMember,1.0,CurrentHealth,0.025,None,0,0,1,0,35,15,0,1,0,0,0
+Ravana_Ravage,Ravana,Ravage,A blade of wind pierces the whole party,WholeParty,0.9,CurrentHealth,0.03,None,0,0,1,0,30,0.5,75,0.005,0,0,0
+Ravana_Longinus,Ravana,Longinus,Marks one member; the spear falls when the next round's first member acts,OneMember,0.5,MaxHealth,0.10,None,0,0,1,0,35,0,0,0,0,0,0
+Ravana_Gale,Ravana,Gale Unleashed,A tornado hits the whole party then lingers for three rounds,WholeParty,1.2,None,0,None,0,3,1,0,45,0,0,0.10,0,0,0
+Ravana_Veil,Ravana,Veil,Ravana and the Chimera take less damage and reflect some back,Self,0,None,0,IncomingDamage,-0.15,3,1,0,35,15,0,0.10,0.5,0,0
+Ravana_Omnichannel,Ravana,Omnichannel,Raises Ravana's attack and defense,Self,0,None,0,Damage,0.15,3,1,0,35,0,0,0.15,0,0,0
+Ravana_WindWall,Ravana,Wind Wall,Stops the next hit on Ravana and turns part of it into power,Self,0,None,0,None,0,0,1,0,30,0,0,0.20,0.10,0.50,0
+Ravana_WindsOfWar,Ravana,Winds of War,Raises the attack of everyone on the field,Self,0,None,0,Damage,0.10,3,1,0,20,0,0,0,0,0,0
+Ravana_Submission,Ravana,Submission,Lowers one member's attack and defense,OneMember,0,None,0,Damage,-0.15,3,1,0,35,0,0,-0.15,0,0,0
+Ravana_Dominion,Ravana,Dominion,Ravana's next damaging move restores his health,Self,0,None,0,None,0,0,1,0,15,0.5,0,0.20,0.025,0.10,0
+Chimera_Meditation,Chimera,Meditation,The goat head foresees a demise: the second member to act next round is struck,WholeParty,0.6,CurrentHealth,0.015,None,0,0,1,0,35,0,0,0,0,0,0
+Chimera_Cycle,Chimera,Cycle,The serpent tail readies poison rain for after the first member acts,WholeParty,0.4,None,0,Poison,0.015,2,2,0,35,15,0,0,0,0,0
+Chimera_Grail,Chimera,Grail,The dragon head hangs a grail of flame over the party for two rounds,WholeParty,0.25,None,0,None,0,2,1,0,35,0,0,0,0,0,0.01
+Chimera_Malice,Chimera,Malice,The lion body lies in wait to punish the first help given next round,WholeParty,0.6,MissingHealth,0.015,None,0,0,1,0,35,0,0,0.5,0,0,0

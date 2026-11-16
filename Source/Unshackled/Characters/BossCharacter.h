@@ -10,4 +10,6 @@ public:
 	ABossCharacter();
 	UPROPERTY(EditAnywhere, Category = "Boss")
 	FName BossId;
-};
+	UPROPERTY(EditAnywhere, Category = "Boss")
+	FName ExcludedMemberId;
+};

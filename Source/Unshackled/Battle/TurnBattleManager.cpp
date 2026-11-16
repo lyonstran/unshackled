@@ -18,8 +18,8 @@ void ATurnBattleManager::BeginPlay()
 	Super::BeginPlay();
 	SpawnMissingParty();
 	SpawnBossIfMissing();
-	FindParty();
 	FindBoss();
+	FindParty();
 	SpawnDebugSummons();
 	BuildBossRows();
 	StartPlayerPhase();
@@ -125,12 +125,33 @@ void ATurnBattleManager::FindParty()
 	Party.Empty();
 	for (TActorIterator<APartyMemberCharacter> It(GetWorld()); It; ++It)
 	{
-		Party.Add(*It);
+		APartyMemberCharacter* Member = *It;
+		if (IsExcludedFromBattle(Member))
+		{
+			Member->SetActorHiddenInGame(true);
+			Member->SetActorEnableCollision(false);
+		}
+		else
+		{
+			Party.Add(Member);
+		}
 	}
 	HasActed.Init(false, Party.Num());
 	IsBlocking.Init(false, Party.Num());
 	BonusActionsNow.Init(0, Party.Num());
 	BonusActionsNext.Init(0, Party.Num());
+}
+bool ATurnBattleManager::IsExcludedFromBattle(APartyMemberCharacter* Member) const
+{
+	if (Boss == nullptr)
+	{
+		return false;
+	}
+	if (Boss->ExcludedMemberId.IsNone())
+	{
+		return false;
+	}
+	return Member->StatsRowName == Boss->ExcludedMemberId;
 }
 void ATurnBattleManager::FindBoss()
 {
@@ -909,6 +930,12 @@ void ATurnBattleManager::StartBossPhase()
 {
 	NotifyPlayerPhaseEnd();
 	State = EBattleState::BossPhase;
+	NotifyEnemiesBossPhaseStart();
+	CheckForEnd();
+	if (State != EBattleState::BossPhase)
+	{
+		return;
+	}
 	int32 Turns = CountLivingMembers();
 	if (Boss != nullptr)
 	{
@@ -917,6 +944,7 @@ void ATurnBattleManager::StartBossPhase()
 		{
 			Turns = Turns + 1;
 		}
+		Turns = Boss->GetBossTurnCount(this, Turns);
 	}
 	if (BossTurnsToSkip > 0)
 	{
@@ -1686,6 +1714,7 @@ void ATurnBattleManager::CompleteRetribution(int32 MemberIndex)
 	APartyMemberCharacter* Finisher = Party[MemberIndex];
 	ShowMessage(FString::Printf(TEXT("Retribution! %s finishes the order"), *Finisher->DisplayName), FColor::Yellow);
 	Finisher->PerformBattleRetribution(this);
+	NotifyEnemiesRetribution(MemberIndex);
 	if (!bUnityActive)
 	{
 		return;
@@ -2080,10 +2109,7 @@ void ATurnBattleManager::NotifyEnemiesBeforeAction(int32 MemberIndex, FName Entr
 		ABattleEnemyCharacter* Enemy = Cast<ABattleEnemyCharacter>(Enemies[i]);
 		if (Enemy != nullptr)
 		{
-			if (!Enemy->Health->IsDead())
-			{
-				Enemy->BeforeMemberAction(this, MemberIndex, EntryName);
-			}
+			Enemy->BeforeMemberAction(this, MemberIndex, EntryName);
 		}
 	}
 }
@@ -2094,9 +2120,34 @@ void ATurnBattleManager::NotifyEnemiesAfterAction(int32 MemberIndex, FName Entry
 		ABattleEnemyCharacter* Enemy = Cast<ABattleEnemyCharacter>(Enemies[i]);
 		if (Enemy != nullptr)
 		{
+			Enemy->AfterMemberAction(this, MemberIndex, EntryName);
+		}
+	}
+}
+void ATurnBattleManager::NotifyEnemiesBossPhaseStart()
+{
+	for (int32 i = 0; i < Enemies.Num(); i++)
+	{
+		ABattleEnemyCharacter* Enemy = Cast<ABattleEnemyCharacter>(Enemies[i]);
+		if (Enemy != nullptr)
+		{
 			if (!Enemy->Health->IsDead())
 			{
-				Enemy->AfterMemberAction(this, MemberIndex, EntryName);
+				Enemy->OnBossPhaseStart(this);
+			}
+		}
+	}
+}
+void ATurnBattleManager::NotifyEnemiesRetribution(int32 MemberIndex)
+{
+	for (int32 i = 0; i < Enemies.Num(); i++)
+	{
+		ABattleEnemyCharacter* Enemy = Cast<ABattleEnemyCharacter>(Enemies[i]);
+		if (Enemy != nullptr)
+		{
+			if (!Enemy->Health->IsDead())
+			{
+				Enemy->OnRetributionCompleted(this, MemberIndex);
 			}
 		}
 	}

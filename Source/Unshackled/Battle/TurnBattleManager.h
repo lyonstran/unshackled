@@ -228,6 +228,9 @@ private:
 	bool DoesMoveFail(int32 MemberIndex, FName EntryName, EBattleAction Category);
 	void NotifyEnemiesBeforeAction(int32 MemberIndex, FName EntryName);
 	void NotifyEnemiesAfterAction(int32 MemberIndex, FName EntryName);
+	void NotifyEnemiesBossPhaseStart();
+	void NotifyEnemiesRetribution(int32 MemberIndex);
+	bool IsExcludedFromBattle(APartyMemberCharacter* Member) const;
 	void SpawnDebugSummons();
 	void BuildSummonTurnQueue();
 	int32 TakeNextSummonTurn();

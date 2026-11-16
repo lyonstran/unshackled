@@ -37,14 +37,6 @@ void ADragonCharacter::BeforeMemberAction(ATurnBattleManager* Manager, int32 Mem
 	RuinedMoves[MemberIndex] = NAME_None;
 	TriggerRuination(Manager, MemberIndex);
 }
-void ADragonCharacter::AfterMemberAction(ATurnBattleManager* Manager, int32 MemberIndex, FName EntryName)
-{
-	Super::AfterMemberAction(Manager, MemberIndex, EntryName);
-	if (IsGrailActive(Manager))
-	{
-		SpillGrail(Manager);
-	}
-}
 FString ADragonCharacter::GetMemberNote(const ATurnBattleManager* Manager, int32 MemberIndex) const
 {
 	FString Note;
@@ -88,10 +80,6 @@ FString ADragonCharacter::GetStatusNote(const ATurnBattleManager* Manager) const
 	if (FlameRoundsLeft > 0)
 	{
 		Note = Note + FString::Printf(TEXT("Horizon %d "), FlameRoundsLeft);
-	}
-	if (GrailLastRound >= Manager->GetRound())
-	{
-		Note = Note + TEXT("Grail ");
 	}
 	return Note;
 }
@@ -395,14 +383,6 @@ float ADragonCharacter::ScoreFlameHorizon(const FBossMoveRow* Move) const
 	}
 	return Move->ScoreBase;
 }
-float ADragonCharacter::ScoreGrail(ATurnBattleManager* Manager, const FBossMoveRow* Move) const
-{
-	if (GrailLastRound >= Manager->GetRound())
-	{
-		return 0.0f;
-	}
-	return Move->ScoreBase;
-}
 int32 ADragonCharacter::PickMoveTarget(ATurnBattleManager* Manager, FName MoveId, const FBossMoveRow* Move)
 {
 	if (MoveId == FName("Dragon_Plume"))
@@ -443,8 +423,7 @@ void ADragonCharacter::PerformMove(ATurnBattleManager* Manager, FName MoveId, co
 	}
 	else if (MoveId == FName("Dragon_Grail"))
 	{
-		GrailMoveId = MoveId;
-		CastGrail(Manager, Move);
+		CastGrail(Manager, MoveId, Move);
 	}
 	else
 	{
@@ -668,43 +647,4 @@ void ADragonCharacter::CastFlameHorizon(ATurnBattleManager* Manager, const FBoss
 	FlamePower = Move->Power;
 	FlameOwnMissingPercent = Move->OwnMissingPercent;
 	Manager->ShowMessage(TEXT("A sea of fire spreads beneath the party"), FColor::Red);
-}
-bool ADragonCharacter::IsGrailActive(const ATurnBattleManager* Manager) const
-{
-	if (GrailFirstRound < 0)
-	{
-		return false;
-	}
-	if (Manager->GetRound() < GrailFirstRound)
-	{
-		return false;
-	}
-	return Manager->GetRound() <= GrailLastRound;
-}
-void ADragonCharacter::CastGrail(ATurnBattleManager* Manager, const FBossMoveRow* Move)
-{
-	int32 Rounds = Move->Turns;
-	if (Rounds < 1)
-	{
-		Rounds = 1;
-	}
-	GrailFirstRound = Manager->GetRound() + 1;
-	GrailLastRound = Manager->GetRound() + Rounds;
-	Manager->ShowMessage(TEXT("A grail of flame hovers over the party"), FColor::Red);
-}
-void ADragonCharacter::SpillGrail(ATurnBattleManager* Manager)
-{
-	const FBossMoveRow* Row = Manager->GetBossMove(GrailMoveId);
-	if (Row == nullptr)
-	{
-		return;
-	}
-	int32 TargetIndex = Manager->PickRandomLivingMember();
-	APartyMemberCharacter* Target = Manager->GetPartyMember(TargetIndex);
-	if (Target == nullptr)
-	{
-		return;
-	}
-	float DamageDealt = HitMemberWithMove(Manager, TargetIndex, Row, 1.0f);
-	Manager->ShowMessage(FString::Printf(TEXT("The grail spills on %s for %d"), *Target->DisplayName, FMath::RoundToInt(DamageDealt)), FColor::Red);
 }

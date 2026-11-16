@@ -59,26 +59,13 @@ void ALionCharacter::BeforeMemberAction(ATurnBattleManager* Manager, int32 Membe
 			}
 		}
 	}
-	if (MaliceRound == Manager->GetRound())
-	{
-		StartMaliceWatch(Manager);
-	}
 }
 void ALionCharacter::AfterMemberAction(ATurnBattleManager* Manager, int32 MemberIndex, FName EntryName)
 {
-	Super::AfterMemberAction(Manager, MemberIndex, EntryName);
 	RecordActionDamage(Manager, MemberIndex);
 	bSovereignMitigation = false;
 	bProwlFailedThisAction = false;
-	if (bMaliceWatching)
-	{
-		bool bCaught = FinishMaliceWatch(Manager);
-		if (bCaught)
-		{
-			MaliceRound = -1;
-			TriggerMalice(Manager, MemberIndex);
-		}
-	}
+	Super::AfterMemberAction(Manager, MemberIndex, EntryName);
 }
 FString ALionCharacter::GetMemberNote(const ATurnBattleManager* Manager, int32 MemberIndex) const
 {
@@ -114,10 +101,6 @@ FString ALionCharacter::GetStatusNote(const ATurnBattleManager* Manager) const
 	{
 		int32 RoundsLeft = ProwlLastRound - Manager->GetRound() + 1;
 		Note = Note + FString::Printf(TEXT("Prowl %d "), RoundsLeft);
-	}
-	if (IsMaliceArmed(Manager))
-	{
-		Note = Note + TEXT("Malice ");
 	}
 	return Note;
 }
@@ -428,14 +411,6 @@ bool ALionCharacter::IsSleeping() const
 {
 	return !bAwake;
 }
-bool ALionCharacter::IsMaliceArmed(const ATurnBattleManager* Manager) const
-{
-	if (MaliceRound < 0)
-	{
-		return false;
-	}
-	return MaliceRound >= Manager->GetRound();
-}
 bool ALionCharacter::IsRoarOnEveryone(ATurnBattleManager* Manager) const
 {
 	for (int32 i = 0; i < Manager->GetPartyCount(); i++)
@@ -623,18 +598,6 @@ float ALionCharacter::ScoreRest(const FBossMoveRow* Move) const
 	}
 	return Move->ScoreBase;
 }
-float ALionCharacter::ScoreMalice(ATurnBattleManager* Manager, FName MoveId, const FBossMoveRow* Move) const
-{
-	if (IsMaliceArmed(Manager))
-	{
-		return 0.0f;
-	}
-	if (LastMoveId == MoveId)
-	{
-		return 0.0f;
-	}
-	return Move->ScoreBase;
-}
 int32 ALionCharacter::FindExecuteTarget(ATurnBattleManager* Manager) const
 {
 	int32 BestIndex = -1;
@@ -808,7 +771,7 @@ void ALionCharacter::PerformMove(ATurnBattleManager* Manager, FName MoveId, cons
 	}
 	else if (MoveId == FName("Lion_Malice"))
 	{
-		CastMalice(Manager);
+		CastMalice(Manager, MoveId);
 	}
 	else if (MoveId == FName("Lion_Slumber"))
 	{
@@ -958,11 +921,6 @@ void ALionCharacter::CastRest(ATurnBattleManager* Manager, FName MoveId, const F
 	Stats->AddModifier(Slumbering);
 	Manager->ShowMessage(TEXT("The Lion lies down to rest: it takes far less damage while it sleeps"), FColor::Orange);
 }
-void ALionCharacter::CastMalice(ATurnBattleManager* Manager)
-{
-	MaliceRound = Manager->GetRound() + 1;
-	Manager->ShowMessage(TEXT("The Lion lies in wait: the next help given next round will be punished"), FColor::Orange);
-}
 void ALionCharacter::Slumber(ATurnBattleManager* Manager)
 {
 	Manager->ShowMessage(TEXT("The Lion slumbers"), FColor::Orange);
@@ -1046,76 +1004,6 @@ void ALionCharacter::TriggerSovereignty(ATurnBattleManager* Manager, int32 Membe
 	bSovereignMitigation = true;
 	SovereignMitigation = Row->Amount1;
 }
-void ALionCharacter::StartMaliceWatch(ATurnBattleManager* Manager)
-{
-	const FBossMoveRow* Row = Manager->GetBossMove(FName("Lion_Malice"));
-	if (Row == nullptr)
-	{
-		return;
-	}
-	SavedBuffCounts.Empty();
-	SavedDivertedHealing.Empty();
-	SavedShieldMultipliers.Empty();
-	SavedShields.Empty();
-	SavedStatsDivert.Empty();
-	SavedHealthDivert.Empty();
-	for (int32 i = 0; i < Manager->GetPartyCount(); i++)
-	{
-		APartyMemberCharacter* Member = Manager->GetPartyMember(i);
-		SavedBuffCounts.Add(Member->Stats->DivertedBuffs.Num());
-		SavedDivertedHealing.Add(Member->Health->DivertedHealing);
-		SavedShieldMultipliers.Add(Member->Health->ShieldMultiplier);
-		SavedShields.Add(Member->Health->Shield);
-		SavedStatsDivert.Add(Member->Stats->DivertFraction);
-		SavedHealthDivert.Add(Member->Health->DivertFraction);
-		Member->Stats->DivertFraction = Row->Amount1;
-		Member->Health->DivertFraction = Row->Amount1;
-		Member->Health->ShieldMultiplier = Member->Health->ShieldMultiplier * (1.0f - Row->Amount1);
-	}
-	bMaliceWatching = true;
-}
-bool ALionCharacter::FinishMaliceWatch(ATurnBattleManager* Manager)
-{
-	bMaliceWatching = false;
-	bool bCaught = false;
-	for (int32 i = 0; i < SavedBuffCounts.Num(); i++)
-	{
-		APartyMemberCharacter* Member = Manager->GetPartyMember(i);
-		if (Member->Stats->DivertedBuffs.Num() > SavedBuffCounts[i])
-		{
-			bCaught = true;
-		}
-		if (Member->Health->DivertedHealing > SavedDivertedHealing[i] + 0.01f)
-		{
-			bCaught = true;
-		}
-		if (Member->Health->Shield > SavedShields[i] + 0.01f)
-		{
-			bCaught = true;
-		}
-		Member->Stats->DivertedBuffs.SetNum(SavedBuffCounts[i]);
-		Member->Health->DivertedHealing = SavedDivertedHealing[i];
-		Member->Health->ShieldMultiplier = SavedShieldMultipliers[i];
-		Member->Stats->DivertFraction = SavedStatsDivert[i];
-		Member->Health->DivertFraction = SavedHealthDivert[i];
-	}
-	return bCaught;
-}
-void ALionCharacter::TriggerMalice(ATurnBattleManager* Manager, int32 MemberIndex)
-{
-	const FBossMoveRow* Row = Manager->GetBossMove(FName("Lion_Malice"));
-	if (Row == nullptr)
-	{
-		return;
-	}
-	APartyMemberCharacter* Member = Manager->GetPartyMember(MemberIndex);
-	if (Member == nullptr)
-	{
-		return;
-	}
-	float DamageDealt = HitMemberWithMove(Manager, MemberIndex, Row, GetHuntMultiplier(Manager, MemberIndex));
-	Manager->ShowMessage(FString::Printf(TEXT("Malice! The Lion leaps in, halves %s's help and mauls them for %d"), *Member->DisplayName, FMath::RoundToInt(DamageDealt)), FColor::Red);
-}
 void ALionCharacter::RecordActionStart()
 {
 	HealthBeforeAction = Health->CurrentHealth;
@@ -1143,4 +1031,8 @@ void ALionCharacter::RecordActionDamage(ATurnBattleManager* Manager, int32 Membe
 		}
 	}
 	AddSubjugation(Manager, MemberIndex, Amount);
+}
+float ALionCharacter::GetHitMultiplierFor(ATurnBattleManager* Manager, int32 MemberIndex) const
+{
+	return GetHuntMultiplier(Manager, MemberIndex);
 }

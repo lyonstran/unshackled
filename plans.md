@@ -219,6 +219,9 @@ Saturn Ravana:
         - winds of war: raise attack stat of allies and enemies by 10% (avaliable floor 3)
         - submission: S. Ravana lowers an enemies attack, and defense by 15%. This debuff lasts for 3 turns. 
         - Dominion: S. Ravana's next damaging ability restores 20% max health. Subsequent uses reduce efficiency of this move by 2.5%, down to 10%. 
+        - Kneel: Summons strong wind magic onto one ally. Deals flat damage for ___ + 2.5% current health as damage. This attack adds an additional stack from passive. 
+        - Ravage: Unleashes a blade of wind magic piercing all ally's. They take 0.9 x 3% of current hp + 0.5(# of stacks) as damage
+        - Longinus: S. Ravana thrusts a staff into the sky, marking an ally as a target. In the following player turn, if that ally marked is not the first to move, they take 10% max health damage from spear impact. Otherwise, they take 10% current health + total # of stacks as damage
 Chimera: It's health is 50% of S. Ravana's max health. 
     - Passive: Upon death, it does not fully go down. After 3 rounds between player party and S. Ravana, Chimera revives itself, only to 50% HP. 
     - Specific moves: 

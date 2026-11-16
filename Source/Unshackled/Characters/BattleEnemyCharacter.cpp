@@ -34,27 +34,28 @@ FString ABattleEnemyCharacter::GetMemberNote(const ATurnBattleManager* Manager, 
 }
 void ABattleEnemyCharacter::BeforeMemberAction(ATurnBattleManager* Manager, int32 MemberIndex, FName EntryName)
 {
-	if (MeditationRound != Manager->GetRound())
+	CheckMeditation(Manager, MemberIndex);
+	if (MaliceRound == Manager->GetRound())
 	{
-		return;
+		StartMaliceWatch(Manager);
 	}
-	if (MeditationActionsSeen < 1)
-	{
-		MeditationActionsSeen = MeditationActionsSeen + 1;
-		return;
-	}
-	MeditationRound = -1;
-	TriggerMeditation(Manager, MemberIndex);
 }
 void ABattleEnemyCharacter::AfterMemberAction(ATurnBattleManager* Manager, int32 MemberIndex, FName EntryName)
 {
-	if (CycleRound != Manager->GetRound())
+	if (bMaliceWatching)
 	{
-		return;
+		bool bCaught = FinishMaliceWatch(Manager);
+		if (bCaught)
+		{
+			MaliceRound = -1;
+			TriggerMalice(Manager, MemberIndex);
+		}
 	}
-	TriggerCycle(Manager);
-	CycleRound = -1;
-	CycleCharges = 0;
+	CheckCycle(Manager);
+	if (IsGrailActive(Manager))
+	{
+		SpillGrail(Manager);
+	}
 }
 FString ABattleEnemyCharacter::GetStatusNote(const ATurnBattleManager* Manager) const
 {
@@ -68,7 +69,29 @@ FString ABattleEnemyCharacter::GetStatusNote(const ATurnBattleManager* Manager) 
 	{
 		Note = Note + FString::Printf(TEXT("Cycle x%d "), Charges);
 	}
+	if (GrailLastRound >= Manager->GetRound())
+	{
+		Note = Note + TEXT("Grail ");
+	}
+	if (IsMaliceArmed(Manager))
+	{
+		Note = Note + TEXT("Malice ");
+	}
 	return Note;
+}
+void ABattleEnemyCharacter::OnBossPhaseStart(ATurnBattleManager* Manager)
+{
+}
+void ABattleEnemyCharacter::OnRetributionCompleted(ATurnBattleManager* Manager, int32 MemberIndex)
+{
+}
+int32 ABattleEnemyCharacter::GetBossTurnCount(ATurnBattleManager* Manager, int32 DefaultTurns)
+{
+	return DefaultTurns;
+}
+float ABattleEnemyCharacter::GetHitMultiplierFor(ATurnBattleManager* Manager, int32 MemberIndex) const
+{
+	return 1.0f;
 }
 TArray<FName> ABattleEnemyCharacter::GatherMoveIds(ATurnBattleManager* Manager) const
 {
@@ -260,6 +283,10 @@ void ABattleEnemyCharacter::ShowMoveMessage(ATurnBattleManager* Manager, const F
 }
 float ABattleEnemyCharacter::HitMemberWithMove(ATurnBattleManager* Manager, int32 MemberIndex, const FBossMoveRow* Move, float Multiplier)
 {
+	return HitMemberWithBonus(Manager, MemberIndex, Move, Multiplier, 0.0f);
+}
+float ABattleEnemyCharacter::HitMemberWithBonus(ATurnBattleManager* Manager, int32 MemberIndex, const FBossMoveRow* Move, float Multiplier, float BonusDamage)
+{
 	APartyMemberCharacter* Member = Manager->GetPartyMember(MemberIndex);
 	if (Member == nullptr)
 	{
@@ -298,6 +325,10 @@ float ABattleEnemyCharacter::HitMemberWithMove(ATurnBattleManager* Manager, int3
 		}
 	}
 	float TotalDamage = BaseDamage + PercentDamage;
+	if (BonusDamage > 0.0f)
+	{
+		TotalDamage = TotalDamage + (BonusDamage * Scale);
+	}
 	if (TotalDamage <= 0.0f)
 	{
 		return 0.0f;
@@ -466,7 +497,8 @@ EModifierKind ABattleEnemyCharacter::GetModKind(const FBossMoveRow* Move) const
 		return EModifierKind::Flat;
 	}
 	return EModifierKind::Percent;
-}float ABattleEnemyCharacter::TakeNextHitMultiplier()
+}
+float ABattleEnemyCharacter::TakeNextHitMultiplier()
 {
 	return 1.0f;
 }
@@ -589,4 +621,172 @@ void ABattleEnemyCharacter::TriggerCycle(ATurnBattleManager* Manager)
 			ApplyMoveModifier(Manager->GetPartyMember(i), CycleMoveId, Move);
 		}
 	}
+}
+void ABattleEnemyCharacter::CheckMeditation(ATurnBattleManager* Manager, int32 MemberIndex)
+{
+	if (MeditationRound != Manager->GetRound())
+	{
+		return;
+	}
+	if (MeditationActionsSeen < 1)
+	{
+		MeditationActionsSeen = MeditationActionsSeen + 1;
+		return;
+	}
+	MeditationRound = -1;
+	TriggerMeditation(Manager, MemberIndex);
+}
+void ABattleEnemyCharacter::CheckCycle(ATurnBattleManager* Manager)
+{
+	if (CycleRound != Manager->GetRound())
+	{
+		return;
+	}
+	TriggerCycle(Manager);
+	CycleRound = -1;
+	CycleCharges = 0;
+}
+bool ABattleEnemyCharacter::IsGrailActive(const ATurnBattleManager* Manager) const
+{
+	if (GrailFirstRound < 0)
+	{
+		return false;
+	}
+	if (Manager->GetRound() < GrailFirstRound)
+	{
+		return false;
+	}
+	return Manager->GetRound() <= GrailLastRound;
+}
+float ABattleEnemyCharacter::ScoreGrail(ATurnBattleManager* Manager, const FBossMoveRow* Move) const
+{
+	if (GrailLastRound >= Manager->GetRound())
+	{
+		return 0.0f;
+	}
+	return Move->ScoreBase;
+}
+void ABattleEnemyCharacter::CastGrail(ATurnBattleManager* Manager, FName MoveId, const FBossMoveRow* Move)
+{
+	int32 Rounds = Move->Turns;
+	if (Rounds < 1)
+	{
+		Rounds = 1;
+	}
+	GrailMoveId = MoveId;
+	GrailFirstRound = Manager->GetRound() + 1;
+	GrailLastRound = Manager->GetRound() + Rounds;
+	Manager->ShowMessage(TEXT("A grail of flame hovers over the party"), FColor::Red);
+}
+void ABattleEnemyCharacter::SpillGrail(ATurnBattleManager* Manager)
+{
+	const FBossMoveRow* Row = Manager->GetBossMove(GrailMoveId);
+	if (Row == nullptr)
+	{
+		return;
+	}
+	int32 TargetIndex = Manager->PickRandomLivingMember();
+	APartyMemberCharacter* Target = Manager->GetPartyMember(TargetIndex);
+	if (Target == nullptr)
+	{
+		return;
+	}
+	float DamageDealt = HitMemberWithMove(Manager, TargetIndex, Row, 1.0f);
+	Manager->ShowMessage(FString::Printf(TEXT("The grail spills on %s for %d"), *Target->DisplayName, FMath::RoundToInt(DamageDealt)), FColor::Red);
+}
+bool ABattleEnemyCharacter::IsMaliceArmed(const ATurnBattleManager* Manager) const
+{
+	if (MaliceRound < 0)
+	{
+		return false;
+	}
+	return MaliceRound >= Manager->GetRound();
+}
+float ABattleEnemyCharacter::ScoreMalice(ATurnBattleManager* Manager, FName MoveId, const FBossMoveRow* Move) const
+{
+	if (IsMaliceArmed(Manager))
+	{
+		return 0.0f;
+	}
+	if (LastMoveId == MoveId)
+	{
+		return 0.0f;
+	}
+	return Move->ScoreBase;
+}
+void ABattleEnemyCharacter::CastMalice(ATurnBattleManager* Manager, FName MoveId)
+{
+	MaliceMoveId = MoveId;
+	MaliceRound = Manager->GetRound() + 1;
+	Manager->ShowMessage(FString::Printf(TEXT("%s lies in wait: the next help given next round will be punished"), *DisplayName), FColor::Orange);
+}
+void ABattleEnemyCharacter::StartMaliceWatch(ATurnBattleManager* Manager)
+{
+	const FBossMoveRow* Row = Manager->GetBossMove(MaliceMoveId);
+	if (Row == nullptr)
+	{
+		return;
+	}
+	SavedBuffCounts.Empty();
+	SavedDivertedHealing.Empty();
+	SavedShieldMultipliers.Empty();
+	SavedShields.Empty();
+	SavedStatsDivert.Empty();
+	SavedHealthDivert.Empty();
+	for (int32 i = 0; i < Manager->GetPartyCount(); i++)
+	{
+		APartyMemberCharacter* Member = Manager->GetPartyMember(i);
+		SavedBuffCounts.Add(Member->Stats->DivertedBuffs.Num());
+		SavedDivertedHealing.Add(Member->Health->DivertedHealing);
+		SavedShieldMultipliers.Add(Member->Health->ShieldMultiplier);
+		SavedShields.Add(Member->Health->Shield);
+		SavedStatsDivert.Add(Member->Stats->DivertFraction);
+		SavedHealthDivert.Add(Member->Health->DivertFraction);
+		Member->Stats->DivertFraction = Row->Amount1;
+		Member->Health->DivertFraction = Row->Amount1;
+		Member->Health->ShieldMultiplier = Member->Health->ShieldMultiplier * (1.0f - Row->Amount1);
+	}
+	bMaliceWatching = true;
+}
+bool ABattleEnemyCharacter::FinishMaliceWatch(ATurnBattleManager* Manager)
+{
+	bMaliceWatching = false;
+	bool bCaught = false;
+	for (int32 i = 0; i < SavedBuffCounts.Num(); i++)
+	{
+		APartyMemberCharacter* Member = Manager->GetPartyMember(i);
+		if (Member->Stats->DivertedBuffs.Num() > SavedBuffCounts[i])
+		{
+			bCaught = true;
+		}
+		if (Member->Health->DivertedHealing > SavedDivertedHealing[i] + 0.01f)
+		{
+			bCaught = true;
+		}
+		if (Member->Health->Shield > SavedShields[i] + 0.01f)
+		{
+			bCaught = true;
+		}
+		Member->Stats->DivertedBuffs.SetNum(SavedBuffCounts[i]);
+		Member->Health->DivertedHealing = SavedDivertedHealing[i];
+		Member->Health->ShieldMultiplier = SavedShieldMultipliers[i];
+		Member->Stats->DivertFraction = SavedStatsDivert[i];
+		Member->Health->DivertFraction = SavedHealthDivert[i];
+	}
+	return bCaught;
+}
+void ABattleEnemyCharacter::TriggerMalice(ATurnBattleManager* Manager, int32 MemberIndex)
+{
+	const FBossMoveRow* Row = Manager->GetBossMove(MaliceMoveId);
+	if (Row == nullptr)
+	{
+		return;
+	}
+	APartyMemberCharacter* Member = Manager->GetPartyMember(MemberIndex);
+	if (Member == nullptr)
+	{
+		return;
+	}
+	float DamageDealt = HitMemberWithMove(Manager, MemberIndex, Row, GetHitMultiplierFor(Manager, MemberIndex));
+	Manager->ShowMessage(FString::Printf(TEXT("Malice! %s leaps in, halves %s's help and mauls them for %d"), *DisplayName, *Member->DisplayName, FMath::RoundToInt(DamageDealt)), FColor::Red);
 }
