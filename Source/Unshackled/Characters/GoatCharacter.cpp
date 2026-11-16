@@ -53,7 +53,7 @@ void AGoatCharacter::AddDoubtToParty(ATurnBattleManager* Manager)
 		}
 	}
 }
-bool AGoatCharacter::DoesMemberMoveFail(ATurnBattleManager* Manager, int32 MemberIndex, EBattleAction Category)
+bool AGoatCharacter::DoesMemberMoveFail(ATurnBattleManager* Manager, int32 MemberIndex, FName EntryName, EBattleAction Category)
 {
 	bool bCanFail = false;
 	if (Category == EBattleAction::Attack)
@@ -693,4 +693,4 @@ void AGoatCharacter::BreakTether(ATurnBattleManager* Manager, bool bDealDamage)
 	int32 MemberIndex = Manager->FindPartyIndex(Broken);
 	float DamageDealt = HitWithChannel(Manager, MemberIndex, Row);
 	Manager->ShowMessage(FString::Printf(TEXT("The tether snaps on %s for %d"), *Broken->DisplayName, FMath::RoundToInt(DamageDealt)), FColor::Orange);
-}
+}

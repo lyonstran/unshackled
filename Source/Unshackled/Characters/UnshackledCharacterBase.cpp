@@ -153,6 +153,20 @@ float AUnshackledCharacterBase::ApplyHit(float RawDamage, bool bTrueDamage, AUns
         ReflectDamage(DamageDealt, Attacker);
         return DamageDealt;
 }
+bool AUnshackledCharacterBase::TakeExecute(AUnshackledCharacterBase* Attacker)
+{
+        if (Health->IsDead())
+        {
+                return false;
+        }
+        if (bInvulnerable)
+        {
+                return false;
+        }
+        Health->CurrentHealth = 0.0f;
+        CheckForDeath(Attacker);
+        return Health->IsDead();
+}
 float AUnshackledCharacterBase::CalculateFinalDamage(float RawDamage, bool bTrueDamage)
 {
         float FinalDamage = RawDamage;

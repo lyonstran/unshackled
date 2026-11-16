@@ -28,3 +28,15 @@ Dragon_Fury,Dragon,Fury,The next hit it takes is softened,Self,0,None,0,None,0,0
 Dragon_Blaze,Dragon,Blaze,Lowers one member's defense and makes Scorch hurt them more,OneMember,0,None,0,Defense,-0.10,3,1,0,35,0,0,0,0,0,0
 Dragon_FlameHorizon,Dragon,Flame Horizon,A sea of fire burns the party for three rounds,WholeParty,0.3,None,0,None,0,3,1,0,40,0,0,0,0,0,0.025
 Dragon_Grail,Dragon,Grail,For two rounds every member action spills fire on a random member,WholeParty,0.25,None,0,None,0,2,1,0,35,0,0,0,0,0,0.01
+Lion_Subjugation,Lion,Subjugation,Passive: damaging the Lion lowers your defense and feeds its attack,Self,0,None,0,None,-0.01,0,30,0,0,0,0,0.5,0,0,0
+Lion_Pride,Lion,Pride,Passive: the first time the Lion drops to half health it gains a great shield,Self,0,None,0,None,0,0,1,0,0,0,0,0.5,0.5,0,0
+Lion_Supremity,Lion,Supremity,Bites one member; executes a member worn down to their subjugation,OneMember,0.8,MissingHealth,0.025,None,0,0,1,0,40,20,100,10,0,0,0
+Lion_Sovereignty,Lion,Sovereignty,Marks one member: their next attack on the Lion is punished and weakened,OneMember,0.6,MaxHealth,0.025,None,0,0,1,0,35,0,0,0.25,0,0,0
+Lion_Hunt,Lion,Hunt,Hunts one member: the Lion's attacks hurt them more for three rounds,OneMember,0,None,0,None,0,3,1,0,40,0,0,0.15,0,0,0
+Lion_Prowl,Lion,Prowl,For five rounds moves aimed at the Lion may fail,Self,0,None,0,None,0,5,1,0,30,10,0,0.25,0.5,0,0
+Lion_Cry,Lion,Cry,Heals back part of the damage it took this round,Self,0,None,0,None,0,0,1,1,20,3,0.02,0.35,0.02,0.15,0
+Lion_Challenge,Lion,Challenge,Dares one member: more attack and mana but less defense and more subjugation,OneMember,0,None,0,None,0.10,3,1,0,30,0,0,-0.10,0.10,1,0
+Lion_Roar,Lion,Roar,Lowers every member's defense by their subjugation for three rounds,WholeParty,0,None,0,None,-0.015,3,1,0,25,2,80,-0.01,10,0,0
+Lion_Rest,Lion,Rest,Sleeps for three rounds taking far less damage and healing; then wakes stronger,Self,0,None,0,None,-0.90,3,1,0,70,0,0,0.35,0.10,0.10,0
+Lion_Slumber,Lion,Slumber,Passive: the Lion sleeps through its turn,Self,0,None,0,None,0,0,1,0,0,0,0,0,0,0,0
+Lion_Malice,Lion,Malice,Lies in wait: the first buff or heal next round is halved and its caster mauled,WholeParty,0.6,MissingHealth,0.015,None,0,0,1,0,35,0,0,0.5,0,0,0

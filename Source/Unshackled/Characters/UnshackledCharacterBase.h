@@ -20,6 +20,7 @@ public:
         void UseUltimate(FVector AimDirection);
         FVector GetFacingDirection() const;
         float ApplyHit(float RawDamage, bool bTrueDamage, AUnshackledCharacterBase* Attacker);
+        bool TakeExecute(AUnshackledCharacterBase* Attacker);
         void DealDamage(AUnshackledCharacterBase* Target, float AbilityScale, bool bTrueDamage);
         virtual void OnDealtDamage(AUnshackledCharacterBase* Target, float DamageDealt);
         virtual void OnKilledTarget(AUnshackledCharacterBase* Target);

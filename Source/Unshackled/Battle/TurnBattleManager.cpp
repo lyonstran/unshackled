@@ -865,6 +865,14 @@ void ATurnBattleManager::NegateBossTurns(int32 Count)
 	}
 	NegatedBossTurnsLeft = NegatedBossTurnsLeft + Count;
 }
+void ATurnBattleManager::AddBossTurns(int32 Count)
+{
+	if (Count <= 0)
+	{
+		return;
+	}
+	BossTurnsLeft = BossTurnsLeft + Count;
+}
 int32 ATurnBattleManager::GetNegatedBossTurnsLeft() const
 {
 	return NegatedBossTurnsLeft;
@@ -1204,7 +1212,7 @@ bool ATurnBattleManager::TryPlayerMove(int32 MemberIndex, FName EntryName, int32
 		{
 			return false;
 		}
-		bMoveFails = DoesMoveFail(MemberIndex, Move->Category);
+		bMoveFails = DoesMoveFail(MemberIndex, EntryName, Move->Category);
 		if (!bMoveFails)
 		{
 			if (Move->ManaCost > 0.0f)
@@ -2093,7 +2101,7 @@ void ATurnBattleManager::NotifyEnemiesAfterAction(int32 MemberIndex, FName Entry
 		}
 	}
 }
-bool ATurnBattleManager::DoesMoveFail(int32 MemberIndex, EBattleAction Category)
+bool ATurnBattleManager::DoesMoveFail(int32 MemberIndex, FName EntryName, EBattleAction Category)
 {
 	for (int32 i = 0; i < Enemies.Num(); i++)
 	{
@@ -2102,7 +2110,7 @@ bool ATurnBattleManager::DoesMoveFail(int32 MemberIndex, EBattleAction Category)
 		{
 			if (!Enemy->Health->IsDead())
 			{
-				if (Enemy->DoesMemberMoveFail(this, MemberIndex, Category))
+				if (Enemy->DoesMemberMoveFail(this, MemberIndex, EntryName, Category))
 				{
 					return true;
 				}

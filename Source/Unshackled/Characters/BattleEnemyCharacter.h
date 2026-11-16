@@ -13,7 +13,7 @@ class UNSHACKLED_API ABattleEnemyCharacter : public AUnshackledCharacterBase
 public:
 	ABattleEnemyCharacter();
 	virtual void OnBattleRoundStart(ATurnBattleManager* Manager);
-	virtual bool DoesMemberMoveFail(ATurnBattleManager* Manager, int32 MemberIndex, EBattleAction Category);
+	virtual bool DoesMemberMoveFail(ATurnBattleManager* Manager, int32 MemberIndex, FName EntryName, EBattleAction Category);
 	virtual bool IsMemberMoveLocked(const ATurnBattleManager* Manager, int32 MemberIndex, FName MoveId) const;
 	virtual FString GetMemberNote(const ATurnBattleManager* Manager, int32 MemberIndex) const;
 	virtual void BeforeMemberAction(ATurnBattleManager* Manager, int32 MemberIndex, FName EntryName);
@@ -69,4 +69,4 @@ protected:
 	FName CycleMoveId;
 	int32 CycleRound = -1;
 	int32 CycleCharges = 0;
-};
+};

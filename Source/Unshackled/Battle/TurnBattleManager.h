@@ -78,6 +78,7 @@ public:
 	void GrantExtraActionNextRound(APartyMemberCharacter* Member);
 	void SkipBossTurns(int32 Count);
 	void NegateBossTurns(int32 Count);
+	void AddBossTurns(int32 Count);
 	int32 GetNegatedBossTurnsLeft() const;
 	void GrantFreeAction();
 	void RestartRetributionOn(APartyMemberCharacter* Starter, float ShieldFraction, float DamageCut, int32 Rounds);
@@ -224,7 +225,7 @@ private:
 	void NotifyEnemyTurn(int32 EnemyIndex);
 	void TickPoison();
 	void TickPoisonOn(AUnshackledCharacterBase* Target, FString TargetName);
-	bool DoesMoveFail(int32 MemberIndex, EBattleAction Category);
+	bool DoesMoveFail(int32 MemberIndex, FName EntryName, EBattleAction Category);
 	void NotifyEnemiesBeforeAction(int32 MemberIndex, FName EntryName);
 	void NotifyEnemiesAfterAction(int32 MemberIndex, FName EntryName);
 	void SpawnDebugSummons();

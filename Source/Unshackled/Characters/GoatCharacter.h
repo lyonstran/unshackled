@@ -11,7 +11,7 @@ class UNSHACKLED_API AGoatCharacter : public ABossCharacter
 public:
 	AGoatCharacter();
 	virtual void OnBattleRoundStart(ATurnBattleManager* Manager) override;
-	virtual bool DoesMemberMoveFail(ATurnBattleManager* Manager, int32 MemberIndex, EBattleAction Category) override;
+	virtual bool DoesMemberMoveFail(ATurnBattleManager* Manager, int32 MemberIndex, FName EntryName, EBattleAction Category) override;
 	virtual bool IsMemberMoveLocked(const ATurnBattleManager* Manager, int32 MemberIndex, FName MoveId) const override;
 	virtual FString GetMemberNote(const ATurnBattleManager* Manager, int32 MemberIndex) const override;
 	UPROPERTY(EditAnywhere, Category = "Goat")
@@ -63,4 +63,4 @@ protected:
 	APartyMemberCharacter* TetherMember = nullptr;
 	FName TetherMoveId;
 	int32 TetherBreakRound = 0;
-};
+};

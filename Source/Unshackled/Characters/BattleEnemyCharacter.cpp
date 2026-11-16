@@ -20,7 +20,7 @@ void ABattleEnemyCharacter::OnBattleRoundStart(ATurnBattleManager* Manager)
 {
 	MovesUsedThisRound.Empty();
 }
-bool ABattleEnemyCharacter::DoesMemberMoveFail(ATurnBattleManager* Manager, int32 MemberIndex, EBattleAction Category)
+bool ABattleEnemyCharacter::DoesMemberMoveFail(ATurnBattleManager* Manager, int32 MemberIndex, FName EntryName, EBattleAction Category)
 {
 	return false;
 }
