@@ -66,4 +66,6 @@ struct FBossMoveRow : public FTableRowBase
 	float Amount2 = 0.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float Amount3 = 0.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float OwnMissingPercent = 0.0f;
 };

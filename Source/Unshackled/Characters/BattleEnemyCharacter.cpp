@@ -289,6 +289,14 @@ float ABattleEnemyCharacter::HitMemberWithMove(ATurnBattleManager* Manager, int3
 	{
 		PercentDamage = GetPercentBase(Member, Move) * Move->Percent * Scale * GetAttackScale();
 	}
+	if (Move->OwnMissingPercent > 0.0f)
+	{
+		float OwnMissingHealth = Health->MaxHealth - Health->CurrentHealth;
+		if (OwnMissingHealth > 0.0f)
+		{
+			PercentDamage = PercentDamage + (OwnMissingHealth * Move->OwnMissingPercent * Scale * GetAttackScale());
+		}
+	}
 	float TotalDamage = BaseDamage + PercentDamage;
 	if (TotalDamage <= 0.0f)
 	{
