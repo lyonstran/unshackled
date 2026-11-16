@@ -6,6 +6,7 @@ Goat_Evoke,Goat,Evoke,Summons a guard,Self,0,None,0,None,0,0,1,0,50,35,10,0.25,2
 Goat_Grasp,Goat,Grasp,Absorbs mana from one member and turns it into a shield,OneMember,0,None,0,None,0,0,1,1,20,0.5,10,0.10,0.05,0
 Goat_Imprison,Goat,Imprison,Cages one of a member's moves for a round,OneMember,0,None,0,None,0,1,1,0,35,15,0,0,0,0
 Goat_Tether,Goat,Tether,Shackles one member and steals half their healing and buffs,OneMember,0.5,CurrentHealth,0.15,None,0,3,1,0,30,10,70,0.5,0,0
+Goat_Meditation,Goat,Meditation,Foresees a demise: the second member to act next round is struck,WholeParty,0.6,CurrentHealth,0.015,None,0,0,1,0,35,0,0,0,0,0
 GoatGuard_Slash,GoatGuard,Slash,Slashes one member,OneMember,0.5,CurrentHealth,0.05,None,0,0,1,0,10,0,0,0,0,0
 GoatGuard_Sacrifice,GoatGuard,Sacrifice,Dies to heal the Goat,Self,0,None,0,None,0,0,1,0,10,0,0,0.15,0.75,0
 Serpent_Pounce,Serpent,Pounce,Lunges at the most wounded member,OneMember,0.9,MissingHealth,0.10,None,0,0,1,0,30,0.5,0,0,0,0
@@ -15,4 +16,5 @@ Serpent_Conjure,Serpent,Conjure,Summons a snake,Self,0,None,0,None,0,0,1,0,45,10
 Serpent_Beckon,Serpent,Beckon,Every snake lunges at the party and explodes,Self,0.6,CurrentHealth,0.10,None,0,0,1,0,20,20,15,0,0,0
 Serpent_Rasp,Serpent,Rasp,Frightens one member and lowers their attack,OneMember,0,None,0,Damage,-0.15,2,1,0,35,0,0,0,0,0
 Serpent_Miasma,Serpent,Miasma,A choking cloud hurts the party for three rounds,WholeParty,0.35,None,0,None,0,3,1,0,25,8,0,0.02,0.01,0
+Serpent_Cycle,Serpent,Cycle,Poison rain hits the party after the first member acts next round,WholeParty,0.4,None,0,Poison,0.015,2,2,0,35,15,0,0,0,0
 Snake_Bite,Snake,Bite,Bites one member,OneMember,0.5,CurrentHealth,0.025,None,0,0,1,0,10,0,0,0,0,0

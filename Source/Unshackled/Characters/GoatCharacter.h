@@ -25,6 +25,7 @@ protected:
 	virtual float ScoreMove(ATurnBattleManager* Manager, FName MoveId, const FBossMoveRow* Move) override;
 	virtual int32 PickMoveTarget(ATurnBattleManager* Manager, FName MoveId, const FBossMoveRow* Move) override;
 	virtual void PerformMove(ATurnBattleManager* Manager, FName MoveId, const FBossMoveRow* Move, int32 TargetIndex) override;
+	virtual float TakeNextHitMultiplier() override;
 	float ScorePummel(ATurnBattleManager* Manager, const FBossMoveRow* Move) const;
 	float ScoreChannel(ATurnBattleManager* Manager, const FBossMoveRow* Move) const;
 	float ScoreWhispers(ATurnBattleManager* Manager, FName MoveId, const FBossMoveRow* Move) const;

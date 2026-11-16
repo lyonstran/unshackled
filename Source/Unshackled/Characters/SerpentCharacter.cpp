@@ -161,6 +161,11 @@ FString ASerpentCharacter::GetMemberNote(const ATurnBattleManager* Manager, int3
 	{
 		Note = Note + FString::Printf(TEXT("Poison %d "), Stacks);
 	}
+	int32 RainStacks = Member->Stats->GetStacks(FName("Serpent_Cycle"), ECharacterStat::Poison, EModifierKind::Flat);
+	if (RainStacks > 0)
+	{
+		Note = Note + FString::Printf(TEXT("Rain %d "), RainStacks);
+	}
 	if (MiasmaRoundsLeft > 0)
 	{
 		Note = Note + TEXT("Miasma");
@@ -252,6 +257,10 @@ float ASerpentCharacter::ScoreMove(ATurnBattleManager* Manager, FName MoveId, co
 	if (MoveId == FName("Serpent_Miasma"))
 	{
 		return ScoreMiasma(Manager, Move);
+	}
+	if (MoveId == FName("Serpent_Cycle"))
+	{
+		return ScoreCycle(Manager, MoveId, Move);
 	}
 	return BaseScore;
 }
@@ -434,6 +443,10 @@ void ASerpentCharacter::PerformMove(ATurnBattleManager* Manager, FName MoveId, c
 	else if (MoveId == FName("Serpent_Miasma"))
 	{
 		CastMiasma(Manager, Move);
+	}
+	else if (MoveId == FName("Serpent_Cycle"))
+	{
+		CastCycle(Manager, MoveId);
 	}
 	else
 	{

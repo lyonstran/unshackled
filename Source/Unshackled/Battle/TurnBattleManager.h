@@ -225,6 +225,8 @@ private:
 	void TickPoison();
 	void TickPoisonOn(AUnshackledCharacterBase* Target, FString TargetName);
 	bool DoesMoveFail(int32 MemberIndex, EBattleAction Category);
+	void NotifyEnemiesBeforeAction(int32 MemberIndex, FName EntryName);
+	void NotifyEnemiesAfterAction(int32 MemberIndex, FName EntryName);
 	void SpawnDebugSummons();
 	void BuildSummonTurnQueue();
 	int32 TakeNextSummonTurn();

@@ -165,6 +165,10 @@ float AGoatCharacter::ScoreMove(ATurnBattleManager* Manager, FName MoveId, const
 	{
 		return ScoreTether(Manager, Move);
 	}
+	if (MoveId == FName("Goat_Meditation"))
+	{
+		return ScoreMeditation(Manager, MoveId, Move);
+	}
 	return BaseScore;
 }
 float AGoatCharacter::ScorePummel(ATurnBattleManager* Manager, const FBossMoveRow* Move) const
@@ -355,6 +359,10 @@ void AGoatCharacter::PerformMove(ATurnBattleManager* Manager, FName MoveId, cons
 	{
 		CastTether(Manager, MoveId, Move, TargetIndex);
 	}
+	else if (MoveId == FName("Goat_Meditation"))
+	{
+		CastMeditation(Manager, MoveId);
+	}
 	else
 	{
 		Super::PerformMove(Manager, MoveId, Move, TargetIndex);
@@ -523,14 +531,18 @@ bool AGoatCharacter::CanAffordUltimate(ATurnBattleManager* Manager, APartyMember
 	}
 	return false;
 }
+float AGoatCharacter::TakeNextHitMultiplier()
+{
+	if (!bChannelReady)
+	{
+		return 1.0f;
+	}
+	bChannelReady = false;
+	return ChannelMultiplier;
+}
 float AGoatCharacter::HitWithChannel(ATurnBattleManager* Manager, int32 MemberIndex, const FBossMoveRow* Move)
 {
-	float Multiplier = 1.0f;
-	if (bChannelReady)
-	{
-		Multiplier = ChannelMultiplier;
-		bChannelReady = false;
-	}
+	float Multiplier = TakeNextHitMultiplier();
 	return HitMemberWithMove(Manager, MemberIndex, Move, Multiplier);
 }
 void AGoatCharacter::CastChannel(ATurnBattleManager* Manager, const FBossMoveRow* Move)

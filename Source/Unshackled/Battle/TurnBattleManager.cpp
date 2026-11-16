@@ -1238,7 +1238,12 @@ bool ATurnBattleManager::TryPlayerMove(int32 MemberIndex, FName EntryName, int32
 		ResolveTelegraph(Countered, true);
 	}
 	Member->OnBattleActionChosen(this, EntryName);
-	if (Move == nullptr)
+	NotifyEnemiesBeforeAction(MemberIndex, EntryName);
+	if (Member->Health->IsDead())
+	{
+		ShowMessage(FString::Printf(TEXT("%s falls before acting"), *Member->DisplayName), FColor::Orange);
+	}
+	else if (Move == nullptr)
 	{
 		IsBlocking[MemberIndex] = true;
 		ShowMessage(FString::Printf(TEXT("%s blocks"), *Member->DisplayName), FColor::Cyan);
@@ -1252,7 +1257,11 @@ bool ATurnBattleManager::TryPlayerMove(int32 MemberIndex, FName EntryName, int32
 		ShowMessage(FString::Printf(TEXT("%s uses %s"), *Member->DisplayName, *Move->DisplayName.ToString()), FColor::Cyan);
 		Member->UseBattleMove(this, EntryName, Move, TargetIndex);
 	}
-	AdvanceRetribution(MemberIndex);
+	NotifyEnemiesAfterAction(MemberIndex, EntryName);
+	if (!Member->Health->IsDead())
+	{
+		AdvanceRetribution(MemberIndex);
+	}
 	UseBonusActionIfAny(MemberIndex);
 	CheckForEnd();
 	if (State == EBattleState::Won)
@@ -2055,6 +2064,34 @@ int32 ATurnBattleManager::GetFirstEnemyPick() const
 int32 ATurnBattleManager::GetBossTurnsLeft() const
 {
 	return BossTurnsLeft;
+}
+void ATurnBattleManager::NotifyEnemiesBeforeAction(int32 MemberIndex, FName EntryName)
+{
+	for (int32 i = 0; i < Enemies.Num(); i++)
+	{
+		ABattleEnemyCharacter* Enemy = Cast<ABattleEnemyCharacter>(Enemies[i]);
+		if (Enemy != nullptr)
+		{
+			if (!Enemy->Health->IsDead())
+			{
+				Enemy->BeforeMemberAction(this, MemberIndex, EntryName);
+			}
+		}
+	}
+}
+void ATurnBattleManager::NotifyEnemiesAfterAction(int32 MemberIndex, FName EntryName)
+{
+	for (int32 i = 0; i < Enemies.Num(); i++)
+	{
+		ABattleEnemyCharacter* Enemy = Cast<ABattleEnemyCharacter>(Enemies[i]);
+		if (Enemy != nullptr)
+		{
+			if (!Enemy->Health->IsDead())
+			{
+				Enemy->AfterMemberAction(this, MemberIndex, EntryName);
+			}
+		}
+	}
 }
 bool ATurnBattleManager::DoesMoveFail(int32 MemberIndex, EBattleAction Category)
 {

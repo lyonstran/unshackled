@@ -78,6 +78,11 @@ void ABattleHUD::DrawBossPanel(ATurnBattleManager* Manager)
 	{
 		StatText = StatText + FString::Printf(TEXT("   Shield %d"), FMath::CeilToInt(Boss->Health->Shield));
 	}
+	FString StatusNote = Boss->GetStatusNote(Manager);
+	if (!StatusNote.IsEmpty())
+	{
+		StatText = StatText + TEXT("   ") + StatusNote;
+	}
 	DrawCenteredText(StatText, FLinearColor(0.75f, 0.75f, 0.75f, 1.0f), CenterX, BarTop + BossBarHeight + 22.0f, 0.8f);
 }
 FLinearColor ABattleHUD::GetEnemyBorderColor(ATurnBattleManager* Manager, int32 EnemyIndex, FLinearColor NormalColor)

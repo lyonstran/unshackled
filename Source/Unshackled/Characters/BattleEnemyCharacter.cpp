@@ -32,6 +32,44 @@ FString ABattleEnemyCharacter::GetMemberNote(const ATurnBattleManager* Manager, 
 {
 	return FString();
 }
+void ABattleEnemyCharacter::BeforeMemberAction(ATurnBattleManager* Manager, int32 MemberIndex, FName EntryName)
+{
+	if (MeditationRound != Manager->GetRound())
+	{
+		return;
+	}
+	if (MeditationActionsSeen < 1)
+	{
+		MeditationActionsSeen = MeditationActionsSeen + 1;
+		return;
+	}
+	MeditationRound = -1;
+	TriggerMeditation(Manager, MemberIndex);
+}
+void ABattleEnemyCharacter::AfterMemberAction(ATurnBattleManager* Manager, int32 MemberIndex, FName EntryName)
+{
+	if (CycleRound != Manager->GetRound())
+	{
+		return;
+	}
+	TriggerCycle(Manager);
+	CycleRound = -1;
+	CycleCharges = 0;
+}
+FString ABattleEnemyCharacter::GetStatusNote(const ATurnBattleManager* Manager) const
+{
+	FString Note;
+	if (IsMeditationPending(Manager))
+	{
+		Note = Note + TEXT("Meditation ");
+	}
+	int32 Charges = GetPendingCycleCharges(Manager);
+	if (Charges > 0)
+	{
+		Note = Note + FString::Printf(TEXT("Cycle x%d "), Charges);
+	}
+	return Note;
+}
 TArray<FName> ABattleEnemyCharacter::GatherMoveIds(ATurnBattleManager* Manager) const
 {
 	TArray<FName> MoveIds;
@@ -86,6 +124,7 @@ bool ABattleEnemyCharacter::TakeTurnFromMoveTable(ATurnBattleManager* Manager)
 		TargetIndex = PickMoveTarget(Manager, MoveId, Move);
 	}
 	MovesUsedThisRound.Add(MoveId);
+	LastMoveId = MoveId;
 	ShowMoveMessage(Manager, Move, TargetIndex);
 	PerformMove(Manager, MoveId, Move, TargetIndex);
 	return true;
@@ -419,4 +458,127 @@ EModifierKind ABattleEnemyCharacter::GetModKind(const FBossMoveRow* Move) const
 		return EModifierKind::Flat;
 	}
 	return EModifierKind::Percent;
+}float ABattleEnemyCharacter::TakeNextHitMultiplier()
+{
+	return 1.0f;
+}
+int32 ABattleEnemyCharacter::CountLivingMembers(const ATurnBattleManager* Manager) const
+{
+	int32 Living = 0;
+	for (int32 i = 0; i < Manager->GetPartyCount(); i++)
+	{
+		APartyMemberCharacter* Member = Manager->GetPartyMember(i);
+		if (Member != nullptr)
+		{
+			if (!Member->Health->IsDead())
+			{
+				Living = Living + 1;
+			}
+		}
+	}
+	return Living;
+}
+bool ABattleEnemyCharacter::IsMeditationPending(const ATurnBattleManager* Manager) const
+{
+	if (MeditationRound < 0)
+	{
+		return false;
+	}
+	return MeditationRound >= Manager->GetRound();
+}
+float ABattleEnemyCharacter::ScoreMeditation(ATurnBattleManager* Manager, FName MoveId, const FBossMoveRow* Move) const
+{
+	if (IsMeditationPending(Manager))
+	{
+		return 0.0f;
+	}
+	if (LastMoveId == MoveId)
+	{
+		return 0.0f;
+	}
+	if (CountLivingMembers(Manager) < 2)
+	{
+		return 0.0f;
+	}
+	return Move->ScoreBase;
+}
+void ABattleEnemyCharacter::CastMeditation(ATurnBattleManager* Manager, FName MoveId)
+{
+	MeditationMoveId = MoveId;
+	MeditationRound = Manager->GetRound() + 1;
+	MeditationActionsSeen = 0;
+	Manager->ShowMessage(FString::Printf(TEXT("%s foresees a demise: the second member to act next round will be struck"), *DisplayName), FColor::Orange);
+}
+void ABattleEnemyCharacter::TriggerMeditation(ATurnBattleManager* Manager, int32 MemberIndex)
+{
+	const FBossMoveRow* Move = Manager->GetBossMove(MeditationMoveId);
+	if (Move == nullptr)
+	{
+		return;
+	}
+	APartyMemberCharacter* Member = Manager->GetPartyMember(MemberIndex);
+	if (Member == nullptr)
+	{
+		return;
+	}
+	float Multiplier = TakeNextHitMultiplier();
+	float DamageDealt = HitMemberWithMove(Manager, MemberIndex, Move, Multiplier);
+	Manager->ShowMessage(FString::Printf(TEXT("Meditation strikes %s for %d"), *Member->DisplayName, FMath::RoundToInt(DamageDealt)), FColor::Orange);
+}
+int32 ABattleEnemyCharacter::GetPendingCycleCharges(const ATurnBattleManager* Manager) const
+{
+	if (CycleRound < 0)
+	{
+		return 0;
+	}
+	if (CycleRound < Manager->GetRound())
+	{
+		return 0;
+	}
+	return CycleCharges;
+}
+float ABattleEnemyCharacter::ScoreCycle(ATurnBattleManager* Manager, FName MoveId, const FBossMoveRow* Move) const
+{
+	int32 Charges = GetPendingCycleCharges(Manager);
+	int32 MaxCharges = Move->MaxStacks;
+	if (MaxCharges < 1)
+	{
+		MaxCharges = 1;
+	}
+	if (Charges >= MaxCharges)
+	{
+		return 0.0f;
+	}
+	float Score = Move->ScoreBase - (Move->ScoreBonus1 * Charges);
+	if (Score < 1.0f)
+	{
+		Score = 1.0f;
+	}
+	return Score;
+}
+void ABattleEnemyCharacter::CastCycle(ATurnBattleManager* Manager, FName MoveId)
+{
+	int32 Charges = GetPendingCycleCharges(Manager);
+	CycleMoveId = MoveId;
+	CycleRound = Manager->GetRound() + 1;
+	CycleCharges = Charges + 1;
+	Manager->ShowMessage(FString::Printf(TEXT("%s readies a rain of poison for after the first member acts"), *DisplayName), FColor::Orange);
+}
+void ABattleEnemyCharacter::TriggerCycle(ATurnBattleManager* Manager)
+{
+	const FBossMoveRow* Move = Manager->GetBossMove(CycleMoveId);
+	if (Move == nullptr)
+	{
+		return;
+	}
+	for (int32 Charge = 0; Charge < CycleCharges; Charge++)
+	{
+		Manager->ShowMessage(TEXT("Poison rain falls on the party"), FColor::Orange);
+		float Multiplier = TakeNextHitMultiplier();
+		for (int32 i = 0; i < Manager->GetPartyCount(); i++)
+		{
+			HitMemberWithMove(Manager, i, Move, Multiplier);
+			ApplyMoveModifier(Manager->GetPartyMember(i), CycleMoveId, Move);
+		}
+	}
 }

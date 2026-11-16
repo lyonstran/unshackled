@@ -16,6 +16,9 @@ public:
 	virtual bool DoesMemberMoveFail(ATurnBattleManager* Manager, int32 MemberIndex, EBattleAction Category);
 	virtual bool IsMemberMoveLocked(const ATurnBattleManager* Manager, int32 MemberIndex, FName MoveId) const;
 	virtual FString GetMemberNote(const ATurnBattleManager* Manager, int32 MemberIndex) const;
+	virtual void BeforeMemberAction(ATurnBattleManager* Manager, int32 MemberIndex, FName EntryName);
+	virtual void AfterMemberAction(ATurnBattleManager* Manager, int32 MemberIndex, FName EntryName);
+	virtual FString GetStatusNote(const ATurnBattleManager* Manager) const;
 	bool TakeTurnFromMoveTable(ATurnBattleManager* Manager);
 	FName GetMoveSetKey() const;
 	UPROPERTY(EditAnywhere, Category = "Battle Enemy")
@@ -47,6 +50,23 @@ protected:
 	TArray<FName> GatherMoveIds(ATurnBattleManager* Manager) const;
 	FName ChooseMove(ATurnBattleManager* Manager, TArray<FName> MoveIds);
 	void ShowMoveMessage(ATurnBattleManager* Manager, const FBossMoveRow* Move, int32 TargetIndex);
+	virtual float TakeNextHitMultiplier();
+	int32 CountLivingMembers(const ATurnBattleManager* Manager) const;
+	bool IsMeditationPending(const ATurnBattleManager* Manager) const;
+	float ScoreMeditation(ATurnBattleManager* Manager, FName MoveId, const FBossMoveRow* Move) const;
+	void CastMeditation(ATurnBattleManager* Manager, FName MoveId);
+	void TriggerMeditation(ATurnBattleManager* Manager, int32 MemberIndex);
+	int32 GetPendingCycleCharges(const ATurnBattleManager* Manager) const;
+	float ScoreCycle(ATurnBattleManager* Manager, FName MoveId, const FBossMoveRow* Move) const;
+	void CastCycle(ATurnBattleManager* Manager, FName MoveId);
+	void TriggerCycle(ATurnBattleManager* Manager);
 	TArray<FName> MovesUsedThisRound;
 	bool bLastChoiceWasBlunder = false;
+	FName LastMoveId;
+	FName MeditationMoveId;
+	int32 MeditationRound = -1;
+	int32 MeditationActionsSeen = 0;
+	FName CycleMoveId;
+	int32 CycleRound = -1;
+	int32 CycleCharges = 0;
 };
