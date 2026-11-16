@@ -160,6 +160,7 @@ Goat:
     - Channel: The next damaging spell by the Goat is amplified by 15%. 
     - Nightmarish whispers: Reduce an ally's defenses by 15% for 5 turns. Can stack 2 times.
     - Pummel: Goat bashes it's hooves into an ally, dealing 10% max HP. 
+    - Meditation: Goat manifests Ally's demise. During player's turn, after one party member picks an moves, The following ally is subjected to flat damage ____ + 1.5% current health damage. This move is not able to be used multiple times in a row. 
 
 Serpent: 
   - Passive: Every turn, allies lose 1% missing health damage. Allies lose 0.5% attack per 10% missing health. When below 50% hp, Serpent sheds its skin. Allies lose 1.5% missing health damage every turn, and Serpent gains 2% defense per 10% missing max hp. 
@@ -174,9 +175,57 @@ Serpent:
     - Beckon: Serpent sends fourth all avaliable snakes conjured towards allies at random. Each serpent then explodes, dealing 10% current hp. 
     - Rasp: Inflicts fear into one ally. Reduce target attack by 15% for two turns. Not stackable. 
     - Miasma: Deal ___ damage to all allies over 3 turns. Damage is increased by (# of snakes fielded on initial cast + # of stacks of decay + 1)% + 2%. 
+    - Cycle: Serpent sets up preemptive rain of poison. During the player's turn, After the first ally moves, all ally's take flat damage for ___, and they lose 1.5% for 2 turns. This move is stackable. 
 
+Dragon: 
+  - Passive: Every other turn, Dragon will spew 1-4 fire balls into the air. After two rounds, the fireballs land randomly on the allies. These fireballs do a flat damage for ____ + 5% of Dragon's missing health. Dragon also gains 5% defense per 10% missing health. The first time Dragon reaches 10% max health or less, Dragon automatically casts 'Hellfire'. This does not consume a move/turn
+    - Hellfire: Incinerates all ally's with powerful fire. Ally's take 5% max health damage + 10% of Dragon's missing health as damage
+  - Specific moves: 
+    - Scorch: Blasts a wave of fire onto all ally's. Deals flat damage for ___ + 5% of Dragon's missing health. 
+    - Ruination: Targets an ally. It inflicts a curse that randomly selects an ally's move and marks it. The next time an ally wouild you that move, they take flat damage for ___ + 5% of dragon's missing health.
+    - Plume: Cna only be used by boss once during it's turns. Dragon summons a pillar of flame onto one ally. This ally takes 10% max health damage + 5% of Dragon's missing health. 
+    - Almighty: Dragon sacrifices 5% of it's current health. It gains 2.5% defense and 2.5% attack. 
+    - Fury: Reduces next source of damage by 15% + 10% of Dragon's missing health. This can stack up to 2 times. 
+    - Blaze: Dragon Reduces an ally's defense by 10% for three turns. During this time, They also take 5% increased damage to Scorch. Not stackable. 
+    - Flame horizon: Conjures a sea of fire. For the next 3 turns, ally's take  a flat damage of ____ + 2.5% Dragon's missing health as damage. Not stackable.
+    - Grail: Dragon conjures a grail of flame. During the next two player rounds, every time an ally makes a move, the grail spills a little, damaging a random ally for flat damage for ___ + 1% of dragon's misisng health damage.
 
+Lion: 
+  - Passive: Dealing damage to Lion adds a stack of 'Subjugation'. Each stack reduces ally defense by 1%. Lion also gains 0.5 * total # of Subjugation stacks across all ally's as Damage. The first time Lion reaches 50% health, Lion gains a 50% max health shield. 
+  - Specific moves:
+    - Sovreignty: Lion marks an ally. The next time that ally would attack Lion, they gain an additional stack of 'Subjugation', take flat damage for ____ + 2.5% max health damage, and Lion mitigates this damage by 25%. 
+    - Hunt: Lion marks an ally (only one ally at a time can be marked). For the next 3 turns, Lion deals 15% increased damage to them. 
+    - Prowl: For the next 5 rounds, Lion moves with bloodlust intent. All moves directed towards Lion in this duration have a 25% of failing. 
+    - Supremity: Lion bites down on an ally, dealing flat damage + 2.5% missing health damage. If an ally only has (# of Subjugation stacks)% max health left, this move instead executes them. If an ally was executed via this move, Lion gains an additional move. 
+    - Cry: Lion heals back 35% of the damage taken in the last turn. Each subsequent use reduces effectiveness of this move by 2%, down to 15%. This move can be used once by the boss per turn. 
+    - Challenge: Lion marks an ally. Lion grants them 10% attack, and 10% mana restoration, but they lose 10% defense, and gain an additional stack of 'Subjugation' when attacking. This effect lasts for 3 turns. 
+    - Roar: Lion reduces all ally defenses by (1.5 + # of Subjugation stacks)% for 3 turns. This effect does not stack.
+    - Rest: Lion enters a slumber. For the next 3 rounds, Lion does not make a move. In this time, Lion gains 90% defense, and heals back 10% max health each round. When this duration ends, Lion gains 10% defense and 10% attack permanently. This move can only be used once. 
+    - Malice: Lion readies themselves for an interception. At any point during the player's moves in the following round, if an ally uses any sort of move with a buff, heal, or shield, Lion leaps in, reduces the raw healing, shielding, or buff by 50%, and deals flat damage for ___ + 1.5% missing health.
 
+Saturn Ravana + Chimera: This fight will include two boss's. In the story, Sirius, upon betrayal, awakens back as Saturn Ravana (S. Ravana) and revives the prrevious boss's, using his magic to fuse them into a chimera. For number of turns, S. Ravana will get 2 turns, and then Chimera get's 1.
+Then at the 50% boss passive activation, only S. Ravana get's an additional turn. 
+
+Saturn Ravana:
+    - Passive: S. Ravana's attacks and abilities apply stacks to enemies. Each stack reduces enemy damage by 1% percent. At 25 stacks, enemies are are executed by Sirius's attacks if they are below 5% health. These stacks are capped at 30. 
+        For S. Ravana's agenda, they do not enact retribution, but 'absolution'
+        - Absolution: When allies achieve a retribution bonus, S.Ravana in the following turn achieves absolution. Absolution mirrors the retribution activated (copies) and applies it to him and Chimera. This happens before any moves are made by either boss.
+    In addition, S. Ravana funnels wind magic all throughout the battle field, where allies lose 1.75% current health each round.
+    - Specific moves: 
+        - veil: surrounds Ravana and Chimera, providing 15% damage reduction, and reflects back 10% of damage back towards enemies. This effect lasts 3 turns.
+        - Omnichannel: raise attack by 15% and defense by 15%. This effect lasts 3 turns. This effect does not stack.
+        - gale unleased: inflicts powerful tornado(AOE) onto all enemies, where they take initial flat damage and for the next three turns, enemies take weaker flat damage again (maybe like 10% of what the initial tornado damage was) 
+        - wind wall: sets up a shield that consumes the next damaging attack from enemy (directed towards S. Ravana). 20% of that damage is converted as bonus flat damage for S. Ravana's next attack. Subsequent use reduces chance of successful abilitiy cast (-10%) for the rest of the battle, starting at 100% successs rate, down to 50%.
+        - winds of war: raise attack stat of allies and enemies by 10% (avaliable floor 3)
+        - submission: S. Ravana lowers an enemies attack, and defense by 15%. This debuff lasts for 3 turns. 
+        - Dominion: S. Ravana's next damaging ability restores 20% max health. Subsequent uses reduce efficiency of this move by 2.5%, down to 10%. 
+Chimera: It's health is 50% of S. Ravana's max health. 
+    - Passive: Upon death, it does not fully go down. After 3 rounds between player party and S. Ravana, Chimera revives itself, only to 50% HP. 
+    - Specific moves: 
+        - Meditation: Goat head manifests Ally's demise. During player's turn, after one party member picks an moves, The following ally is subjected to flat damage ____ + 1.5% current health damage. This move is not able to be used multiple times in a row.
+        - Cycle: Serpent tail sets up preemptive rain of poison. During the player's turn, After the first ally moves, all ally's take flat damage for ___, and they lose 1.5% for 2 turns. This move is stackable. 
+        - Grail: Dragon head conjures a grail of flame. During the next two player rounds, every time an ally makes a move, the grail spills a little, damaging a random ally for flat damage for ___ + 1% of dragon's misisng health damage.
+        - Malice: Lion body readies themselves for an interception. At any point during the player's moves in the following round, if an ally uses any sort of move with a buff, heal, or shield, Lion leaps in, reduces the raw healing, shielding, or buff by 50%, and deals flat damage for ___ + 1.5% missing health.
 
 
 
