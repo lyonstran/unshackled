@@ -11,6 +11,7 @@
 AMagicFloorDirectorCharacter::AMagicFloorDirectorCharacter()
 {
 	StatsRowName = FName("MagicDirector");
+	bIsMiniboss = true;
 	AttackDamage = 20.0f;
 	Health->MaxHealth = 280.0f;
 	Stats->BaseDefense = 40.0f;

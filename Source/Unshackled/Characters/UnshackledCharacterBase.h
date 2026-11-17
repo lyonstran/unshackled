@@ -16,6 +16,7 @@ public:
         void AttackInDirection(FVector Direction);
         void Dash();
         void ReviveCharacter();
+        void ReviveCharacterAt(float HealthFraction);
         void UseSpecial(FVector AimDirection);
         void UseUltimate(FVector AimDirection);
         FVector GetFacingDirection() const;
@@ -70,6 +71,8 @@ protected:
         virtual bool WouldDie();
         virtual float GetFloorStatScale() const;
         virtual float GetFloorManaCostScale() const;
+        virtual float GetManaRegenScale() const;
+        virtual float GetCooldownScale() const;
         virtual void PerformBasicAttack(FVector Direction);
         virtual void PerformSpecial(FVector AimDirection);
         virtual void PerformUltimate(FVector AimDirection);

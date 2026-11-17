@@ -6,6 +6,7 @@
 #include "Components/StatsComponent.h"
 #include "Components/RetributionComponent.h"
 #include "Components/GameMenuComponent.h"
+#include "Components/ItemMenuComponent.h"
 #include "Engine/Canvas.h"
 #include "EngineUtils.h"
 #include "Engine/World.h"
@@ -34,6 +35,7 @@ void AUnshackledHUD::DrawHUD()
         DrawPrompt();
         DrawBanner();
         DrawExtraHUD();
+        DrawItemMenu();
         DrawGameMenu();
 }
 AUnshackledHUD* AUnshackledHUD::FindPlayerHUD(const UObject* WorldContextObject)
@@ -486,4 +488,169 @@ void AUnshackledHUD::DrawMenuRow(FString Label, float CenterX, float Top, bool b
                 TextColor = FLinearColor(1.0f, 0.85f, 0.2f, 1.0f);
         }
         DrawMenuText(Label, TextColor, CenterX, Top, MenuOptionScale);
+}
+void AUnshackledHUD::DrawItemMenu()
+{
+        APlayerController* OwningController = GetOwningPlayerController();
+        if (OwningController == nullptr)
+        {
+                return;
+        }
+        UItemMenuComponent* ItemMenu = OwningController->FindComponentByClass<UItemMenuComponent>();
+        if (ItemMenu == nullptr)
+        {
+                return;
+        }
+        if (!ItemMenu->IsOpen())
+        {
+                return;
+        }
+        FLinearColor BackdropColor = FLinearColor(0.0f, 0.0f, 0.0f, MenuBackdropAlpha);
+        DrawRect(BackdropColor, 0.0f, 0.0f, Canvas->SizeX, Canvas->SizeY);
+        float CenterX = Canvas->SizeX / 2.0f;
+        float Top = Canvas->SizeY * ItemMenuTopFraction;
+        DrawMenuText(ItemMenu->GetTitle(), FLinearColor::White, CenterX, Top, MenuTitleScale);
+        float RowsTop = Top + (MenuRowHeight * 1.6f);
+        float AfterRows = DrawItemMenuRows(ItemMenu, CenterX, RowsTop);
+        FLinearColor DescriptionColor = FLinearColor(1.0f, 0.95f, 0.7f, 1.0f);
+        DrawMenuText(ItemMenu->GetSelectedDescription(), DescriptionColor, CenterX, AfterRows + 8.0f, 1.1f);
+        float NextTop = AfterRows + 40.0f;
+        if (ItemMenu->GetStage() == EItemMenuStage::PickMember)
+        {
+                DrawItemMemberRow(ItemMenu, CenterX, NextTop);
+                NextTop = NextTop + 60.0f;
+        }
+        if (ItemMenu->GetMode() == EItemMenuMode::Artifacts)
+        {
+                DrawPartyStats(ItemMenu, CenterX, NextTop);
+        }
+        FLinearColor StatusColor = FLinearColor(0.5f, 1.0f, 0.5f, 1.0f);
+        DrawMenuText(ItemMenu->GetStatusText(), StatusColor, CenterX, Canvas->SizeY - 80.0f, 1.1f);
+        FString Hint = TEXT("Up / Down: choose     Space / A: use     Esc / B: back     Q: close");
+        if (ItemMenu->GetMode() == EItemMenuMode::Artifacts)
+        {
+                Hint = TEXT("Up / Down: choose     Space / A: equip or unequip     Esc / B or R: close");
+        }
+        if (ItemMenu->GetStage() == EItemMenuStage::PickMember)
+        {
+                Hint = TEXT("Left / Right: choose ally     Space / A: use     Esc / B: back");
+        }
+        FLinearColor HintColor = FLinearColor(0.7f, 0.7f, 0.7f, 1.0f);
+        DrawMenuText(Hint, HintColor, CenterX, Canvas->SizeY - 50.0f, MenuHintScale);
+}
+float AUnshackledHUD::DrawItemMenuRows(UItemMenuComponent* ItemMenu, float CenterX, float Top)
+{
+        int32 Count = ItemMenu->GetEntryCount();
+        if (Count == 0)
+        {
+                FString EmptyText = TEXT("No items");
+                if (ItemMenu->GetMode() == EItemMenuMode::Artifacts)
+                {
+                        EmptyText = TEXT("No artifacts yet: open chests to find them");
+                }
+                DrawMenuText(EmptyText, FLinearColor(0.6f, 0.6f, 0.6f, 1.0f), CenterX, Top, 1.2f);
+                return Top + ItemMenuRowHeight;
+        }
+        int32 Selected = ItemMenu->GetSelectedIndex();
+        int32 FirstVisible = Selected - (ItemMenuVisibleRows / 2);
+        if (FirstVisible > Count - ItemMenuVisibleRows)
+        {
+                FirstVisible = Count - ItemMenuVisibleRows;
+        }
+        if (FirstVisible < 0)
+        {
+                FirstVisible = 0;
+        }
+        int32 LastVisible = FirstVisible + ItemMenuVisibleRows - 1;
+        if (LastVisible > Count - 1)
+        {
+                LastVisible = Count - 1;
+        }
+        float RowTop = Top;
+        for (int32 i = FirstVisible; i <= LastVisible; i++)
+        {
+                bool bSelected = false;
+                if (i == Selected)
+                {
+                        bSelected = true;
+                }
+                FLinearColor TextColor = FLinearColor::White;
+                if (bSelected)
+                {
+                        FLinearColor HighlightColor = FLinearColor(1.0f, 0.85f, 0.2f, 0.25f);
+                        float HighlightLeft = CenterX - (ItemMenuPanelWidth / 2.0f);
+                        DrawRect(HighlightColor, HighlightLeft, RowTop - 2.0f, ItemMenuPanelWidth, ItemMenuRowHeight - 2.0f);
+                        TextColor = FLinearColor(1.0f, 0.85f, 0.2f, 1.0f);
+                }
+                DrawMenuText(ItemMenu->GetEntryLabel(i), TextColor, CenterX, RowTop, 1.15f);
+                RowTop = RowTop + ItemMenuRowHeight;
+        }
+        if (LastVisible < Count - 1)
+        {
+                DrawMenuText(TEXT("..."), FLinearColor(0.6f, 0.6f, 0.6f, 1.0f), CenterX, RowTop, 1.0f);
+                RowTop = RowTop + ItemMenuRowHeight;
+        }
+        return RowTop;
+}
+void AUnshackledHUD::DrawItemMemberRow(UItemMenuComponent* ItemMenu, float CenterX, float Top)
+{
+        int32 Count = ItemMenu->GetMemberCount();
+        if (Count == 0)
+        {
+                return;
+        }
+        float BoxWidth = 150.0f;
+        float BoxHeight = 44.0f;
+        float Gap = 12.0f;
+        float TotalWidth = (Count * BoxWidth) + ((Count - 1) * Gap);
+        float Left = CenterX - (TotalWidth / 2.0f);
+        for (int32 i = 0; i < Count; i++)
+        {
+                APartyMemberCharacter* Member = ItemMenu->GetMember(i);
+                if (Member != nullptr)
+                {
+                        float BoxLeft = Left + (i * (BoxWidth + Gap));
+                        FLinearColor BorderColor = FLinearColor(0.25f, 0.25f, 0.25f, 1.0f);
+                        if (i == ItemMenu->GetMemberIndex())
+                        {
+                                BorderColor = FLinearColor(1.0f, 0.85f, 0.2f, 1.0f);
+                        }
+                        DrawRect(BorderColor, BoxLeft - 3.0f, Top - 3.0f, BoxWidth + 6.0f, BoxHeight + 6.0f);
+                        DrawRect(FLinearColor(0.08f, 0.08f, 0.12f, 0.95f), BoxLeft, Top, BoxWidth, BoxHeight);
+                        FLinearColor NameColor = FLinearColor::White;
+                        if (!ItemMenu->CanPickMember(i))
+                        {
+                                NameColor = FLinearColor(0.45f, 0.45f, 0.45f, 1.0f);
+                        }
+                        DrawText(Member->DisplayName, NameColor, BoxLeft + 6.0f, Top + 4.0f, nullptr, 1.0f);
+                        FString HealthText = TEXT("Down");
+                        if (!Member->Health->IsDead())
+                        {
+                                HealthText = FString::Printf(TEXT("HP %d / %d   MP %d"), FMath::CeilToInt(Member->Health->CurrentHealth), FMath::CeilToInt(Member->Health->MaxHealth), FMath::FloorToInt(Member->Stats->CurrentMana));
+                        }
+                        DrawText(HealthText, NameColor, BoxLeft + 6.0f, Top + 24.0f, nullptr, 0.8f);
+                }
+        }
+}
+void AUnshackledHUD::DrawPartyStats(UItemMenuComponent* ItemMenu, float CenterX, float Top)
+{
+        DrawMenuText(TEXT("Party"), FLinearColor::White, CenterX, Top, 1.2f);
+        float LineTop = Top + 26.0f;
+        for (int32 i = 0; i < ItemMenu->GetMemberCount(); i++)
+        {
+                APartyMemberCharacter* Member = ItemMenu->GetMember(i);
+                if (Member != nullptr)
+                {
+                        int32 HealthNow = FMath::CeilToInt(Member->Health->CurrentHealth);
+                        int32 HealthMax = FMath::CeilToInt(Member->Health->MaxHealth);
+                        int32 ManaNow = FMath::FloorToInt(Member->Stats->CurrentMana);
+                        int32 ManaMax = FMath::CeilToInt(Member->Stats->GetFinal(ECharacterStat::MaxMana));
+                        int32 DamageNow = FMath::RoundToInt(Member->Stats->GetFinal(ECharacterStat::Damage));
+                        int32 DefenseNow = FMath::RoundToInt(Member->Stats->GetFinal(ECharacterStat::Defense));
+                        int32 SpeedNow = FMath::RoundToInt(Member->Stats->GetFinal(ECharacterStat::Speed));
+                        FString Line = FString::Printf(TEXT("%s   HP %d/%d   MP %d/%d   Damage %d   Defense %d   Speed %d"), *Member->DisplayName, HealthNow, HealthMax, ManaNow, ManaMax, DamageNow, DefenseNow, SpeedNow);
+                        DrawMenuText(Line, FLinearColor(0.85f, 0.85f, 0.85f, 1.0f), CenterX, LineTop, 1.0f);
+                        LineTop = LineTop + 22.0f;
+                }
+        }
 }

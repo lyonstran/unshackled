@@ -1,0 +1,26 @@
+Name,Floor,DisplayName,Description,bWholeParty,bOverworldOnly,HealFlat,HealPercent,ManaFlat,ReviveFraction,DamagePercent,DefensePercent,SpeedPercent,ShieldPercent,BuffSeconds,BuffRounds
+HealthPotion_Basic,1,Basic Health Potion,"Restore 25 health",False,False,25,0,0,0,0,0,0,0,30,2
+ManaPotion_Basic,1,Basic Mana Potion,"Restore 25 mana",False,False,0,0,25,0,0,0,0,0,30,2
+Potato,1,Potato,"Restore 5% max health",False,False,0,0.05,0,0,0,0,0,0,30,2
+Cheese,1,Cheese,"Revive a fallen ally at 25% health",False,False,0,0,0,0.25,0,0,0,0,30,2
+MoldyBread,1,Moldy Bread,"+5% defense for 30 seconds (2 rounds)",False,False,0,0,0,0,0,0.05,0,0,30,2
+HalfEatenSoup,1,Half-eaten Soup,"+5% damage for 30 seconds (2 rounds)",False,False,0,0,0,0,0.05,0,0,0,30,2
+HealthPotion_Better,2,Better Health Potion,"Restore 50 health, +5% defense for 30 seconds (2 rounds)",False,False,50,0,0,0,0,0.05,0,0,30,2
+ManaPotion_Better,2,Better Mana Potion,"Restore 50 mana, +5% damage for 30 seconds (2 rounds)",False,False,0,0,50,0,0.05,0,0,0,30,2
+ChocolateBar,2,Chocolate Bar,"Restore 50 health and 50 mana",False,False,50,0,50,0,0,0,0,0,30,2
+Camembert,2,Camembert,"Revive a fallen ally at full health, -30% defense for 30 seconds (2 rounds)",False,False,0,0,0,1.0,0,-0.3,0,0,30,2
+HalfEatenBread,2,Half-eaten Bread,"+7.5% defense for 30 seconds (2 rounds)",False,False,0,0,0,0,0,0.075,0,0,30,2
+CanOfSoup,2,Can of Soup,"+7.5% damage for 30 seconds (2 rounds)",False,False,0,0,0,0,0.075,0,0,0,30,2
+HealthPotion_Awesome,3,Awesome Health Potion,"Restore 75 health, +7.5% defense for 30 seconds (2 rounds)",False,False,75,0,0,0,0,0.075,0,0,30,2
+ManaPotion_Awesome,3,Awesome Mana Potion,"Restore 75 mana, +7.5% damage for 30 seconds (2 rounds)",False,False,0,0,75,0,0.075,0,0,0,30,2
+GinAndTonic,3,Gin and Tonic,"Revive a fallen ally at 50% health",False,False,0,0,0,0.5,0,0,0,0,30,2
+Springs,3,Springs,"Party +50% speed for 30 seconds (overworld only)",True,True,0,0,0,0,0,0,0.5,0,30,2
+ShieldPotion,3,Shield Potion,"Party gains a shield of 15% max health for 30 seconds (2 rounds)",True,False,0,0,0,0,0,0,0,0.15,30,2
+ExquisiteBread,3,Exquisite Bread,"+10% defense for 30 seconds (2 rounds)",False,False,0,0,0,0,0,0.1,0,0,30,2
+RevivalBeads,3,Revival Beads,"Revive every fallen ally at 25% health",True,False,0,0,0,0.25,0,0,0,0,30,2
+HealthPotion_Almighty,4,Almighty Health Potion,"Restore 150 health, +7.5% defense for 30 seconds (2 rounds)",False,False,150,0,0,0,0,0.075,0,0,30,2
+ManaPotion_Almighty,4,Almighty Mana Potion,"Restore 150 mana, +7.5% damage for 30 seconds (2 rounds)",False,False,0,0,150,0,0.075,0,0,0,30,2
+Rum,4,Rum,"Revive a fallen ally at 75% health",False,False,0,0,0,0.75,0,0,0,0,30,2
+Omnipotion,4,Omnipotion,"Restore 100 health and 100 mana, +10% damage and defense for 30 seconds (2 rounds)",False,False,100,0,100,0,0.1,0.1,0,0,30,2
+RevivalChain,4,Revival Chain,"Revive every fallen ally at 50% health",True,False,0,0,0,0.5,0,0,0,0,30,2
+MysteryLiquid,4,Mystery Liquid,"+50% damage and -50% defense for 30 seconds (2 rounds)",False,False,0,0,0,0,0.5,-0.5,0,0,30,2

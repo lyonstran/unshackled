@@ -26,7 +26,7 @@ void UHealthComponent::Heal(float Amount)
 	{
 		return;
 	}
-	float HealAmount = Amount * HealMultiplier;
+	float HealAmount = Amount * HealMultiplier * (1.0f + ArtifactBonus);
 	if (DivertFraction > 0.0f)
 	{
 		float DivertedPart = HealAmount * DivertFraction;
@@ -57,7 +57,7 @@ void UHealthComponent::AddShield(float Amount)
 	{
 		return;
 	}
-	Shield = Shield + (Amount * ShieldMultiplier);
+	Shield = Shield + (Amount * ShieldMultiplier * (1.0f + ArtifactBonus));
 }
 float UHealthComponent::AbsorbWithShield(float Amount)
 {

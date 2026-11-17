@@ -7,6 +7,8 @@ AUnshackledPlayerController::AUnshackledPlayerController()
 {
         Retribution = CreateDefaultSubobject<URetributionComponent>(TEXT("Retribution"));
         GameMenu = CreateDefaultSubobject<UGameMenuComponent>(TEXT("GameMenu"));
+        ItemMenu = CreateDefaultSubobject<UItemMenuComponent>(TEXT("ItemMenu"));
+        ArtifactPulse = CreateDefaultSubobject<UArtifactPulseComponent>(TEXT("ArtifactPulse"));
 }
 void AUnshackledPlayerController::BeginPlay()
 {
@@ -441,6 +443,14 @@ void AUnshackledPlayerController::BindMenuInput(UEnhancedInputComponent* Input)
         {
                 Input->BindAction(MenuBackAction, ETriggerEvent::Started, this, &AUnshackledPlayerController::MenuBack);
         }
+        if (UseItemAction != nullptr)
+        {
+                Input->BindAction(UseItemAction, ETriggerEvent::Started, this, &AUnshackledPlayerController::ToggleItemMenu);
+        }
+        if (InventoryAction != nullptr)
+        {
+                Input->BindAction(InventoryAction, ETriggerEvent::Started, this, &AUnshackledPlayerController::ToggleArtifactMenu);
+        }
 }
 bool AUnshackledPlayerController::IsGameMenuOpen() const
 {
@@ -450,10 +460,49 @@ bool AUnshackledPlayerController::IsGameMenuOpen() const
         }
         return GameMenu->IsOpen();
 }
+bool AUnshackledPlayerController::IsItemMenuOpen() const
+{
+        if (ItemMenu == nullptr)
+        {
+                return false;
+        }
+        return ItemMenu->IsOpen();
+}
+void AUnshackledPlayerController::ToggleItemMenu()
+{
+        if (ItemMenu == nullptr)
+        {
+                return;
+        }
+        if (IsGameMenuOpen())
+        {
+                return;
+        }
+        bSwitchMenuOpen = false;
+        ItemMenu->ToggleMenu(EItemMenuMode::Items);
+}
+void AUnshackledPlayerController::ToggleArtifactMenu()
+{
+        if (ItemMenu == nullptr)
+        {
+                return;
+        }
+        if (IsGameMenuOpen())
+        {
+                return;
+        }
+        bSwitchMenuOpen = false;
+        ItemMenu->ToggleMenu(EItemMenuMode::Artifacts);
+}
 void AUnshackledPlayerController::TogglePause()
 {
         if (GameMenu == nullptr)
         {
+                return;
+        }
+        if (IsItemMenuOpen())
+        {
+                ItemMenu->CloseMenu();
                 return;
         }
         bSwitchMenuOpen = false;
@@ -464,6 +513,11 @@ void AUnshackledPlayerController::MenuNavigate(const FInputActionValue& Value)
         if (IsGameMenuOpen())
         {
                 GameMenu->HandleNavigate(Value.Get<FVector2D>());
+                return;
+        }
+        if (IsItemMenuOpen())
+        {
+                ItemMenu->HandleNavigate(Value.Get<FVector2D>());
         }
 }
 void AUnshackledPlayerController::MenuNavigateReleased(const FInputActionValue& Value)
@@ -472,12 +526,21 @@ void AUnshackledPlayerController::MenuNavigateReleased(const FInputActionValue& 
         {
                 GameMenu->HandleNavigateReleased();
         }
+        if (ItemMenu != nullptr)
+        {
+                ItemMenu->HandleNavigateReleased();
+        }
 }
 void AUnshackledPlayerController::MenuConfirm()
 {
         if (IsGameMenuOpen())
         {
                 GameMenu->Confirm();
+                return;
+        }
+        if (IsItemMenuOpen())
+        {
+                ItemMenu->Confirm();
         }
 }
 void AUnshackledPlayerController::MenuBack()
@@ -485,6 +548,11 @@ void AUnshackledPlayerController::MenuBack()
         if (IsGameMenuOpen())
         {
                 GameMenu->Back();
+                return;
+        }
+        if (IsItemMenuOpen())
+        {
+                ItemMenu->Back();
         }
 }
 void AUnshackledPlayerController::Move(const FInputActionValue& Value)

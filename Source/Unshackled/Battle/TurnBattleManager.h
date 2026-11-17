@@ -10,6 +10,9 @@ class APartyMemberCharacter;
 class ABossCharacter;
 class ABattleSummonCharacter;
 class AUnshackledCharacterBase;
+class UUnshackledGameInstance;
+struct FActiveItemRow;
+struct FArtifactRow;
 USTRUCT()
 struct FBattlePartySlot
 {
@@ -40,7 +43,8 @@ enum class EBattleMenuStage
 	PickMember,
 	PickAction,
 	PickTarget,
-	PickEnemy
+	PickEnemy,
+	PickItem
 };
 struct FPendingTelegraph
 {
@@ -118,6 +122,11 @@ public:
 	int32 GetBossTurnsLeft() const;
 	bool IsEntryLockedByEnemy(int32 MemberIndex, FName EntryName) const;
 	FString GetEnemyNotesForMember(int32 MemberIndex) const;
+	int32 GetMenuItemIndex() const;
+	int32 GetMenuItemCount() const;
+	FString GetMenuItemLabel(int32 Index) const;
+	FString GetMenuItemDescription() const;
+	bool IsPickingItemTarget() const;
 	UPROPERTY(EditAnywhere, Category = "Battle")
 	UDataTable* TelegraphTable = nullptr;
 	UPROPERTY(EditAnywhere, Category = "Battle")
@@ -129,7 +138,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Battle")
 	UDataTable* BossMoveTable = nullptr;
 	UPROPERTY(EditAnywhere, Category = "Battle")
-	float ManaRestoreFraction = 0.25f;
+	float ManaRestoreFraction = 0.2f;
 	UPROPERTY(EditAnywhere, Category = "Battle Setup")
 	TArray<FBattlePartySlot> PartySlots;
 	UPROPERTY(EditAnywhere, Category = "Battle Setup")
@@ -158,6 +167,8 @@ public:
 	bool bSpawnWholePartyForTesting = false;
 	UPROPERTY(EditAnywhere, Category = "Battle Debug")
 	bool bUnlockAllMovesForTesting = false;
+	UPROPERTY(EditAnywhere, Category = "Battle Debug")
+	bool bGiveAllItemsForTesting = false;
 	UPROPERTY(EditAnywhere, Category = "Battle Debug")
 	TSubclassOf<ABossCharacter> DebugBossOverride;
 	UPROPERTY(EditAnywhere, Category = "Battle Debug")
@@ -190,6 +201,10 @@ private:
 	int32 MenuActionIndex = 0;
 	int32 MenuTargetIndex = 0;
 	TArray<FName> MenuEntries;
+	TArray<FName> ItemEntries;
+	int32 MenuItemIndex = 0;
+	FName PendingItemId;
+	bool bPickingItemTarget = false;
 	int32 Round = 1;
 	int32 BossTurnsLeft = 0;
 	int32 BossTurnsToSkip = 0;
@@ -267,6 +282,19 @@ private:
 	EBattleAction GetEntryCategory(FName EntryName) const;
 	bool IsBlockEntry(FName EntryName) const;
 	bool IsItemEntry(FName EntryName) const;
+	UUnshackledGameInstance* GetUnshackledGameInstance() const;
+	void BuildItemEntries();
+	bool HasUsableItems() const;
+	void StartItemPick();
+	void ConfirmItemChoice();
+	void StartItemTargetPick();
+	bool CanTargetMember(int32 MemberIndex) const;
+	bool CanUsePendingItem(int32 TargetIndex) const;
+	void UseChosenItem(int32 MemberIndex, int32 TargetIndex);
+	void GiveItemTo(int32 TargetIndex, const FActiveItemRow* Row);
+	void RunArtifactPulses();
+	void PulseArtifactOnParty(const FArtifactRow* Row);
+	void MarkRandomEnemy(float Bonus);
 	void EndRound();
 	void AdvanceTelegraphs();
 	void ResolveTelegraph(FPendingTelegraph Telegraph, bool bCountered);

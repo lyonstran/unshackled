@@ -3,12 +3,14 @@
 #include "Characters/FlowerCharacter.h"
 #include "EngineUtils.h"
 #include "Game/UnshackledGameInstance.h"
+#include "UI/UnshackledHUD.h"
 #include "GameFramework/CharacterMovementComponent.h"
 AEnemyCharacter::AEnemyCharacter()
 {
         PrimaryActorTick.bCanEverTick = true;
         bIsEnemy = true;
         AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
+        ChestClass = AItemChestActor::StaticClass();
 }
 AUnshackledCharacterBase* AEnemyCharacter::FindClosestTarget()
 {
@@ -112,7 +114,76 @@ void AEnemyCharacter::Tick(float DeltaTime)
 void AEnemyCharacter::Die()
 {
         Super::Die();
+        DropLoot();
         SetLifeSpan(1.0f);
+}
+void AEnemyCharacter::DropLoot()
+{
+        if (bIsMiniboss)
+        {
+                SpawnMinibossChest();
+                return;
+        }
+        UUnshackledGameInstance* GameInstanceRef = Cast<UUnshackledGameInstance>(GetGameInstance());
+        if (GameInstanceRef == nullptr)
+        {
+                return;
+        }
+        TArray<FName> Dropped = GameInstanceRef->RollEnemyDrops();
+        if (Dropped.Num() == 0)
+        {
+                return;
+        }
+        FString Text = TEXT("Loot:");
+        for (int32 i = 0; i < Dropped.Num(); i++)
+        {
+                Text = Text + TEXT(" ") + GameInstanceRef->GetItemName(Dropped[i]);
+                if (i < Dropped.Num() - 1)
+                {
+                        Text = Text + TEXT(",");
+                }
+        }
+        AUnshackledHUD* Hud = AUnshackledHUD::FindPlayerHUD(this);
+        if (Hud != nullptr)
+        {
+                Hud->AddMessage(Text, FLinearColor(0.6f, 1.0f, 0.6f, 1.0f), 3.0f);
+        }
+}
+bool AEnemyCharacter::HasMinibossChest() const
+{
+        for (TActorIterator<AItemChestActor> It(GetWorld()); It; ++It)
+        {
+                AItemChestActor* Chest = *It;
+                if (Chest->bFromMiniboss)
+                {
+                        return true;
+                }
+        }
+        return false;
+}
+void AEnemyCharacter::SpawnMinibossChest()
+{
+        if (ChestClass == nullptr)
+        {
+                return;
+        }
+        if (HasMinibossChest())
+        {
+                return;
+        }
+        FActorSpawnParameters SpawnParams;
+        SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+        AItemChestActor* Chest = GetWorld()->SpawnActor<AItemChestActor>(ChestClass, GetActorLocation(), FRotator::ZeroRotator, SpawnParams);
+        if (Chest == nullptr)
+        {
+                return;
+        }
+        Chest->bFromMiniboss = true;
+        AUnshackledHUD* Hud = AUnshackledHUD::FindPlayerHUD(this);
+        if (Hud != nullptr)
+        {
+                Hud->AddMessage(TEXT("The director dropped a chest"), FLinearColor(1.0f, 0.85f, 0.2f, 1.0f), 4.0f);
+        }
 }
 float AEnemyCharacter::GetFloorStatScale() const
 {

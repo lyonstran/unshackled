@@ -4,6 +4,7 @@
 #include "Characters/BattleSummonCharacter.h"
 #include "UI/UnshackledHUD.h"
 #include "Game/UnshackledGameInstance.h"
+#include "Items/ItemRows.h"
 #include "InputCoreTypes.h"
 #include "EngineUtils.h"
 #include "Engine/Engine.h"
@@ -16,6 +17,14 @@ ATurnBattleManager::ATurnBattleManager()
 void ATurnBattleManager::BeginPlay()
 {
 	Super::BeginPlay();
+	if (bGiveAllItemsForTesting)
+	{
+		UUnshackledGameInstance* GameInstanceRef = GetUnshackledGameInstance();
+		if (GameInstanceRef != nullptr)
+		{
+			GameInstanceRef->GiveAllItems();
+		}
+	}
 	SpawnMissingParty();
 	SpawnBossIfMissing();
 	FindBoss();
@@ -246,6 +255,7 @@ void ATurnBattleManager::ResetMenuToNextMember()
 	MenuStage = EBattleMenuStage::PickMember;
 	MenuActionIndex = 0;
 	FirstEnemyPick = -1;
+	bPickingItemTarget = false;
 	int32 NextIndex = FindNextActingMember();
 	if (NextIndex >= 0)
 	{
@@ -308,6 +318,26 @@ void ATurnBattleManager::MenuStep(int32 Horizontal, int32 Vertical)
 		}
 		return;
 	}
+	if (MenuStage == EBattleMenuStage::PickItem)
+	{
+		if (Vertical != 0)
+		{
+			int32 ItemCount = ItemEntries.Num();
+			if (ItemCount > 0)
+			{
+				MenuItemIndex = MenuItemIndex - Vertical;
+				if (MenuItemIndex < 0)
+				{
+					MenuItemIndex = ItemCount - 1;
+				}
+				if (MenuItemIndex >= ItemCount)
+				{
+					MenuItemIndex = 0;
+				}
+			}
+		}
+		return;
+	}
 	if (Vertical != 0)
 	{
 		int32 Count = GetMenuActionCount();
@@ -351,6 +381,11 @@ void ATurnBattleManager::MenuConfirm()
 		}
 		return;
 	}
+	if (MenuStage == EBattleMenuStage::PickItem)
+	{
+		ConfirmItemChoice();
+		return;
+	}
 	FName EntryName = GetMenuEntry(MenuActionIndex);
 	int32 TargetIndex = MenuMemberIndex;
 	SecondTargetIndex = -1;
@@ -359,6 +394,11 @@ void ATurnBattleManager::MenuConfirm()
 		if (!IsEntryUsable(MenuMemberIndex, EntryName))
 		{
 			ShowMessage(TEXT("Cannot use that right now"), FColor::Orange);
+			return;
+		}
+		if (IsItemEntry(EntryName))
+		{
+			StartItemPick();
 			return;
 		}
 		if (NeedsAllyTarget(EntryName))
@@ -399,6 +439,11 @@ void ATurnBattleManager::MenuConfirm()
 	if (MenuStage == EBattleMenuStage::PickTarget)
 	{
 		TargetIndex = MenuTargetIndex;
+		if (!CanTargetMember(TargetIndex))
+		{
+			ShowMessage(TEXT("Choose someone else"), FColor::Orange);
+			return;
+		}
 	}
 	bool bActed = TryPlayerMove(MenuMemberIndex, EntryName, TargetIndex);
 	if (bActed)
@@ -424,6 +469,18 @@ void ATurnBattleManager::MenuBack()
 		return;
 	}
 	if (MenuStage == EBattleMenuStage::PickTarget)
+	{
+		if (bPickingItemTarget)
+		{
+			bPickingItemTarget = false;
+			MenuStage = EBattleMenuStage::PickItem;
+		}
+		else
+		{
+			MenuStage = EBattleMenuStage::PickAction;
+		}
+	}
+	else if (MenuStage == EBattleMenuStage::PickItem)
 	{
 		MenuStage = EBattleMenuStage::PickAction;
 	}
@@ -495,7 +552,8 @@ float ATurnBattleManager::GetMoveManaCost(const FBattleMoveRow* Move) const
 	{
 		return Move->ManaCost;
 	}
-	return Move->ManaCost * GameInstanceRef->GetPartyManaCostScale();
+	float CostScale = GameInstanceRef->GetPartyManaCostScale() * (1.0f - GameInstanceRef->GetCooldownReduction());
+	return Move->ManaCost * CostScale;
 }
 const FBossMoveRow* ATurnBattleManager::GetBossMove(FName MoveId) const
 {
@@ -591,7 +649,11 @@ FString ATurnBattleManager::GetEntryDescription(FName EntryName) const
 	}
 	if (IsItemEntry(EntryName))
 	{
-		return TEXT("No items yet");
+		if (HasUsableItems())
+		{
+			return TEXT("Use an item (uses this member's action)");
+		}
+		return TEXT("No usable items");
 	}
 	const FBattleMoveRow* Move = GetMove(EntryName);
 	if (Move == nullptr)
@@ -620,7 +682,7 @@ bool ATurnBattleManager::IsEntryUsable(int32 MemberIndex, FName EntryName) const
 	}
 	if (IsItemEntry(EntryName))
 	{
-		return false;
+		return HasUsableItems();
 	}
 	const FBattleMoveRow* Move = GetMove(EntryName);
 	if (Move == nullptr)
@@ -729,6 +791,7 @@ void ATurnBattleManager::MoveEnemySelection(int32 Step)
 void ATurnBattleManager::StartTargetPick()
 {
 	MenuStage = EBattleMenuStage::PickTarget;
+	bPickingItemTarget = false;
 	MenuTargetIndex = MenuMemberIndex;
 }
 void ATurnBattleManager::MoveTargetSelection(int32 Step)
@@ -750,7 +813,7 @@ void ATurnBattleManager::MoveTargetSelection(int32 Step)
 		{
 			Candidate = 0;
 		}
-		if (!Party[Candidate]->Health->IsDead())
+		if (CanTargetMember(Candidate))
 		{
 			MenuTargetIndex = Candidate;
 			return;
@@ -787,12 +850,18 @@ void ATurnBattleManager::StopRealTimeManaRegen()
 }
 void ATurnBattleManager::RestoreManaForNewRound()
 {
+	float RegenScale = 1.0f;
+	UUnshackledGameInstance* GameInstanceRef = GetUnshackledGameInstance();
+	if (GameInstanceRef != nullptr)
+	{
+		RegenScale = 1.0f + GameInstanceRef->GetManaRegenBonus();
+	}
 	for (int32 i = 0; i < Party.Num(); i++)
 	{
 		if (!Party[i]->Health->IsDead())
 		{
 			float MaxMana = Party[i]->Stats->GetFinal(ECharacterStat::MaxMana);
-			Party[i]->Stats->RestoreMana(MaxMana * ManaRestoreFraction);
+			Party[i]->Stats->RestoreMana(MaxMana * ManaRestoreFraction * RegenScale);
 		}
 	}
 }
@@ -832,6 +901,7 @@ void ATurnBattleManager::TickPoison()
 void ATurnBattleManager::NotifyPlayerPhaseStart()
 {
 	TickPoison();
+	RunArtifactPulses();
 	for (int32 i = 0; i < Party.Num(); i++)
 	{
 		if (Party[i] != nullptr)
@@ -1126,6 +1196,11 @@ void ATurnBattleManager::LeaveAfterWin()
 }
 void ATurnBattleManager::LeaveAfterLoss()
 {
+	UUnshackledGameInstance* GameInstanceRef = GetUnshackledGameInstance();
+	if (GameInstanceRef != nullptr)
+	{
+		GameInstanceRef->RestoreFloorStartInventory();
+	}
 	FString CurrentLevelName = UGameplayStatics::GetCurrentLevelName(this, true);
 	UGameplayStatics::OpenLevel(this, FName(*CurrentLevelName));
 }
@@ -1173,6 +1248,7 @@ void ATurnBattleManager::EndRound()
 		if (Party[i] != nullptr)
 		{
 			Party[i]->Stats->CountDownTurns();
+			Party[i]->CountDownItemShieldRound();
 		}
 	}
 	for (int32 i = 0; i < Enemies.Num(); i++)
@@ -1247,7 +1323,17 @@ bool ATurnBattleManager::TryPlayerMove(int32 MemberIndex, FName EntryName, int32
 	APartyMemberCharacter* Member = Party[MemberIndex];
 	const FBattleMoveRow* Move = nullptr;
 	bool bMoveFails = false;
-	if (!IsBlockEntry(EntryName))
+	bool bIsItem = IsItemEntry(EntryName);
+	if (bIsItem)
+	{
+		if (!CanUsePendingItem(TargetIndex))
+		{
+			ShowMessage(TEXT("That item cannot be used right now"), FColor::Orange);
+			return false;
+		}
+		bMoveFails = DoesMoveFail(MemberIndex, EntryName, EBattleAction::Item);
+	}
+	else if (!IsBlockEntry(EntryName))
 	{
 		Move = GetMove(EntryName);
 		if (Move == nullptr)
@@ -1293,6 +1379,17 @@ bool ATurnBattleManager::TryPlayerMove(int32 MemberIndex, FName EntryName, int32
 	if (Member->Health->IsDead())
 	{
 		ShowMessage(FString::Printf(TEXT("%s falls before acting"), *Member->DisplayName), FColor::Orange);
+	}
+	else if (bIsItem)
+	{
+		if (bMoveFails)
+		{
+			ShowMessage(FString::Printf(TEXT("%s fumbles the item (it is kept)"), *Member->DisplayName), FColor::Orange);
+		}
+		else
+		{
+			UseChosenItem(MemberIndex, TargetIndex);
+		}
 	}
 	else if (Move == nullptr)
 	{
@@ -2222,4 +2319,372 @@ FString ATurnBattleManager::GetEnemyNotesForMember(int32 MemberIndex) const
 		}
 	}
 	return Notes;
+}
+UUnshackledGameInstance* ATurnBattleManager::GetUnshackledGameInstance() const
+{
+	UUnshackledGameInstance* GameInstanceRef = Cast<UUnshackledGameInstance>(GetGameInstance());
+	return GameInstanceRef;
+}
+void ATurnBattleManager::BuildItemEntries()
+{
+	ItemEntries.Empty();
+	UUnshackledGameInstance* GameInstanceRef = GetUnshackledGameInstance();
+	if (GameInstanceRef == nullptr)
+	{
+		return;
+	}
+	TArray<FName> HeldIds = GameInstanceRef->GetHeldItemIds();
+	for (int32 i = 0; i < HeldIds.Num(); i++)
+	{
+		const FActiveItemRow* Row = GameInstanceRef->GetItemRow(HeldIds[i]);
+		if (Row != nullptr)
+		{
+			if (!Row->bOverworldOnly)
+			{
+				ItemEntries.Add(HeldIds[i]);
+			}
+		}
+	}
+}
+bool ATurnBattleManager::HasUsableItems() const
+{
+	UUnshackledGameInstance* GameInstanceRef = GetUnshackledGameInstance();
+	if (GameInstanceRef == nullptr)
+	{
+		return false;
+	}
+	TArray<FName> HeldIds = GameInstanceRef->GetHeldItemIds();
+	for (int32 i = 0; i < HeldIds.Num(); i++)
+	{
+		const FActiveItemRow* Row = GameInstanceRef->GetItemRow(HeldIds[i]);
+		if (Row != nullptr)
+		{
+			if (!Row->bOverworldOnly)
+			{
+				return true;
+			}
+		}
+	}
+	return false;
+}
+void ATurnBattleManager::StartItemPick()
+{
+	BuildItemEntries();
+	if (ItemEntries.Num() == 0)
+	{
+		ShowMessage(TEXT("No usable items"), FColor::Orange);
+		return;
+	}
+	if (MenuItemIndex >= ItemEntries.Num())
+	{
+		MenuItemIndex = 0;
+	}
+	if (MenuItemIndex < 0)
+	{
+		MenuItemIndex = 0;
+	}
+	bPickingItemTarget = false;
+	MenuStage = EBattleMenuStage::PickItem;
+}
+void ATurnBattleManager::ConfirmItemChoice()
+{
+	if (MenuItemIndex < 0)
+	{
+		return;
+	}
+	if (MenuItemIndex >= ItemEntries.Num())
+	{
+		return;
+	}
+	PendingItemId = ItemEntries[MenuItemIndex];
+	UUnshackledGameInstance* GameInstanceRef = GetUnshackledGameInstance();
+	if (GameInstanceRef == nullptr)
+	{
+		return;
+	}
+	const FActiveItemRow* Row = GameInstanceRef->GetItemRow(PendingItemId);
+	if (Row == nullptr)
+	{
+		return;
+	}
+	if (Row->bWholeParty)
+	{
+		bool bActed = TryPlayerMove(MenuMemberIndex, FName(TEXT("Item")), -1);
+		if (bActed)
+		{
+			ResetMenuToNextMember();
+		}
+		return;
+	}
+	StartItemTargetPick();
+}
+void ATurnBattleManager::StartItemTargetPick()
+{
+	bPickingItemTarget = true;
+	int32 FirstValid = -1;
+	if (CanTargetMember(MenuMemberIndex))
+	{
+		FirstValid = MenuMemberIndex;
+	}
+	if (FirstValid < 0)
+	{
+		for (int32 i = 0; i < Party.Num(); i++)
+		{
+			if (FirstValid < 0)
+			{
+				if (CanTargetMember(i))
+				{
+					FirstValid = i;
+				}
+			}
+		}
+	}
+	if (FirstValid < 0)
+	{
+		bPickingItemTarget = false;
+		ShowMessage(TEXT("Nobody can use that right now"), FColor::Orange);
+		return;
+	}
+	MenuTargetIndex = FirstValid;
+	MenuStage = EBattleMenuStage::PickTarget;
+}
+bool ATurnBattleManager::CanTargetMember(int32 MemberIndex) const
+{
+	if (MemberIndex < 0)
+	{
+		return false;
+	}
+	if (MemberIndex >= Party.Num())
+	{
+		return false;
+	}
+	if (!bPickingItemTarget)
+	{
+		return !Party[MemberIndex]->Health->IsDead();
+	}
+	UUnshackledGameInstance* GameInstanceRef = GetUnshackledGameInstance();
+	if (GameInstanceRef == nullptr)
+	{
+		return false;
+	}
+	const FActiveItemRow* Row = GameInstanceRef->GetItemRow(PendingItemId);
+	return Party[MemberIndex]->CanReceiveItem(Row);
+}
+bool ATurnBattleManager::CanUsePendingItem(int32 TargetIndex) const
+{
+	UUnshackledGameInstance* GameInstanceRef = GetUnshackledGameInstance();
+	if (GameInstanceRef == nullptr)
+	{
+		return false;
+	}
+	if (GameInstanceRef->GetItemCount(PendingItemId) <= 0)
+	{
+		return false;
+	}
+	const FActiveItemRow* Row = GameInstanceRef->GetItemRow(PendingItemId);
+	if (Row == nullptr)
+	{
+		return false;
+	}
+	if (Row->bOverworldOnly)
+	{
+		return false;
+	}
+	if (Row->bWholeParty)
+	{
+		for (int32 i = 0; i < Party.Num(); i++)
+		{
+			if (Party[i]->CanReceiveItem(Row))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+	if (TargetIndex < 0)
+	{
+		return false;
+	}
+	if (TargetIndex >= Party.Num())
+	{
+		return false;
+	}
+	return Party[TargetIndex]->CanReceiveItem(Row);
+}
+void ATurnBattleManager::UseChosenItem(int32 MemberIndex, int32 TargetIndex)
+{
+	UUnshackledGameInstance* GameInstanceRef = GetUnshackledGameInstance();
+	if (GameInstanceRef == nullptr)
+	{
+		return;
+	}
+	const FActiveItemRow* Row = GameInstanceRef->GetItemRow(PendingItemId);
+	if (Row == nullptr)
+	{
+		return;
+	}
+	FString ItemName = GameInstanceRef->GetItemName(PendingItemId);
+	FString TargetText = TEXT("the party");
+	if (Row->bWholeParty)
+	{
+		for (int32 i = 0; i < Party.Num(); i++)
+		{
+			GiveItemTo(i, Row);
+		}
+	}
+	else
+	{
+		GiveItemTo(TargetIndex, Row);
+		TargetText = Party[TargetIndex]->DisplayName;
+	}
+	GameInstanceRef->ConsumeItem(PendingItemId);
+	ShowMessage(FString::Printf(TEXT("%s uses %s on %s"), *Party[MemberIndex]->DisplayName, *ItemName, *TargetText), FColor::Green);
+}
+void ATurnBattleManager::GiveItemTo(int32 TargetIndex, const FActiveItemRow* Row)
+{
+	APartyMemberCharacter* Target = GetPartyMember(TargetIndex);
+	if (Target == nullptr)
+	{
+		return;
+	}
+	bool bWasDead = Target->Health->IsDead();
+	bool bUsed = Target->ReceiveItem(Row, true);
+	if (!bUsed)
+	{
+		return;
+	}
+	if (bWasDead)
+	{
+		if (TargetIndex < HasActed.Num())
+		{
+			HasActed[TargetIndex] = true;
+		}
+		ShowMessage(FString::Printf(TEXT("%s is back on their feet (acts next round)"), *Target->DisplayName), FColor::Green);
+	}
+}
+void ATurnBattleManager::RunArtifactPulses()
+{
+	UUnshackledGameInstance* GameInstanceRef = GetUnshackledGameInstance();
+	if (GameInstanceRef == nullptr)
+	{
+		return;
+	}
+	TArray<FName> EquippedIds = GameInstanceRef->GetEquippedArtifactIds();
+	for (int32 i = 0; i < EquippedIds.Num(); i++)
+	{
+		const FArtifactRow* Row = GameInstanceRef->GetArtifactRow(EquippedIds[i]);
+		if (Row != nullptr)
+		{
+			if (Row->PulseRounds > 0)
+			{
+				if (Round % Row->PulseRounds == 0)
+				{
+					PulseArtifactOnParty(Row);
+					if (Row->MarkBonus > 0.0f)
+					{
+						MarkRandomEnemy(Row->MarkBonus);
+					}
+				}
+			}
+		}
+	}
+}
+void ATurnBattleManager::PulseArtifactOnParty(const FArtifactRow* Row)
+{
+	bool bDidSomething = false;
+	for (int32 i = 0; i < Party.Num(); i++)
+	{
+		APartyMemberCharacter* Member = Party[i];
+		if (!Member->Health->IsDead())
+		{
+			float HealAmount = (Row->PulseHealPercent * Member->Health->MaxHealth) + Row->PulseHealFlat;
+			if (HealAmount > 0.0f)
+			{
+				Member->Health->Heal(HealAmount);
+				bDidSomething = true;
+			}
+			if (Row->BattleShieldPercent > 0.0f)
+			{
+				float ShieldAmount = Member->Health->CurrentHealth * Row->BattleShieldPercent;
+				float ShieldCap = Member->Health->MaxHealth * Row->ShieldCapPercent;
+				Member->AddCappedShield(ShieldAmount, ShieldCap);
+				bDidSomething = true;
+			}
+		}
+	}
+	if (bDidSomething)
+	{
+		ShowMessage(FString::Printf(TEXT("%s helps the party"), *Row->DisplayName.ToString()), FColor::Green);
+	}
+}
+void ATurnBattleManager::MarkRandomEnemy(float Bonus)
+{
+	int32 EnemyIndex = PickRandomLivingEnemy();
+	AUnshackledCharacterBase* Enemy = GetEnemy(EnemyIndex);
+	if (Enemy == nullptr)
+	{
+		return;
+	}
+	FStatModifier Mark;
+	Mark.SourceId = FName("CompassMark");
+	Mark.Stat = ECharacterStat::IncomingDamage;
+	Mark.Kind = EModifierKind::Percent;
+	Mark.Amount = Bonus;
+	Mark.Duration = 0.0f;
+	Mark.TurnsLeft = 1;
+	Mark.Rule = EStackRule::RefreshSameSource;
+	Enemy->Stats->AddModifier(Mark);
+	ShowMessage(FString::Printf(TEXT("The compass marks %s this round"), *GetEnemyName(EnemyIndex)), FColor::Purple);
+}
+int32 ATurnBattleManager::GetMenuItemIndex() const
+{
+	return MenuItemIndex;
+}
+int32 ATurnBattleManager::GetMenuItemCount() const
+{
+	return ItemEntries.Num();
+}
+FString ATurnBattleManager::GetMenuItemLabel(int32 Index) const
+{
+	if (Index < 0)
+	{
+		return FString();
+	}
+	if (Index >= ItemEntries.Num())
+	{
+		return FString();
+	}
+	UUnshackledGameInstance* GameInstanceRef = GetUnshackledGameInstance();
+	if (GameInstanceRef == nullptr)
+	{
+		return ItemEntries[Index].ToString();
+	}
+	int32 Count = GameInstanceRef->GetItemCount(ItemEntries[Index]);
+	return FString::Printf(TEXT("%s  x%d"), *GameInstanceRef->GetItemName(ItemEntries[Index]), Count);
+}
+FString ATurnBattleManager::GetMenuItemDescription() const
+{
+	if (MenuItemIndex < 0)
+	{
+		return FString();
+	}
+	if (MenuItemIndex >= ItemEntries.Num())
+	{
+		return FString();
+	}
+	UUnshackledGameInstance* GameInstanceRef = GetUnshackledGameInstance();
+	if (GameInstanceRef == nullptr)
+	{
+		return FString();
+	}
+	const FActiveItemRow* Row = GameInstanceRef->GetItemRow(ItemEntries[MenuItemIndex]);
+	if (Row == nullptr)
+	{
+		return FString();
+	}
+	return Row->Description.ToString();
+}
+bool ATurnBattleManager::IsPickingItemTarget() const
+{
+	return bPickingItemTarget;
 }

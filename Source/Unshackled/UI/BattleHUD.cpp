@@ -230,7 +230,14 @@ void ABattleHUD::DrawPartyCards(ATurnBattleManager* Manager)
 			{
 				if (Manager->GetMenuStage() != EBattleMenuStage::PickMember)
 				{
-					DrawActionList(Manager, Left, Top);
+					if (IsShowingItems(Manager))
+					{
+						DrawItemList(Manager, Left, Top);
+					}
+					else
+					{
+						DrawActionList(Manager, Left, Top);
+					}
 				}
 			}
 		}
@@ -378,6 +385,14 @@ void ABattleHUD::DrawHintText(ATurnBattleManager* Manager)
 	if (Manager->GetMenuStage() == EBattleMenuStage::PickTarget)
 	{
 		Hint = TEXT("Left / Right: choose ally     Space: confirm     Esc: back");
+		if (Manager->IsPickingItemTarget())
+		{
+			Hint = TEXT("Left / Right: choose who gets the item     Space: use     Esc: back");
+		}
+	}
+	if (Manager->GetMenuStage() == EBattleMenuStage::PickItem)
+	{
+		Hint = TEXT("Up / Down: choose item     Space: confirm     Esc: back");
 	}
 	if (Manager->GetMenuStage() == EBattleMenuStage::PickEnemy)
 	{
@@ -391,6 +406,10 @@ void ABattleHUD::DrawHintText(ATurnBattleManager* Manager)
 	{
 		FName EntryName = Manager->GetMenuEntry(Manager->GetMenuActionIndex());
 		FString Description = Manager->GetEntryDescription(EntryName);
+		if (IsShowingItems(Manager))
+		{
+			Description = Manager->GetMenuItemDescription();
+		}
 		float DescriptionTop = BossTopMargin + 22.0f + BossBarHeight + 68.0f;
 		DrawCenteredText(Description, FLinearColor(1.0f, 0.95f, 0.7f, 1.0f), Canvas->SizeX / 2.0f, DescriptionTop, 1.0f);
 	}
@@ -456,5 +475,41 @@ void ABattleHUD::DrawRetributionOrder(ATurnBattleManager* Manager)
 			FString StepText = FString::Printf(TEXT("%d. %s"), i + 1, *Member->DisplayName);
 			DrawText(StepText, FLinearColor::White, BoxLeft + 5.0f, BoxTop + 4.0f, nullptr, 0.8f);
 		}
+	}
+}
+bool ABattleHUD::IsShowingItems(ATurnBattleManager* Manager) const
+{
+	if (Manager->GetMenuStage() == EBattleMenuStage::PickItem)
+	{
+		return true;
+	}
+	if (Manager->GetMenuStage() == EBattleMenuStage::PickTarget)
+	{
+		if (Manager->IsPickingItemTarget())
+		{
+			return true;
+		}
+	}
+	return false;
+}
+void ABattleHUD::DrawItemList(ATurnBattleManager* Manager, float CardLeft, float CardTop)
+{
+	int32 Count = Manager->GetMenuItemCount();
+	float PanelHeight = (Count * ActionRowHeight) + 12.0f;
+	float PanelTop = CardTop - PanelHeight - ActionPanelGap;
+	float PanelLeft = CardLeft;
+	FLinearColor BorderColor = FLinearColor(0.4f, 1.0f, 0.5f, 1.0f);
+	DrawRect(BorderColor, PanelLeft - 3.0f, PanelTop - 3.0f, ActionPanelWidth + 6.0f, PanelHeight + 6.0f);
+	FLinearColor BackColor = FLinearColor(0.06f, 0.06f, 0.1f, 0.97f);
+	DrawRect(BackColor, PanelLeft, PanelTop, ActionPanelWidth, PanelHeight);
+	for (int32 i = 0; i < Count; i++)
+	{
+		float RowTop = PanelTop + 6.0f + (i * ActionRowHeight);
+		if (i == Manager->GetMenuItemIndex())
+		{
+			FLinearColor HighlightColor = FLinearColor(0.1f, 0.3f, 0.12f, 1.0f);
+			DrawRect(HighlightColor, PanelLeft + 4.0f, RowTop, ActionPanelWidth - 8.0f, ActionRowHeight - 2.0f);
+		}
+		DrawText(Manager->GetMenuItemLabel(i), FLinearColor::White, PanelLeft + 10.0f, RowTop + 3.0f, nullptr, 0.95f);
 	}
 }

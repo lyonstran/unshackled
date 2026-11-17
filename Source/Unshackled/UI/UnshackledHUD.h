@@ -80,9 +80,21 @@ public:
         float MenuPanelWidth = 360.0f;
         UPROPERTY(EditAnywhere, Category = "Game Menu")
         float MenuBackdropAlpha = 0.65f;
+        UPROPERTY(EditAnywhere, Category = "Item Menu")
+        float ItemMenuTopFraction = 0.12f;
+        UPROPERTY(EditAnywhere, Category = "Item Menu")
+        float ItemMenuRowHeight = 26.0f;
+        UPROPERTY(EditAnywhere, Category = "Item Menu")
+        int32 ItemMenuVisibleRows = 12;
+        UPROPERTY(EditAnywhere, Category = "Item Menu")
+        float ItemMenuPanelWidth = 420.0f;
 protected:
         virtual void DrawExtraHUD();
         void DrawGameMenu();
+        void DrawItemMenu();
+        float DrawItemMenuRows(class UItemMenuComponent* ItemMenu, float CenterX, float Top);
+        void DrawItemMemberRow(class UItemMenuComponent* ItemMenu, float CenterX, float Top);
+        void DrawPartyStats(class UItemMenuComponent* ItemMenu, float CenterX, float Top);
         void DrawMenuRows(class UGameMenuComponent* GameMenu, float CenterX, float Top);
         void DrawConfirmRows(class UGameMenuComponent* GameMenu, float CenterX, float Top);
         void DrawMenuRow(FString Label, float CenterX, float Top, bool bSelected, bool bEnabled);

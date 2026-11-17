@@ -10,6 +10,7 @@
 #include "Engine/DataTable.h"
 #include "Engine/World.h"
 #include "Game/UnshackledGameMode.h"
+#include "Game/UnshackledGameInstance.h"
 #include "Stats/CharacterStatsRow.h"
 #include "UI/UnshackledHUD.h"
 AUnshackledCharacterBase::AUnshackledCharacterBase()
@@ -30,6 +31,14 @@ void AUnshackledCharacterBase::BeginPlay()
         ApplyStatsRow();
         Stats->BaseMaxHealth = Health->MaxHealth;
         Stats->BaseDamage = AttackDamage;
+        if (bIsEnemy)
+        {
+                UUnshackledGameInstance* GameInstanceRef = Cast<UUnshackledGameInstance>(GetGameInstance());
+                if (GameInstanceRef != nullptr)
+                {
+                        Stats->BuffScale = GameInstanceRef->GetEnemyBuffScale();
+                }
+        }
 }
 void AUnshackledCharacterBase::ApplyStatsRow()
 {
@@ -87,6 +96,14 @@ float AUnshackledCharacterBase::GetFloorManaCostScale() const
 {
         return 1.0f;
 }
+float AUnshackledCharacterBase::GetManaRegenScale() const
+{
+        return 1.0f;
+}
+float AUnshackledCharacterBase::GetCooldownScale() const
+{
+        return 1.0f;
+}
 void AUnshackledCharacterBase::Tick(float DeltaTime)
 {
         Super::Tick(DeltaTime);
@@ -110,7 +127,7 @@ void AUnshackledCharacterBase::RegenerateMana(float DeltaTime)
         {
                 return;
         }
-        float ManaGained = ManaRegenPerSecond * DeltaTime;
+        float ManaGained = ManaRegenPerSecond * GetManaRegenScale() * DeltaTime;
         Stats->RestoreMana(ManaGained);
 }
 FVector AUnshackledCharacterBase::GetFacingDirection() const
@@ -388,6 +405,25 @@ void AUnshackledCharacterBase::ReviveCharacter()
         SetActorEnableCollision(true);
         GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 }
+void AUnshackledCharacterBase::ReviveCharacterAt(float HealthFraction)
+{
+        if (!Health->IsDead())
+        {
+                return;
+        }
+        float NewHealth = Health->MaxHealth * HealthFraction;
+        if (NewHealth < 1.0f)
+        {
+                NewHealth = 1.0f;
+        }
+        if (NewHealth > Health->MaxHealth)
+        {
+                NewHealth = Health->MaxHealth;
+        }
+        Health->CurrentHealth = NewHealth;
+        SetActorEnableCollision(true);
+        GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+}
 bool AUnshackledCharacterBase::TryPayMana(float ManaCost)
 {
         if (ManaCost <= 0.0f)
@@ -446,8 +482,9 @@ void AUnshackledCharacterBase::UseSpecial(FVector AimDirection)
         if (SpecialCooldown > 0.0f)
         {
                 bCanUseSpecial = false;
+                float SpecialCooldownTime = SpecialCooldown * GetCooldownScale();
                 GetWorldTimerManager().SetTimer(SpecialCooldownTimer, this,
-                        &AUnshackledCharacterBase::ResetSpecial, SpecialCooldown, false);
+                        &AUnshackledCharacterBase::ResetSpecial, SpecialCooldownTime, false);
         }
         PendingSpecialAim = CleanAimDirection(AimDirection);
         if (SpecialWindup > 0.0f)
@@ -498,8 +535,9 @@ void AUnshackledCharacterBase::UseUltimate(FVector AimDirection)
         if (UltimateCooldown > 0.0f)
         {
                 bCanUseUltimate = false;
+                float UltimateCooldownTime = UltimateCooldown * GetCooldownScale();
                 GetWorldTimerManager().SetTimer(UltimateCooldownTimer, this,
-                        &AUnshackledCharacterBase::ResetUltimate, UltimateCooldown, false);
+                        &AUnshackledCharacterBase::ResetUltimate, UltimateCooldownTime, false);
         }
         PendingUltimateAim = CleanAimDirection(AimDirection);
         if (UltimateWindup > 0.0f)

@@ -7,6 +7,8 @@
 #include "Characters/PartyMemberCharacter.h"
 #include "Components/RetributionComponent.h"
 #include "Components/GameMenuComponent.h"
+#include "Components/ItemMenuComponent.h"
+#include "Components/ArtifactPulseComponent.h"
 #include "UnshackledPlayerController.generated.h"
 enum class EPartyMenuMode : uint8
 {
@@ -24,6 +26,10 @@ public:
         URetributionComponent* Retribution;
         UPROPERTY(VisibleAnywhere, Category = "Menu")
         UGameMenuComponent* GameMenu;
+        UPROPERTY(VisibleAnywhere, Category = "Menu")
+        UItemMenuComponent* ItemMenu;
+        UPROPERTY(VisibleAnywhere, Category = "Items")
+        UArtifactPulseComponent* ArtifactPulse;
         UPROPERTY(EditAnywhere, Category = "Input")
         UInputMappingContext *MappingContext;
         UPROPERTY(EditAnywhere, Category = "Input")
@@ -56,6 +62,10 @@ public:
         UInputAction* MenuConfirmAction;
         UPROPERTY(EditAnywhere, Category = "Input")
         UInputAction* MenuBackAction;
+        UPROPERTY(EditAnywhere, Category = "Input")
+        UInputAction* UseItemAction;
+        UPROPERTY(EditAnywhere, Category = "Input")
+        UInputAction* InventoryAction;
         UPROPERTY(EditAnywhere, Category = "Input")
         float StickAimThreshold = 0.25f;
         bool IsSwitchMenuOpen() const;
@@ -92,6 +102,9 @@ protected:
         void MoveSwitchSelection(int32 Step);
         void BindMenuInput(class UEnhancedInputComponent* Input);
         bool IsGameMenuOpen() const;
+        bool IsItemMenuOpen() const;
+        void ToggleItemMenu();
+        void ToggleArtifactMenu();
         void TogglePause();
         void MenuNavigate(const FInputActionValue& Value);
         void MenuNavigateReleased(const FInputActionValue& Value);

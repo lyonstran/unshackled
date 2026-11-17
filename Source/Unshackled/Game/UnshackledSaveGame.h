@@ -8,7 +8,7 @@ class UNSHACKLED_API UUnshackledSaveGame : public USaveGame
 	GENERATED_BODY()
 public:
 	UPROPERTY(VisibleAnywhere, Category = "Save")
-	int32 SaveVersion = 1;
+	int32 SaveVersion = 2;
 	UPROPERTY(VisibleAnywhere, Category = "Save")
 	int32 Floor = 1;
 	UPROPERTY(VisibleAnywhere, Category = "Save")
@@ -21,4 +21,12 @@ public:
 	TArray<float> CharacterHealth;
 	UPROPERTY(VisibleAnywhere, Category = "Save")
 	TArray<float> CharacterMana;
+	UPROPERTY(VisibleAnywhere, Category = "Save")
+	TArray<FName> ItemIds;
+	UPROPERTY(VisibleAnywhere, Category = "Save")
+	TArray<int32> ItemCounts;
+	UPROPERTY(VisibleAnywhere, Category = "Save")
+	TArray<FName> ArtifactIds;
+	UPROPERTY(VisibleAnywhere, Category = "Save")
+	TArray<FName> EquippedArtifactIds;
 };

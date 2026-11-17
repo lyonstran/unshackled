@@ -72,6 +72,8 @@ protected:
 	void DrawPartyCards(ATurnBattleManager* Manager);
 	void DrawPartyCard(ATurnBattleManager* Manager, int32 MemberIndex, float Left, float Top);
 	void DrawActionList(ATurnBattleManager* Manager, float CardLeft, float CardTop);
+	void DrawItemList(ATurnBattleManager* Manager, float CardLeft, float CardTop);
+	bool IsShowingItems(ATurnBattleManager* Manager) const;
 	void DrawHintText(ATurnBattleManager* Manager);
 	void DrawRetributionOrder(ATurnBattleManager* Manager);
 	void DrawCenteredText(FString Text, FLinearColor Color, float CenterX, float Top, float Scale);

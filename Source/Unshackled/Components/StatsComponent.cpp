@@ -95,6 +95,7 @@ void UStatsComponent::AddModifier(FStatModifier NewModifier)
         }
         else
         {
+                NewModifier.Amount = NewModifier.Amount * BuffScale;
                 if (DivertFraction > 0.0f)
                 {
                         if (NewModifier.Amount != 0.0f)
@@ -150,7 +151,10 @@ int32 UStatsComponent::CountBeneficialModifiers() const
                 {
                         if (Modifiers[i].Amount != 0.0f)
                         {
-                                Count = Count + 1;
+                                if (Modifiers[i].SourceId != FName("ArtifactBonus"))
+                                {
+                                        Count = Count + 1;
+                                }
                         }
                 }
         }

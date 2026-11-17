@@ -5,6 +5,7 @@
 #include "Battle/TurnBattleManager.h"
 #include "Battle/BattleMoveRow.h"
 #include "Characters/BossCharacter.h"
+#include "Items/ItemRows.h"
 #include "EngineUtils.h"
 #include "GameFramework/PlayerController.h"
 #include "Engine/Engine.h"
@@ -34,6 +35,7 @@ void APartyMemberCharacter::BeginPlay()
         {
                 GameInstanceRef->RestoreCharacterState(this);
         }
+        RefreshArtifactEffects();
         if (!IsPlayerControlled())
         {
                 SetFollowing(true);
@@ -43,6 +45,7 @@ void APartyMemberCharacter::Tick(float DeltaTime)
 {
         Super::Tick(DeltaTime);
         UpdateGroundCooldown(DeltaTime);
+        TickItemShield(DeltaTime);
         if (bIsGrounded)
         {
                 DrainGroundedMana(DeltaTime);
@@ -261,6 +264,19 @@ APartyMemberCharacter* APartyMemberCharacter::GetShelterGuardian() const
 float APartyMemberCharacter::FilterIncomingDamage(float RawDamage, bool bTrueDamage, AUnshackledCharacterBase* Attacker)
 {
         float Result = Super::FilterIncomingDamage(RawDamage, bTrueDamage, Attacker);
+        if (Result > 0.0f)
+        {
+                if (Attacker != nullptr)
+                {
+                        if (Attacker->bIsEnemy)
+                        {
+                                if (RollEnemyAttackFails())
+                                {
+                                        return 0.0f;
+                                }
+                        }
+                }
+        }
         if (ShelterGuardian == nullptr)
         {
                 return Result;
@@ -487,6 +503,7 @@ void APartyMemberCharacter::RestartLevelAfterDeath()
         if (GameInstanceRef != nullptr)
         {
                 GameInstanceRef->RestoreFloorStartRecruits();
+                GameInstanceRef->RestoreFloorStartInventory();
         }
         FString CurrentLevelName = UGameplayStatics::GetCurrentLevelName(this, true);
         UGameplayStatics::OpenLevel(this, FName(*CurrentLevelName));
@@ -508,4 +525,242 @@ float APartyMemberCharacter::GetFloorManaCostScale() const
                 return 1.0f;
         }
         return GameInstanceRef->GetPartyManaCostScale();
+}
+float APartyMemberCharacter::GetManaRegenScale() const
+{
+        UUnshackledGameInstance* GameInstanceRef = Cast<UUnshackledGameInstance>(GetGameInstance());
+        if (GameInstanceRef == nullptr)
+        {
+                return 1.0f;
+        }
+        return GameInstanceRef->GetOverworldManaRegenScale();
+}
+float APartyMemberCharacter::GetCooldownScale() const
+{
+        UUnshackledGameInstance* GameInstanceRef = Cast<UUnshackledGameInstance>(GetGameInstance());
+        if (GameInstanceRef == nullptr)
+        {
+                return 1.0f;
+        }
+        return 1.0f - GameInstanceRef->GetCooldownReduction();
+}
+bool APartyMemberCharacter::RollEnemyAttackFails()
+{
+        UUnshackledGameInstance* GameInstanceRef = Cast<UUnshackledGameInstance>(GetGameInstance());
+        if (GameInstanceRef == nullptr)
+        {
+                return false;
+        }
+        bool bInBattle = IsInTurnBattle();
+        float FailChance = GameInstanceRef->GetEnemyFailChance(bInBattle);
+        if (FailChance <= 0.0f)
+        {
+                return false;
+        }
+        if (FMath::FRand() >= FailChance)
+        {
+                return false;
+        }
+        FString Text = FString::Printf(TEXT("Omen: an attack on %s fails"), *DisplayName);
+        if (bInBattle)
+        {
+                ShowBattleMessage(Text, FColor::Purple);
+        }
+        else
+        {
+                AUnshackledHUD* Hud = AUnshackledHUD::FindPlayerHUD(this);
+                if (Hud != nullptr)
+                {
+                        Hud->AddMessage(Text, FLinearColor(0.7f, 0.5f, 1.0f, 1.0f), 2.0f);
+                }
+        }
+        return true;
+}
+bool APartyMemberCharacter::CanReceiveItem(const FActiveItemRow* Item) const
+{
+        if (Item == nullptr)
+        {
+                return false;
+        }
+        if (Item->ReviveFraction > 0.0f)
+        {
+                return Health->IsDead();
+        }
+        return !Health->IsDead();
+}
+bool APartyMemberCharacter::ReceiveItem(const FActiveItemRow* Item, bool bInBattle)
+{
+        if (!CanReceiveItem(Item))
+        {
+                return false;
+        }
+        if (Item->ReviveFraction > 0.0f)
+        {
+                ReviveCharacterAt(Item->ReviveFraction);
+        }
+        float HealAmount = Item->HealFlat + (Item->HealPercent * Health->MaxHealth);
+        if (HealAmount > 0.0f)
+        {
+                Health->Heal(HealAmount);
+        }
+        if (Item->ManaFlat > 0.0f)
+        {
+                Stats->RestoreMana(Item->ManaFlat);
+        }
+        AddItemModifier(FName("ItemDamage"), ECharacterStat::Damage, Item->DamagePercent, Item, bInBattle);
+        AddItemModifier(FName("ItemDefense"), ECharacterStat::Defense, Item->DefensePercent, Item, bInBattle);
+        if (!bInBattle)
+        {
+                AddItemModifier(FName("ItemSpeed"), ECharacterStat::Speed, Item->SpeedPercent, Item, bInBattle);
+        }
+        if (Item->ShieldPercent > 0.0f)
+        {
+                float ShieldAmount = Item->ShieldPercent * Health->MaxHealth;
+                Health->AddShield(ShieldAmount);
+                ItemShieldAmount = ShieldAmount;
+                if (bInBattle)
+                {
+                        ItemShieldRoundsLeft = Item->BuffRounds;
+                        ItemShieldSecondsLeft = 0.0f;
+                }
+                else
+                {
+                        ItemShieldSecondsLeft = Item->BuffSeconds;
+                        ItemShieldRoundsLeft = 0;
+                }
+        }
+        return true;
+}
+void APartyMemberCharacter::AddItemModifier(FName SourceId, ECharacterStat Stat, float Amount, const FActiveItemRow* Item, bool bInBattle)
+{
+        if (Amount == 0.0f)
+        {
+                return;
+        }
+        FStatModifier NewModifier;
+        NewModifier.SourceId = SourceId;
+        NewModifier.Stat = Stat;
+        NewModifier.Kind = EModifierKind::Percent;
+        NewModifier.Amount = Amount;
+        NewModifier.Rule = EStackRule::RefreshSameSource;
+        if (bInBattle)
+        {
+                NewModifier.Duration = 0.0f;
+                NewModifier.TurnsLeft = Item->BuffRounds;
+        }
+        else
+        {
+                NewModifier.Duration = Item->BuffSeconds;
+                NewModifier.TurnsLeft = 0;
+        }
+        Stats->AddModifier(NewModifier);
+}
+void APartyMemberCharacter::RefreshArtifactEffects()
+{
+        Stats->RemoveModifiersFromSource(FName("ArtifactBonus"));
+        Health->ArtifactBonus = 0.0f;
+        UUnshackledGameInstance* GameInstanceRef = Cast<UUnshackledGameInstance>(GetGameInstance());
+        if (GameInstanceRef == nullptr)
+        {
+                return;
+        }
+        float DamageFlat = 0.0f;
+        float DamagePercent = 0.0f;
+        float DefenseFlat = 0.0f;
+        float DefensePercent = 0.0f;
+        float SpeedFlat = 0.0f;
+        float SpeedPercent = 0.0f;
+        float ReflectFraction = 0.0f;
+        TArray<FName> EquippedIds = GameInstanceRef->GetEquippedArtifactIds();
+        for (int32 i = 0; i < EquippedIds.Num(); i++)
+        {
+                const FArtifactRow* Row = GameInstanceRef->GetArtifactRow(EquippedIds[i]);
+                if (Row != nullptr)
+                {
+                        DamageFlat = DamageFlat + Row->DamageFlat;
+                        DamagePercent = DamagePercent + Row->DamagePercent;
+                        DefenseFlat = DefenseFlat + Row->DefenseFlat;
+                        DefensePercent = DefensePercent + Row->DefensePercent;
+                        SpeedFlat = SpeedFlat + Row->SpeedFlat;
+                        SpeedPercent = SpeedPercent + Row->SpeedPercent;
+                        ReflectFraction = ReflectFraction + Row->Reflect;
+                }
+        }
+        AddArtifactModifier(ECharacterStat::Damage, EModifierKind::Flat, DamageFlat);
+        AddArtifactModifier(ECharacterStat::Damage, EModifierKind::Percent, DamagePercent);
+        AddArtifactModifier(ECharacterStat::Defense, EModifierKind::Flat, DefenseFlat);
+        AddArtifactModifier(ECharacterStat::Defense, EModifierKind::Percent, DefensePercent);
+        AddArtifactModifier(ECharacterStat::Speed, EModifierKind::Flat, SpeedFlat);
+        AddArtifactModifier(ECharacterStat::Speed, EModifierKind::Percent, SpeedPercent);
+        AddArtifactModifier(ECharacterStat::Reflect, EModifierKind::Flat, ReflectFraction);
+        Health->ArtifactBonus = GameInstanceRef->GetHealShieldBonus();
+}
+void APartyMemberCharacter::AddArtifactModifier(ECharacterStat Stat, EModifierKind Kind, float Amount)
+{
+        if (Amount == 0.0f)
+        {
+                return;
+        }
+        FStatModifier NewModifier;
+        NewModifier.SourceId = FName("ArtifactBonus");
+        NewModifier.Stat = Stat;
+        NewModifier.Kind = Kind;
+        NewModifier.Amount = Amount;
+        NewModifier.Duration = 0.0f;
+        NewModifier.TurnsLeft = 0;
+        NewModifier.Rule = EStackRule::RefreshSameSource;
+        Stats->AddModifier(NewModifier);
+}
+void APartyMemberCharacter::AddCappedShield(float Amount, float CapAmount)
+{
+        if (Health->IsDead())
+        {
+                return;
+        }
+        float Room = CapAmount - Health->Shield;
+        if (Room <= 0.0f)
+        {
+                return;
+        }
+        float ShieldToAdd = Amount;
+        if (ShieldToAdd > Room)
+        {
+                ShieldToAdd = Room;
+        }
+        Health->AddShield(ShieldToAdd);
+}
+void APartyMemberCharacter::TickItemShield(float DeltaTime)
+{
+        if (ItemShieldSecondsLeft <= 0.0f)
+        {
+                return;
+        }
+        ItemShieldSecondsLeft = ItemShieldSecondsLeft - DeltaTime;
+        if (ItemShieldSecondsLeft <= 0.0f)
+        {
+                ItemShieldSecondsLeft = 0.0f;
+                ExpireItemShield();
+        }
+}
+void APartyMemberCharacter::CountDownItemShieldRound()
+{
+        if (ItemShieldRoundsLeft <= 0)
+        {
+                return;
+        }
+        ItemShieldRoundsLeft = ItemShieldRoundsLeft - 1;
+        if (ItemShieldRoundsLeft <= 0)
+        {
+                ExpireItemShield();
+        }
+}
+void APartyMemberCharacter::ExpireItemShield()
+{
+        float ShieldToRemove = ItemShieldAmount;
+        if (ShieldToRemove > Health->Shield)
+        {
+                ShieldToRemove = Health->Shield;
+        }
+        Health->Shield = Health->Shield - ShieldToRemove;
+        ItemShieldAmount = 0.0f;
 }

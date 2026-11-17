@@ -26,6 +26,7 @@ public:
         float BaseMaxHealth = 100.0f;
         float CurrentMana = 0.0f;
         float DebuffScale = 1.0f;
+        float BuffScale = 1.0f;
         bool bRepelDebuffs = false;
         float DivertFraction = 0.0f;
         TArray<FStatModifier> DivertedBuffs;

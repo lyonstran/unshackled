@@ -1,0 +1,26 @@
+Name,Floor,DisplayName,Description,DamageFlat,DamagePercent,DefenseFlat,DefensePercent,SpeedFlat,SpeedPercent,CooldownReduction,ManaRegenBonus,DropChanceBonus,HealShieldBonus,EnemyFailChance,Reflect,EnemyBuffReduction,PulseSeconds,PulseRounds,PulseHealPercent,PulseHealFlat,PulseShieldPercent,BattleShieldPercent,ShieldCapPercent,MarkBonus
+RustyFryingPan,1,Rusty Frying Pan,"+3 damage, +30 speed",3,0,0,0,30,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+BrokenIdol,1,Broken Idol,"+5% defense, 5% cooldown reduction (battle: 5% lower mana costs)",0,0,0,0.05,0,0,0.05,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+TeddyBear,1,Teddy Bear,"Heal 10% max health every 15 seconds (every 3 rounds)",0,0,0,0,0,0,0,0,0,0,0,0,0,15,3,0.1,0,0,0,0,0
+RustyNail,1,Rusty Nail,"+5% damage, +5% mana regen",0,0.05,0,0,0,0,0,0.05,0,0,0,0,0,0,0,0,0,0,0,0,0
+BeerMug,1,Beer Mug,"+5% speed",0,0,0,0,0,0.05,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+DirtyRag,1,Dirty Rag,"+25% item drop chance",0,0,0,0,0,0,0,0,0.25,0,0,0,0,0,0,0,0,0,0,0,0
+OldTooth,1,Old Tooth,"+4 defense, heal 10 health every 2 seconds (every round)",0,0,4,0,0,0,0,0,0,0,0,0,0,2,1,0,10,0,0,0,0
+DirtyIronFryingPan,2,Dirty Iron Cast Frying Pan,"+5 damage, +60 speed, 10% cooldown reduction (battle: 10% lower mana costs)",5,0,0,0,60,0,0.1,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+SmellyBoots,2,Smelly Boots,"+10% speed",0,0,0,0,0,0.1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+SilverNecklace,2,Silver Necklace,"Heal 10% max health every 10 seconds (every 2 rounds)",0,0,0,0,0,0,0,0,0,0,0,0,0,10,2,0.1,0,0,0,0,0
+OldOrangeRinds,2,Old Orange Rinds,"Healing and shielding 15% more effective",0,0,0,0,0,0,0,0,0,0.15,0,0,0,0,0,0,0,0,0,0,0
+CreepyMask,2,Creepy Mask,"Omen: enemy attacks have a 5% chance to fail (2.5% in battle)",0,0,0,0,0,0,0,0,0,0,0.05,0,0,0,0,0,0,0,0,0,0
+PaperCrown,2,Paper Crown,"+10% defense, +10% mana regen",0,0,0,0.1,0,0,0,0.1,0,0,0,0,0,0,0,0,0,0,0,0,0
+RustyDagger,2,Rusty Dagger,"+10% damage, +10% mana regen",0,0.1,0,0,0,0,0,0.1,0,0,0,0,0,0,0,0,0,0,0,0,0
+IronFryingPan,3,Iron Cast Frying Pan,"+7 damage, +90 speed, 15% cooldown reduction (battle: 15% lower mana costs)",7,0,0,0,90,0,0.15,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+PorcelainVase,3,Porcelain Vase,"Shield of 3% current health every 2 seconds (10% every round), up to 30% max health",0,0,0,0,0,0,0,0,0,0,0,0,0,2,1,0,0,0.03,0.1,0.3,0
+Idol,3,Idol,"+15% defense, reflect 5% of damage taken",0,0,0,0.15,0,0,0,0,0,0,0,0.05,0,0,0,0,0,0,0,0,0
+SharktoothPendant,3,Sharktooth Pendant,"+11 damage, +30% item drop chance",11,0,0,0,0,0,0,0,0.3,0,0,0,0,0,0,0,0,0,0,0,0
+Lantern,3,Lantern,"Illuminated: enemy buffs are 10% less effective",0,0,0,0,0,0,0,0,0,0,0,0,0.1,0,0,0,0,0,0,0,0
+BeerKeg,3,Beer Keg,"+15% speed",0,0,0,0,0,0.15,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+SuperCuteTeddyBear,3,Super Cute Teddy Bear,"Heal 20% max health every 15 seconds (every 3 rounds)",0,0,0,0,0,0,0,0,0,0,0,0,0,15,3,0.2,0,0,0,0,0
+StainlessSteelFryingPan,4,Stainless Steel Frying Pan,"+14 damage, +180 speed, 20% cooldown reduction (battle: 20% lower mana costs)",14,0,0,0,180,0,0.2,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+LuxuryBoots,4,Luxury Boots,"+35% speed, +10% defense",0,0,0,0.1,0,0.35,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+Compass,4,Compass,"Marks an enemy every 20 seconds (every other round): it takes 20% more damage",0,0,0,0,0,0,0,0,0,0,0,0,0,20,2,0,0,0,0,0,0.2
+DivineIdol,4,Divine Idol,"+20% defense, reflect 7.5% of damage taken, enemy attacks have a 10% chance to fail (5% in battle)",0,0,0,0.2,0,0,0,0,0,0,0.1,0.075,0,0,0,0,0,0,0,0,0

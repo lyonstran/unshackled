@@ -5,6 +5,7 @@
 #include "Characters/EnemyCharacter.h"
 #include "WaveRow.h"
 #include "Game/RecruitPointActor.h"
+#include "Game/ItemChestActor.h"
 #include "WaveSpawner.generated.h"
 class UBoxComponent;
 enum class EWaveState : uint8
@@ -47,6 +48,10 @@ public:
       float SpawnInterval = 0.4f;
       UPROPERTY(EditAnywhere, Category = "Waves")
       TArray<AActor*> SpawnPoints;
+      UPROPERTY(EditAnywhere, Category = "Loot")
+      TSubclassOf<AItemChestActor> ChestClass;
+      UPROPERTY(EditAnywhere, Category = "Loot")
+      FVector ChestOffset = FVector(250.0f, 0.0f, 0.0f);
 protected:
       virtual void BeginPlay() override;
       EWaveState State = EWaveState::WaitingForPlayer;
@@ -75,4 +80,5 @@ protected:
       void RemoveDeadEnemies();
       void FinishFloor();
       void ReviveDeadAllies();
+      void SpawnFloorClearChest();
 };

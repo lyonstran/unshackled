@@ -11,6 +11,7 @@
 AFloorDirectorCharacter::AFloorDirectorCharacter()
 {
         StatsRowName = FName("FloorDirector");
+        bIsMiniboss = true;
         AttackDamage = 25.0f;
         Health->MaxHealth = 300.0f;
         Stats->BaseDefense = 50.0f;

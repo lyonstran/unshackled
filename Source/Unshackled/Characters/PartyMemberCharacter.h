@@ -7,6 +7,7 @@
 #include "PartyMemberCharacter.generated.h"
 class ATurnBattleManager;
 struct FBattleMoveRow;
+struct FActiveItemRow;
 UCLASS()
 class UNSHACKLED_API APartyMemberCharacter : public AUnshackledCharacterBase
 {
@@ -40,6 +41,11 @@ public:
         void SetBattleShelter(APartyMemberCharacter* Guardian, float Share);
         void ClearBattleShelter();
         APartyMemberCharacter* GetShelterGuardian() const;
+        bool CanReceiveItem(const FActiveItemRow* Item) const;
+        bool ReceiveItem(const FActiveItemRow* Item, bool bInBattle);
+        void RefreshArtifactEffects();
+        void AddCappedShield(float Amount, float CapAmount);
+        void CountDownItemShieldRound();
         UPROPERTY(VisibleAnywhere, Category = "Camera")
         USpringArmComponent* CameraArm;
         UPROPERTY(VisibleAnywhere, Category = "Camera")
@@ -62,6 +68,8 @@ protected:
         virtual void BeginPlay() override;
         virtual float GetFloorStatScale() const override;
         virtual float GetFloorManaCostScale() const override;
+        virtual float GetManaRegenScale() const override;
+        virtual float GetCooldownScale() const override;
         virtual void Die() override;
         virtual void GroundedTick(float DeltaTime);
         virtual float FilterIncomingDamage(float RawDamage, bool bTrueDamage, AUnshackledCharacterBase* Attacker) override;
@@ -74,6 +82,14 @@ protected:
         void FollowLeader();
         void UpdateGroundCooldown(float DeltaTime);
         void DrainGroundedMana(float DeltaTime);
+        bool RollEnemyAttackFails();
+        void AddItemModifier(FName SourceId, ECharacterStat Stat, float Amount, const FActiveItemRow* Item, bool bInBattle);
+        void AddArtifactModifier(ECharacterStat Stat, EModifierKind Kind, float Amount);
+        void TickItemShield(float DeltaTime);
+        void ExpireItemShield();
+        float ItemShieldAmount = 0.0f;
+        float ItemShieldSecondsLeft = 0.0f;
+        int32 ItemShieldRoundsLeft = 0;
         bool bIsFollowing = false;
         bool bIsGrounded = false;
         float GroundCooldownRemaining = 0.0f;

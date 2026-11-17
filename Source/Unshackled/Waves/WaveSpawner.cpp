@@ -16,6 +16,7 @@ AWaveSpawner::AWaveSpawner()
       StartTrigger->SetBoxExtent(FVector(500.0f, 500.0f, 200.0f));
       StartTrigger->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
       StartTrigger->SetGenerateOverlapEvents(true);
+      ChestClass = AItemChestActor::StaticClass();
 }
 void AWaveSpawner::BeginPlay()
 {
@@ -294,6 +295,7 @@ void AWaveSpawner::FinishFloor()
 {
       State = EWaveState::FloorCleared;
       ReviveDeadAllies();
+      SpawnFloorClearChest();
       APlayerController* PlayerController = UGameplayStatics::GetPlayerController(this, 0);
       if (PlayerController != nullptr)
       {
@@ -304,6 +306,22 @@ void AWaveSpawner::FinishFloor()
               }
       }
       UE_LOG(LogTemp, Warning, TEXT("Floor %d cleared"), FloorNumber);
+}
+void AWaveSpawner::SpawnFloorClearChest()
+{
+      if (ChestClass == nullptr)
+      {
+            return;
+      }
+      APawn* LeaderPawn = UGameplayStatics::GetPlayerPawn(this, 0);
+      if (LeaderPawn == nullptr)
+      {
+            return;
+      }
+      FVector ChestLocation = LeaderPawn->GetActorLocation() + ChestOffset;
+      FActorSpawnParameters SpawnParams;
+      SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+      GetWorld()->SpawnActor<AItemChestActor>(ChestClass, ChestLocation, FRotator::ZeroRotator, SpawnParams);
 }
 void AWaveSpawner::ReviveDeadAllies()
 {
