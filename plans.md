@@ -231,6 +231,86 @@ Chimera: It's health is 50% of S. Ravana's max health.
         - Malice: Lion body readies themselves for an interception. At any point during the player's moves in the following round, if an ally uses any sort of move with a buff, heal, or shield, Lion leaps in, reduces the raw healing, shielding, or buff by 50%, and deals flat damage for ___ + 1.5% missing health.
 
 
+# items
+
+With items, I want two kinds, passive and active items. Passive items will be things that a player equips in their inventory that affect all party members with bonus's/stat increases. Active items will be primairly be potions, tonics, single use items that give some sort of effect, and affect a single member at a time. For passive items, I want them to spawn from two chests per floor (one after the miniboss dies and one after the floor is cleared, right before the exit). The passive item gained will be drawn from a random pool of passive items. If player's really wanted to, they could save right before opening a chest and refresh the game until they get something they are satisfied with. For active items, enemies will sometimes drop them on death. For the player to use them, they simply use the 'use item' keybind whereever it is designated and can click on an item to instantly use. I think now would also be a good time to get into how the inventory system would work. Players will have an infinite inventory size. There will be two separate inventories, one for passive items (which from here on out, I'll dub as 'Artifacts') and one for active items (will stay named as active items). This leaves two keybinds, one to open to artifacts and select which ones to equip (which is where I also want character info, moves, details about those moves, full character sprite, etc to live) and a keybind to open a smaller menu that opens near the hud with cooldowns and character profile picture (I'll finish designing this soon so there cna be a better picture of what I'm going for). Let me specifcy both passive items and active items will be useable in overworld and boss battles. 
+
+Planned passive items: (for the speed stat, it's exclusively an oerworld stat, which I plan to keep that way. No conversion for boss battles. Same with item drop rate bonuses)
+Floor 1: 
+  - rusty frying pan: party members gains +15 damage and +10 speed
+  - broken idol: party members gain 5% defense, and 5% cooldown reduction. (cooldown reduction in turnbased combat is replaced with mana costs -> this applies for all cooldown reduction based passive items)
+  - teddy bear: party gains passive health regen for 10% max health every 15 seconds (every 3 player rounds in boss battles)
+  - rusty nail: party gains 5% attack and +5%  mana regen
+  - beer mug: party gains 5% movement speed
+  - dirty rag: party gains 25% increased chance for item drops from enemies
+  - old tooth: party gains +20 defense and 10 flat health regen every 2 seconds (health regen occurs every player round if in boss battle)
+
+Floor 2: 
+  - dirty iron cast frying pan: party gains +25 damage and +20 speed and 10% cooldown reduction (cooldown reduction in turnbased combat is replaced with mana costs -> this applies for all cooldown reduction based passive items)
+  - smelly boots: party gains 10% speed
+  - silver necklace: party gains passive health regen for 10% max health every 10 seconds (Every 2 player rounds in boss battles)
+  - old orange rinds: healing and shielding is 15% more effective. 
+  - creepy mask: party gains 'omen' passive
+    - omen: enemy attacks have a 5% chance to fail (2.5% chance in turn-based combat)
+  - paper crown: party gains +10% defense and +10% mana regen
+  - rusty dagger: party gains 10% attack and 10% mana regen
+
+Floor 3: 
+  - iron cast frying pan: party gains +35 attack damage and +30 speed and 15% cooldown reduction (cooldown reduction in turnbased combat is replaced with mana costs -> this applies for all cooldown reduction based passive items)
+  - porcelain vase: every 2 seconds, party gains 3% of their current health as a shield, up to 30% of their max health (in boss battle, every round, party members gain a 10% current health shield every player round, up to 30% of of their max health)
+  - idol: party members gain 15% defense, and reflect back 5% of incoming damage
+  - sharktooth pendant: party gains +55 attack damage and enemies have a 30% increased drop rate from enemies.  
+  - lantern: party gains illuminated passive
+    - illuminated: enemy buffs are 10% less effective.  
+  - beer keg: party gains 15% movement speed
+  - super cute teddy bear: party gains passive health regen for 20% max health every 15 seconds (health regen occures every 3 player rounds in boss battles)
+
+Floor 4: 
+  - stainless steel frying pan: party gains +70 attack damage and +60 speed and 20% cooldown reduction. 
+  - luxury boots: party gains 35% speed and 10% increased defense
+  - compass: every 20 seconds (every other round in boss battles), the compass will mark an enemy (in overworld, mark is permanent, in boss battles, mark will disappear following round before refreshing). These marked enemies take 20% increased damage from all sources. 
+  - divine idol: party members gain 20% defense, reflect back 7.5% of incoming damage, and enemies have a 10% chance to fail their attacks.
+
+Active items: all enemies have a 50% chance of dropping items. Let the number of items they drop range from 1-3 (decide between 1 - 3, then draw that nuber of items randomly from the possible items to be dropped) (with the exception of miniboss's, they always drop a chest with an artifact like discussed above)
+I think I'll also slow down natural mana regeneration as well, both overworld and boss battles
+
+Floor 1: 
+  - basic health potion: restore 25 health
+  - basic mana potion: restore 25 mana 
+  - potato: restore 5% max health
+  - cheese: revive an ally at 25% hp. 
+  - moldy bread: increase defense by 5% for 30 seconds (2 rounds)
+  - half-eaten soup: increase attack by 5% for 30 seconds (2 rounds)
+
+Floor 2: 
+  - better health potion: restore 50 health and gain 5% defense for 30 seconds (2 rounds)
+  - better mana potion: restore 50 mana and gain 5% attack for 30 seconds (2 rounds)
+  - chocolate bar: restore 50 health and 50 mana
+  - camembert: revive an ally at 100% hp, but they have 30% less defense for 30 seconds (2 rounds)
+  - half-eaten bread: increase defense by 7.5% for 30 seconds (2 rounds) 
+  - can of soup: increase attack by 7.5% for 30 seconds (2 rounds)
+
+Floor 3: 
+  - awesome health potion: restore 75 health and gain 7.5% defense for 30 seconds (2 rounds)
+  - better mana potion: restore 75 mana and gain 7.5% attack for 30 seconds (2 rounds)
+  - gin and tonic: revive an ally to 50% hp
+  - springs: party gains 50% speed for 30 seconds
+  - shield potion: party gains 15% max hp shield for 30 seconds (2 rounds or until broken)
+  - exquisite bread: increase defense by 10% for 30 seconds (2 rounds)
+  - revival beads: revive all dead allies to 25% hp
+
+Floor 4: 
+  - Almighty health potion: restore 150 health and gain 7.5% defense for 30 seconds (2 rounds)
+  - Almighty mana potion: restore 150 mana and gain 7.5% attack for 30 seconds (2 rounds) 
+  - rum: revive a ally to 75% hp 
+  - omnipotion: restore 100 health, restore 100 mana, and gain 10% attack and defense for 30 seconds (2 rounds)
+  - revival chain: revive all dead allies to 50% hp
+  - mystery liquid: gain 50% attack, lose 50% defense for 30 seconds (2 rounds)
+
+All the items I have planned out for now (probably only items for the time being given time left for this project).
+
+Side note for later; I think enemies should chase allies evenly, so like if we ground an ally, they wouldn't just default to the closest ally, but they'd even spread out. <- should increase size of waves as well. 
+
 
 
 
